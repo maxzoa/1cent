@@ -5,7 +5,8 @@ from typing import Any
 import httpx
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
-from mcp.types import CallToolResult, TextContent
+from mcp.types import CallToolResult, TextContent, ToolAnnotations
+from pydantic import BaseModel
 from x402.http import (
     decode_payment_required_header,
     decode_payment_response_header,
@@ -16,6 +17,16 @@ from x402.schemas import PaymentPayload
 from onecent.config import get_settings
 from onecent.db import Session
 from onecent.repositories.funnel import facilitator_label, record_funnel_event
+from onecent.schemas import (
+    CatalogSearchResponse,
+    ChangedResponse,
+    DemoPulseResponse,
+    ExtractResponse,
+    PassportResponse,
+    PulseResponse,
+    ToolResponse,
+)
+from onecent.services.demo import demo_pulse_result
 from onecent.services.discovery import ENDPOINT_DESCRIPTIONS
 from onecent.services.tool_catalog import TOOL_BY_KEY, TOOLS
 from onecent.services.tool_operations import catalog_search as search_catalog
@@ -29,6 +40,7 @@ MCP_PROTOCOL_VERSION = "2025-11-25"
 MCP_PAYMENT_META_KEY = "x402/payment"
 MCP_PAYMENT_RESPONSE_META_KEY = "x402/payment-response"
 INTERNAL_API = "http://127.0.0.1:8013"
+FREE_MCP_TOOL_NAMES = ("catalog_search", "demo_url_pulse")
 mcp_settings = get_settings()
 
 mcp = FastMCP(
@@ -81,6 +93,57 @@ def _result(
         isError=error,
         _meta=meta,
     )
+
+
+def _tool_annotations(
+    *, changes_snapshot: bool = False, open_world: bool = True
+) -> ToolAnnotations:
+    return ToolAnnotations(
+        readOnlyHint=not changes_snapshot,
+        destructiveHint=False,
+        idempotentHint=not changes_snapshot,
+        openWorldHint=open_world,
+    )
+
+
+@mcp.tool(
+    name="catalog_search",
+    title="Start here: find a 1cent tool and current price",
+    description=(
+        "Start here before choosing a paid operation. Search the local 1cent catalog without "
+        "fetching a URL or requiring payment. Returns up to five matching tools with purpose, "
+        "current atomic Base USDC price and REST path."
+    ),
+    annotations=_tool_annotations(open_world=False),
+)
+async def catalog_search(query: str) -> CallToolResult:
+    rows = search_catalog(query)
+    data = {
+        "results": [
+            {
+                "tool": row["tool"],
+                "description": row["description"],
+                "price_atomic": row["price_atomic"],
+                "rest_path": row["rest_path"],
+            }
+            for row in rows
+        ]
+    }
+    return _result(data, error=False)
+
+
+@mcp.tool(
+    name="demo_url_pulse",
+    title="Free demo: preview a URL Pulse result",
+    description=(
+        "Return a precomputed example of 1cent URL Pulse output without payment, database access "
+        "or any network request. This fixed demonstration never accepts a URL and never fetches "
+        "an external resource."
+    ),
+    annotations=_tool_annotations(open_world=False),
+)
+async def demo_url_pulse() -> CallToolResult:
+    return _result(demo_pulse_result(), error=False)
 
 
 async def _paid_rest_call(
@@ -180,6 +243,7 @@ async def _paid_rest_call(
     name="url_pulse",
     title="URL Pulse",
     description=ENDPOINT_DESCRIPTIONS["pulse"],
+    annotations=_tool_annotations(),
 )
 async def url_pulse(ctx: Context[Any, Any, Any], url: str, fresh: bool = False) -> CallToolResult:
     return await _paid_rest_call("pulse", {"url": url, "fresh": fresh}, ctx)
@@ -189,6 +253,7 @@ async def url_pulse(ctx: Context[Any, Any, Any], url: str, fresh: bool = False) 
     name="url_passport",
     title="URL Passport",
     description=ENDPOINT_DESCRIPTIONS["passport"],
+    annotations=_tool_annotations(),
 )
 async def url_passport(
     ctx: Context[Any, Any, Any], url: str, fresh: bool = False
@@ -200,6 +265,7 @@ async def url_passport(
     name="url_extract",
     title="URL Extract",
     description=ENDPOINT_DESCRIPTIONS["extract"],
+    annotations=_tool_annotations(),
 )
 async def url_extract(
     ctx: Context[Any, Any, Any],
@@ -218,6 +284,7 @@ async def url_extract(
     name="url_changed",
     title="URL Changed",
     description=ENDPOINT_DESCRIPTIONS["changed"],
+    annotations=_tool_annotations(changes_snapshot=True),
 )
 async def url_changed(ctx: Context[Any, Any, Any], url: str, fresh: bool = False) -> CallToolResult:
     return await _paid_rest_call("changed", {"url": url, "fresh": fresh}, ctx)
@@ -244,36 +311,31 @@ for _definition in TOOLS:
             + " Use only for public HTTP(S) resources; it does not execute JavaScript "
             "or bypass access controls."
         ),
+        annotations=_tool_annotations(changes_snapshot=_definition.key == "url_diff"),
     )(_make_projection_tool(_definition.key))
 
 
-@mcp.tool(
-    name="catalog_search",
-    title="Search the 1cent tool catalog",
-    description=(
-        "Search the local 1cent tool catalog without fetching a URL or requiring payment. "
-        "Returns up to five matching tools with purpose, current atomic price and REST path."
-    ),
-)
-async def catalog_search(query: str) -> CallToolResult:
-    rows = search_catalog(query)
-    data = {
-        "results": [
-            {
-                "tool": row["tool"],
-                "description": row["description"],
-                "price_atomic": row["price_atomic"],
-                "rest_path": row["rest_path"],
-            }
-            for row in rows
-        ]
-    }
-    return _result(data, error=False)
+MCP_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
+    "catalog_search": CatalogSearchResponse,
+    "demo_url_pulse": DemoPulseResponse,
+    "url_pulse": PulseResponse,
+    "url_passport": PassportResponse,
+    "url_extract": ExtractResponse,
+    "url_changed": ChangedResponse,
+    **{
+        item.key: ToolResponse
+        for item in TOOLS
+        if item.key not in {"url_pulse", "url_passport", "url_extract", "url_changed"}
+    },
+}
 
 
-for _tool_name in tuple(item.key for item in TOOLS) + ("catalog_search",):
+for _tool_name in FREE_MCP_TOOL_NAMES + tuple(item.key for item in TOOLS):
     _tool = mcp._tool_manager.get_tool(_tool_name)
     if _tool is not None:
         _tool.parameters["additionalProperties"] = False
         _tool.fn_metadata.arg_model.model_config["extra"] = "forbid"
         _tool.fn_metadata.arg_model.model_rebuild(force=True)
+        # FastMCP 1.28 validates declared output models even for expected x402 error
+        # results. Publish the exact success schema without weakening unpaid/error handling.
+        _tool.__dict__["output_schema"] = MCP_OUTPUT_MODELS[_tool_name].model_json_schema()

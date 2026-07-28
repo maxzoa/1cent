@@ -128,3 +128,15 @@ class CatalogSearchResult(StrictModel):
 
 class CatalogSearchResponse(StrictModel):
     results: list[CatalogSearchResult]
+
+
+class DemoPulseResponse(StrictModel):
+    demo: bool
+    url: str
+    reachable: bool
+    status_code: int
+    title: str
+    summary: str
+    source: str
+    network_request_performed: bool
+    payment_required: bool

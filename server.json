@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "ru.maxzoa/1cent",
   "title": "1cent Web Intelligence for AI Agents",
-  "description": "Pay-per-call URL intelligence for AI agents via x402 USDC on Base; no account or API key.",
-  "version": "0.2.0",
+  "description": "SSRF-safe URL intelligence: 32 x402 tools plus free discovery and demo, no account or API key.",
+  "version": "0.3.0",
   "websiteUrl": "https://1cent.maxzoa.ru",
   "remotes": [
     {

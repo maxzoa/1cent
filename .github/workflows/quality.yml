@@ -1,0 +1,42 @@
+name: quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install pinned dependencies
+        run: python -m pip install -e ".[dev]"
+      - name: Dependency consistency
+        run: python -m pip check
+      - name: Ruff
+        run: ruff check .
+      - name: Mypy strict
+        run: mypy
+      - name: Tests and security regression
+        # Module invocation keeps the repository root on sys.path, including
+        # the tracked scripts package used by operational unit tests.
+        run: python -m pytest -q
+      - name: Release and MCP schema consistency
+        run: python scripts/validate_release.py
+      - name: Shell syntax
+        run: find scripts -name '*.sh' -print0 | xargs -0 -n1 sh -n
+      - name: Container build
+        run: docker build --pull=false -t onecent:ci .

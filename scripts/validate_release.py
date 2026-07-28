@@ -1,0 +1,91 @@
+from __future__ import annotations
+
+import asyncio
+import json
+import subprocess
+import tomllib
+from pathlib import Path
+from typing import cast
+
+from onecent import __version__
+from onecent.mcp_server import FREE_MCP_TOOL_NAMES, mcp
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _json(path: str) -> dict[str, object]:
+    value = json.loads((ROOT / path).read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise TypeError(f"{path} must contain a JSON object")
+    return cast(dict[str, object], value)
+
+
+def _tracked_files() -> list[str]:
+    result = subprocess.run(
+        ["git", "ls-files"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+async def _validate_mcp() -> None:
+    tools = await mcp.list_tools()
+    assert len(tools) == 34
+    assert [tool.name for tool in tools[:2]] == list(FREE_MCP_TOOL_NAMES)
+    for tool in tools:
+        assert tool.inputSchema.get("additionalProperties") is False, tool.name
+        assert tool.outputSchema is not None, tool.name
+        assert tool.outputSchema.get("additionalProperties") is False, tool.name
+        assert tool.annotations is not None, tool.name
+        assert tool.annotations.destructiveHint is False, tool.name
+
+
+def main() -> None:
+    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    project = cast(dict[str, object], pyproject["project"])
+    registry = _json("server.json")
+    catalog_registry = _json("catalog/server.json")
+    tool_catalog = _json("catalog/tool-catalog.json")
+
+    versions = {
+        __version__,
+        str(project["version"]),
+        str(registry["version"]),
+        str(catalog_registry["version"]),
+        str(tool_catalog["version"]),
+    }
+    assert versions == {"0.3.0"}, versions
+    assert registry["name"] == catalog_registry["name"] == "ru.maxzoa/1cent"
+    assert registry["remotes"] == [
+        {"type": "streamable-http", "url": "https://1cent.maxzoa.ru/mcp"}
+    ]
+    assert catalog_registry["remotes"] == registry["remotes"]
+    assert len(cast(list[object], tool_catalog["tools"])) == 32
+
+    for required in (
+        "LICENSE",
+        "NOTICE",
+        "SECURITY.md",
+        "BUYER_QUICKSTART.md",
+        "CHANGELOG.md",
+        "TRUST_AND_SCALING_READINESS.md",
+    ):
+        assert (ROOT / required).is_file(), required
+
+    forbidden = (".env", ".pem", ".key", ".p12")
+    for tracked in _tracked_files():
+        path = Path(tracked)
+        assert ".secrets" not in path.parts, tracked
+        if path.name != ".env.example":
+            assert not any(path.name.endswith(suffix) for suffix in forbidden), tracked
+
+    asyncio.run(_validate_mcp())
+    print("release_validation=PASS; version=0.3.0; paid_tools=32; free_tools=2")
+
+
+if __name__ == "__main__":
+    main()
