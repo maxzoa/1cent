@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0 — 2026-07-28
+
+- Added safety-first `onecent doctor` and explicitly gated buyer CLI plus pinned Python/Node examples.
+- Added rate-limited live demo for fixed `example.com` through the existing safe service layer.
+- Added common quality metadata: cache, timings, network calls, truncation and warnings.
+- Added conversion latency metrics and plain-Russian Telegram funnel diagnostics.
+- Added scheduled independent public health checks, restore drill and unpaid load smoke.
+- Added separate fully hashed runtime and CI dependency locks, pip-audit, CycloneDX SBOM and pinned Trivy scan.
+- Upgraded the official Python/Node x402 SDKs and vulnerable transitive packages; both dependency audits are clean.
+- Preserved all payment, network, seller, facilitator, price and UNKNOWN no-retry behavior.
+
 ## 0.3.0 — 2026-07-28
 
 - Added free static `demo_url_pulse` for MCP and `/v1/demo/pulse` for REST.

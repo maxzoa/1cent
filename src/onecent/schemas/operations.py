@@ -21,6 +21,18 @@ class ExtractRequest(UrlRequest):
     include_links: bool = False
 
 
+class ResultQuality(StrictModel):
+    """Machine-readable evidence about result freshness and completeness."""
+
+    cache_hit: bool = False
+    processing_ms: int = Field(default=0, ge=0)
+    network_ms: int = Field(default=0, ge=0)
+    external_requests: int = Field(default=0, ge=0)
+    truncated: bool = False
+    completeness: float = Field(default=1.0, ge=0.0, le=1.0)
+    warnings: list[str] = Field(default_factory=list)
+
+
 class PulseResponse(StrictModel):
     request_id: str
     url_requested: str
@@ -41,6 +53,7 @@ class PulseResponse(StrictModel):
     content_hash: str
     from_cache: bool
     checked_at: datetime
+    quality: ResultQuality = Field(default_factory=ResultQuality)
 
 
 class SiteInfo(StrictModel):
@@ -88,6 +101,7 @@ class ExtractResponse(StrictModel):
     truncated: bool
     from_cache: bool
     checked_at: datetime
+    quality: ResultQuality = Field(default_factory=ResultQuality)
 
 
 class ChangedResponse(StrictModel):
@@ -98,6 +112,7 @@ class ChangedResponse(StrictModel):
     first_seen_at: datetime | None = None
     previous_checked_at: datetime | None = None
     checked_at: datetime
+    quality: ResultQuality = Field(default_factory=ResultQuality)
 
 
 class ToolRequest(UrlRequest):
@@ -113,6 +128,7 @@ class ToolResponse(StrictModel):
     content_hash: str
     from_cache: bool
     checked_at: datetime
+    quality: ResultQuality = Field(default_factory=ResultQuality)
 
 
 class CatalogSearchRequest(StrictModel):
@@ -140,3 +156,11 @@ class DemoPulseResponse(StrictModel):
     source: str
     network_request_performed: bool
     payment_required: bool
+
+
+class LiveDemoPulseResponse(StrictModel):
+    demo: bool = True
+    fixed_target: str
+    payment_required: bool = False
+    rate_limit_per_hour: int
+    result: PulseResponse

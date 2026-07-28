@@ -1,0 +1,37 @@
+name: external-health
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: onecent-external-health
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Public health and unpaid payment challenge
+        shell: bash
+        run: |
+          set -euo pipefail
+          base=https://1cent.maxzoa.ru
+          ua=onecent-smoke/github-health
+          curl -A "$ua" --fail --silent --show-error "$base/health" | grep -q '"status":"ok"'
+          curl -A "$ua" --fail --silent --show-error "$base/status.json" | grep -q '"network":"eip155:8453"'
+          curl -A "$ua" --fail --silent --show-error "$base/v1/demo/pulse" | grep -q '"network_request_performed":false'
+          code=$(curl -A "$ua" --silent --show-error --dump-header /tmp/headers \
+            --output /tmp/body --write-out '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            -d '{"url":"https://example.com/","fresh":false}' \
+            "$base/v1/url/status")
+          test "$code" = 402
+          grep -qi '^payment-required:' /tmp/headers
+          grep -q 'eip155:8453' /tmp/body
+          echo external_health=PASS

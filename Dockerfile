@@ -2,9 +2,9 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 RUN groupadd --gid 10001 onecent && useradd --uid 10001 --gid onecent --no-create-home onecent
 WORKDIR /app
-COPY pyproject.toml ./
+COPY pyproject.toml requirements.lock ./
 RUN mkdir -p src/onecent && touch src/onecent/__init__.py \
-    && pip install --no-cache-dir .
+    && pip install --no-cache-dir --require-hashes -r requirements.lock
 COPY src ./src
 COPY alembic.ini ./
 COPY migrations ./migrations

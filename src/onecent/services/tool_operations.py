@@ -2,6 +2,7 @@ import hashlib
 import json
 import re
 from datetime import datetime, timezone
+from time import monotonic
 from typing import cast
 from urllib.parse import urljoin, urlsplit
 from uuid import uuid4
@@ -19,11 +20,12 @@ from onecent.repositories.data import (
     put_cache,
     record_request,
 )
-from onecent.schemas import ToolResponse
+from onecent.schemas import ResultQuality, ToolResponse
 from onecent.services.fetcher import fetch_url
 from onecent.services.robots import robots_allowed
 from onecent.services.settings_registry import effective_app_settings
 from onecent.services.tool_catalog import TOOL_BY_KEY, public_catalog
+from onecent.services.traffic_audit import current_traffic_context
 from onecent.services.url_guard import guard_url
 
 UTC = timezone.utc
@@ -253,6 +255,7 @@ def _project(tool: str, artifact: dict[str, object]) -> dict[str, object]:
 async def run_projection(
     tool: str, url: str, fresh: bool, settings: Settings, session: AsyncSession
 ) -> ToolResponse:
+    started = monotonic()
     if tool not in TOOL_BY_KEY or tool in {
         "url_pulse",
         "url_passport",
@@ -263,17 +266,22 @@ async def run_projection(
     settings = await effective_app_settings(session, settings)
     artifact, from_cache = await _artifact(url, fresh, settings, session)
     data = _project(tool, artifact)
+    external_requests = 0 if from_cache else 1
+    network_ms = 0 if from_cache else int(cast(int, artifact["elapsed_ms"]))
+    warnings = ["cached_result"] if from_cache else []
     secondary_paths = {
         "site_llms_txt": "/llms.txt",
         "site_security_txt": "/.well-known/security.txt",
     }
     if tool in secondary_paths:
         target = urljoin(str(artifact["final_url"]), secondary_paths[tool])
+        external_requests += 1
         try:
             secondary_allowed, _ = await robots_allowed(target, settings)
             if not secondary_allowed:
                 raise PermissionError("robots.txt disallows secondary resource")
             secondary = await fetch_url(target, settings)
+            network_ms += secondary.elapsed_ms
             secondary_text = secondary.body.decode("utf-8", "replace")[:65_536]
             data = {
                 "url": secondary.url,
@@ -284,6 +292,7 @@ async def run_projection(
             }
         except Exception as exc:
             data = {"url": target, "found": False, "error": type(exc).__name__}
+            warnings.append("secondary_resource_unavailable")
     if tool == "url_diff":
         previous = await latest_snapshot(session, str(artifact["requested_url"]))
         current_hash = str(artifact["hash"])
@@ -305,8 +314,12 @@ async def run_projection(
             None,
             len(str(artifact["text"])),
         )
+    traffic = current_traffic_context()
+    truncated = bool(data.get("truncated", False))
+    if truncated:
+        warnings.append("content_truncated")
     response = ToolResponse(
-        request_id=str(uuid4()),
+        request_id=traffic.request_id if traffic else str(uuid4()),
         tool=tool,
         url_requested=url,
         url_final=str(artifact["final_url"]),
@@ -314,6 +327,15 @@ async def run_projection(
         content_hash=str(artifact["hash"]),
         from_cache=from_cache,
         checked_at=datetime.now(UTC),
+        quality=ResultQuality(
+            cache_hit=from_cache,
+            processing_ms=max(0, int((monotonic() - started) * 1000)),
+            network_ms=max(0, network_ms),
+            external_requests=external_requests,
+            truncated=truncated,
+            completeness=0.85 if truncated else 1.0,
+            warnings=warnings,
+        ),
     )
     await record_request(
         session,

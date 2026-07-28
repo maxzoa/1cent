@@ -34,8 +34,8 @@ def _tracked_files() -> list[str]:
 
 async def _validate_mcp() -> None:
     tools = await mcp.list_tools()
-    assert len(tools) == 34
-    assert [tool.name for tool in tools[:2]] == list(FREE_MCP_TOOL_NAMES)
+    assert len(tools) == 35
+    assert [tool.name for tool in tools[:3]] == list(FREE_MCP_TOOL_NAMES)
     for tool in tools:
         assert tool.inputSchema.get("additionalProperties") is False, tool.name
         assert tool.outputSchema is not None, tool.name
@@ -58,7 +58,7 @@ def main() -> None:
         str(catalog_registry["version"]),
         str(tool_catalog["version"]),
     }
-    assert versions == {"0.3.0"}, versions
+    assert versions == {"0.4.0"}, versions
     assert registry["name"] == catalog_registry["name"] == "ru.maxzoa/1cent"
     assert registry["remotes"] == [
         {"type": "streamable-http", "url": "https://1cent.maxzoa.ru/mcp"}
@@ -84,7 +84,7 @@ def main() -> None:
             assert not any(path.name.endswith(suffix) for suffix in forbidden), tracked
 
     asyncio.run(_validate_mcp())
-    print("release_validation=PASS; version=0.3.0; paid_tools=32; free_tools=2")
+    print("release_validation=PASS; version=0.4.0; paid_tools=32; free_tools=3")
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ from x402.schemas import PaymentRequired
 EXPECTED_TOOLS = {
     "catalog_search",
     "demo_url_pulse",
+    "demo_live_url_pulse",
     "url_pulse",
     "url_passport",
     "url_extract",
@@ -71,16 +72,17 @@ async def run(endpoint: str, paid: bool) -> None:
             names = {tool.name for tool in tools.tools}
             if names != EXPECTED_TOOLS:
                 raise RuntimeError(f"unexpected tools: {sorted(names)}")
-            if [tool.name for tool in tools.tools[:2]] != [
+            if [tool.name for tool in tools.tools[:3]] != [
                 "catalog_search",
                 "demo_url_pulse",
+                "demo_live_url_pulse",
             ]:
                 raise RuntimeError("free discovery tools are not listed first")
             for tool in tools.tools:
                 schema = tool.inputSchema
                 if schema.get("additionalProperties") is not False:
                     raise RuntimeError(f"{tool.name}: input schema is not strict")
-                if tool.name != "demo_url_pulse":
+                if tool.name not in {"demo_url_pulse", "demo_live_url_pulse"}:
                     required_field = "query" if tool.name == "catalog_search" else "url"
                     if required_field not in schema.get("required", []):
                         raise RuntimeError(f"{tool.name}: required field missing")

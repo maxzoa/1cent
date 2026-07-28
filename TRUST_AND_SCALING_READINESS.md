@@ -1,6 +1,7 @@
 # Trust and scaling readiness
 
-Version 0.3.0 improves trust without changing production payment behavior.
+Version 0.4.0 improves buyer conversion, independent verification and result transparency without
+changing production payment behavior.
 
 ## Delivered now
 
@@ -10,6 +11,11 @@ Version 0.3.0 improves trust without changing production payment behavior.
 - Apache-2.0 licensing and CI quality gates;
 - buyer quickstart and live-price guidance;
 - payment funnel attribution retained.
+- no-payment buyer doctor and explicit maximum-price payment gates;
+- fixed-target live demo with atomic per-client hourly limits;
+- external scheduled health evidence, isolated restore drill and unpaid load smoke;
+- hashed transitive lock, dependency audit, SBOM and pinned container scan;
+- cache/timing/completeness/warning metadata in successful results.
 
 ## Signed offers and receipts
 
