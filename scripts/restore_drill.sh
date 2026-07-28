@@ -37,6 +37,8 @@ while [ "$attempt" -lt 30 ]; do
 done
 test "$ready" = true
 
+"$DOCKER" exec "$NAME" psql -v ON_ERROR_STOP=1 -U postgres \
+  -c "CREATE ROLE onecent NOLOGIN" >/dev/null
 gzip -dc "$BACKUP" | "$DOCKER" exec -i "$NAME" psql -v ON_ERROR_STOP=1 -U postgres >/dev/null
 tables=$("$DOCKER" exec "$NAME" psql -At -U postgres -c \
   "SELECT count(*) FROM pg_catalog.pg_tables WHERE schemaname='public'")
