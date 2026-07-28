@@ -238,7 +238,7 @@ def _challenge_values(
         return None, None, None, None
     try:
         required = decode_payment_required_header(encoded)
-        accepted = required.accepts[0]
+        accepted: Any = required.accepts[0]
         return (
             str(accepted.network),
             str(accepted.asset),
