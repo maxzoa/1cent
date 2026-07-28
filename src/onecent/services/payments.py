@@ -575,23 +575,23 @@ def build_x402_middleware(
 
         async with Session() as session:
             if response.status_code == 402 and not signature:
+                challenge_network, challenge_asset, challenge_pay_to, challenge_amount = (
+                    _challenge_values(headers)
+                )
+                await _record_funnel(
+                    "challenge_issued",
+                    "success",
+                    request_fingerprint=fingerprint,
+                    network=challenge_network or settings.x402_network,
+                    asset=challenge_asset,
+                    pay_to=challenge_pay_to,
+                    amount_atomic=challenge_amount,
+                    facilitator=facilitator_label(settings.x402_facilitator_url),
+                    http_status=402,
+                    elapsed_ms=roundtrip_ms,
+                )
                 try:
-                    challenge_network, challenge_asset, challenge_pay_to, challenge_amount = (
-                        _challenge_values(headers)
-                    )
                     await record_attempt(session, "challenge", True)
-                    await _record_funnel(
-                        "challenge_issued",
-                        "success",
-                        request_fingerprint=fingerprint,
-                        network=challenge_network or settings.x402_network,
-                        asset=challenge_asset,
-                        pay_to=challenge_pay_to,
-                        amount_atomic=challenge_amount,
-                        facilitator=facilitator_label(settings.x402_facilitator_url),
-                        http_status=402,
-                        elapsed_ms=roundtrip_ms,
-                    )
                 except Exception:
                     await session.rollback()
             elif payment_id:
