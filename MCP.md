@@ -7,26 +7,45 @@ Public endpoint: `https://1cent.maxzoa.ru/mcp`
 - Payments: x402 v2, `exact`, Base Mainnet `eip155:8453`, Base USDC.
 - Authentication: payment payload in MCP request `_meta["x402/payment"]`.
 - Receipt: settlement result in tool result `_meta["x402/payment-response"]`.
+- Transport security: allowed host/origin validation and DNS-rebinding protection.
 
 ## Tools
 
+Production publishes 34 MCP tools: 32 paid URL/site operations and two free local tools.
+
+Free tools are listed first:
+
+- `catalog_search` — bounded local tool/price search;
+- `demo_url_pulse` — fixed precomputed sample; no URL input, payment, DB or network.
+
+Recommended paid bundles:
+
 | Tool | Purpose | Input |
 |---|---|---|
-| `url_pulse` | Fast URL reachability, status, timing and content summary | `url` string, optional `fresh` boolean |
-| `url_passport` | URL identity, redirects, headers, TLS and page metadata | `url` string, optional `fresh` boolean |
-| `url_extract` | Safe readable text and optional public links extraction | `url` string, optional `fresh` and `include_links` booleans |
-| `url_changed` | Compare current public content with the last stored snapshot | `url` string, optional `fresh` boolean |
+| `url_pulse` | Fast URL reachability, timing and content summary | `url`, optional `fresh` |
+| `url_passport` | Identity, redirects, TLS, discovery and page metadata | `url`, optional `fresh` |
+| `url_extract` | Safe readable text and optional public links | `url`, optional `fresh`, `include_links` |
+| `url_changed` | Compare current public content with prior snapshot | `url`, optional `fresh` |
 
-Every schema has `additionalProperties: false`. Calls without payment return a tool error containing x402 payment requirements. A URL operation starts only after the existing gateway verifies payment. Paid MCP calls use the same REST service layer, SSRF checks, fetch limits, cache, request audit, payment events, fingerprint and idempotency controls as the public REST API.
+The other 28 paid projections cover status, redirects, metadata, content, discovery, TLS and
+security evidence. Current names and prices come from `GET /v1/catalog`.
+
+Every tool publishes strict `inputSchema`, exact success `outputSchema` and MCP annotations.
+Unknown fields are rejected. URL tools declare open-world access; change/diff tools disclose their
+snapshot side effect. Calls without payment return a tool error containing x402 requirements.
+A URL operation starts only after the existing gateway verifies payment. Paid MCP calls use the
+same REST service layer, SSRF checks, fetch limits, cache, audit, payment evidence, fingerprint and
+idempotency controls as the REST API.
 
 ## Client flow
 
 1. Connect with Streamable HTTP and run `initialize`.
-2. Run `tools/list` and select one tool.
-3. Call without payment to receive the x402 requirements.
-4. Validate network, scheme, asset, amount, payee and resource in client policy.
-5. Sign the advertised payment on the required network and repeat the call with
-   `_meta["x402/payment"]`.
-6. Require `_meta["x402/payment-response"]` in the successful result.
+2. Run `tools/list`.
+3. Call free `catalog_search` or `demo_url_pulse` first.
+4. Call a paid tool without payment to receive x402 requirements.
+5. Validate network, scheme, asset, amount, payee and resource in client policy.
+6. Sign the advertised payment and repeat the call with `_meta["x402/payment"]`.
+7. Require `_meta["x402/payment-response"]` in the successful result.
 
-Never place a buyer private key in MCP configuration sent to the server. Signing belongs in the buyer client. See `scripts/test_mcp_client.py` for the official Python SDK client flow.
+Never place a buyer private key in MCP configuration sent to the server. Signing belongs in the
+buyer client. See `scripts/test_mcp_client.py` and [BUYER_QUICKSTART.md](BUYER_QUICKSTART.md).

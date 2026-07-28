@@ -19,6 +19,7 @@ from x402.schemas import PaymentRequired
 
 EXPECTED_TOOLS = {
     "catalog_search",
+    "demo_url_pulse",
     "url_pulse",
     "url_passport",
     "url_extract",
@@ -70,17 +71,38 @@ async def run(endpoint: str, paid: bool) -> None:
             names = {tool.name for tool in tools.tools}
             if names != EXPECTED_TOOLS:
                 raise RuntimeError(f"unexpected tools: {sorted(names)}")
+            if [tool.name for tool in tools.tools[:2]] != [
+                "catalog_search",
+                "demo_url_pulse",
+            ]:
+                raise RuntimeError("free discovery tools are not listed first")
             for tool in tools.tools:
                 schema = tool.inputSchema
                 if schema.get("additionalProperties") is not False:
                     raise RuntimeError(f"{tool.name}: input schema is not strict")
-                required_field = "query" if tool.name == "catalog_search" else "url"
-                if required_field not in schema.get("required", []):
-                    raise RuntimeError(f"{tool.name}: url is not required")
+                if tool.name != "demo_url_pulse":
+                    required_field = "query" if tool.name == "catalog_search" else "url"
+                    if required_field not in schema.get("required", []):
+                        raise RuntimeError(f"{tool.name}: required field missing")
+                if not tool.outputSchema:
+                    raise RuntimeError(f"{tool.name}: output schema missing")
+                if not tool.annotations or tool.annotations.destructiveHint is not False:
+                    raise RuntimeError(f"{tool.name}: safe annotations missing")
 
             search = await session.call_tool("catalog_search", {"query": "redirect chain"})
             if search.isError or "url_redirects" not in str(search.structuredContent):
                 raise RuntimeError("free catalog_search failed")
+
+            demo = await session.call_tool("demo_url_pulse", {})
+            demo_data = demo.structuredContent
+            if (
+                demo.isError
+                or not isinstance(demo_data, dict)
+                or demo_data.get("source") != "precomputed"
+                or demo_data.get("network_request_performed") is not False
+                or demo_data.get("payment_required") is not False
+            ):
+                raise RuntimeError("free demo_url_pulse failed")
 
             arguments = {"url": "https://example.com", "fresh": False}
             unpaid = await session.call_tool(

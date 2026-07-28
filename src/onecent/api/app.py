@@ -1,7 +1,8 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from html import escape
 from time import monotonic
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
@@ -11,11 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from onecent import __version__
 from onecent.config import Settings, get_settings
 from onecent.db import Session, engine
-from onecent.mcp_server import mcp
+from onecent.mcp_server import FREE_MCP_TOOL_NAMES, mcp
 from onecent.repositories.catalog import price_promo_status, public_catalog_rows, tool_enabled
 from onecent.repositories.data import record_error, service_enabled
 from onecent.schemas import (
     ChangedResponse,
+    DemoPulseResponse,
     ExtractRequest,
     ExtractResponse,
     PassportResponse,
@@ -24,6 +26,7 @@ from onecent.schemas import (
     ToolResponse,
     UrlRequest,
 )
+from onecent.services.demo import demo_pulse_result
 from onecent.services.discovery import ENDPOINT_DESCRIPTIONS
 from onecent.services.operations import changed, extract, passport, pulse
 from onecent.services.payments import build_x402_middleware
@@ -68,6 +71,10 @@ app = FastAPI(
             "description": "Paid, SSRF-protected inspection of public HTTP(S) resources.",
         },
         {"name": "Service", "description": "Public service status and capabilities."},
+        {
+            "name": "Free demo",
+            "description": "Static product preview with no payment, DB access or URL fetch.",
+        },
     ],
 )
 x402_middleware = build_x402_middleware(settings)
@@ -113,6 +120,7 @@ async def root() -> HTMLResponse:
         "1cent Web Intelligence for AI Agents",
         "<p>Pay-per-call URL inspection through REST and MCP. No account or API key required.</p>"
         "<p><code>https://1cent.maxzoa.ru/mcp/</code></p><p><a href='/tools'>Browse tools</a> · "
+        "<a href='/v1/demo/pulse'>Free demo</a> · "
         "<a href='/docs'>OpenAPI</a> · <a href='/docs/getting-started'>Pay with x402</a> · "
         "<a href='https://registry.modelcontextprotocol.io'>MCP Registry</a> · "
         "<a href='https://smithery.ai/servers/maxzoa27/onecent' rel='me'>Smithery</a></p>",
@@ -141,29 +149,11 @@ async def catalog(
 
 @app.get("/.well-known/mcp/server-card.json", include_in_schema=False)
 async def mcp_server_card() -> dict[str, object]:
+    tools = await mcp.list_tools()
     return {
         "serverInfo": {"name": "ru.maxzoa/1cent", "version": __version__},
         "authentication": {"required": False, "schemes": []},
-        "tools": [
-            {
-                "name": item.key,
-                "description": item.description_en,
-                "inputSchema": ToolRequest.model_json_schema(),
-            }
-            for item in TOOLS
-        ]
-        + [
-            {
-                "name": "catalog_search",
-                "description": "Search the local tool catalog without payment.",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {"query": {"type": "string"}},
-                    "required": ["query"],
-                    "additionalProperties": False,
-                },
-            }
-        ],
+        "tools": [tool.model_dump(by_alias=True, exclude_none=True) for tool in tools],
         "resources": [],
         "prompts": [],
     }
@@ -229,7 +219,7 @@ async def _x402_manifest(session: AsyncSession) -> dict[str, object]:
         "mcp": {
             "url": f"{settings.public_base_url.rstrip('/')}/mcp/",
             "transport": "streamable-http",
-            "freeTools": ["catalog_search"],
+            "freeTools": list(FREE_MCP_TOOL_NAMES),
         },
         "facilitator": settings.x402_facilitator_url,
         "promotion": promotion,
@@ -291,8 +281,10 @@ def _landing(title: str, body: str) -> HTMLResponse:
 async def tools_page() -> HTMLResponse:
     return _landing(
         "Web intelligence tools",
-        "<p>32 paid REST and MCP tools plus free catalog_search.</p>"
-        "<p><a href='/v1/catalog'>Machine-readable catalog</a></p>",
+        "<p>32 paid REST/MCP tools plus two free MCP tools: "
+        "<code>catalog_search</code> and <code>demo_url_pulse</code>.</p>"
+        "<p><a href='/v1/demo/pulse'>Try the static demo</a> · "
+        "<a href='/v1/catalog'>Machine-readable catalog</a></p>",
     )
 
 
@@ -309,6 +301,8 @@ async def pricing_page() -> HTMLResponse:
 async def getting_started() -> HTMLResponse:
     return _landing(
         "Pay for a 1cent request",
+        "<p><strong>Start free:</strong> call MCP <code>catalog_search</code> or "
+        "<code>demo_url_pulse</code>. Neither tool fetches a URL or requires payment.</p>"
         "<p>No account or API key. Buyer needs a wallet with Base Mainnet USDC and an "
         "x402 v2 client.</p><ol><li>Read <a href='/.well-known/x402'>discovery manifest</a>."
         "</li><li>Install the official x402 client.</li><li>Call a REST endpoint; the "
@@ -316,7 +310,8 @@ async def getting_started() -> HTMLResponse:
         "<p><a href='/examples/python-x402'>Python example</a> · "
         "<a href='/examples/typescript-x402'>TypeScript example</a></p>"
         "<p>MCP transport: <code>https://1cent.maxzoa.ru/mcp/</code>. "
-        "The free <code>catalog_search</code> tool helps choose a paid operation.</p>",
+        "Private keys stay only inside the buyer client and are never sent to 1cent. "
+        "Always read the current advertised price instead of hard-coding it.</p>",
     )
 
 
@@ -392,10 +387,66 @@ async def terms() -> HTMLResponse:
     )
 
 
+async def _public_status_payload(session: AsyncSession) -> dict[str, object]:
+    database = "ok"
+    enabled = settings.service_enabled
+    try:
+        await session.execute(text("SELECT 1"))
+        enabled = await service_enabled(session, settings.service_enabled)
+        rows = await public_catalog_rows(session)
+        promotion = await price_promo_status(session)
+    except Exception:
+        database = "error"
+        rows = public_catalog()
+        promotion = {"active": False, "price_atomic": None, "expires_at": None}
+    return {
+        "status": "ok" if database == "ok" and enabled else "degraded",
+        "version": __version__,
+        "database": database,
+        "service_enabled": enabled,
+        "payment_mode": f"x402-v2-{settings.x402_environment}",
+        "network": settings.x402_network,
+        "paid_tools": len(rows),
+        "free_mcp_tools": list(FREE_MCP_TOOL_NAMES),
+        "promotion": promotion,
+        "uptime_seconds": int(monotonic() - started),
+    }
+
+
+@app.get("/status.json", tags=["Service"], summary="Public trust status")
+async def status_json(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> dict[str, object]:
+    return await _public_status_payload(session)
+
+
 @app.get("/status", response_class=HTMLResponse, include_in_schema=False)
-async def status_page() -> HTMLResponse:
-    return _landing(
-        "Service status", "<p>Use <a href='/health'>/health</a> for current public health.</p>"
+async def status_page(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> HTMLResponse:
+    status = await _public_status_payload(session)
+    free_tools = ", ".join(cast(list[str], status["free_mcp_tools"]))
+    body = (
+        f"<p><strong>Status:</strong> {escape(str(status['status']))}</p>"
+        f"<p><strong>Payment mode:</strong> {escape(str(status['payment_mode']))}<br>"
+        f"<strong>Network:</strong> {escape(str(status['network']))}<br>"
+        f"<strong>Paid tools:</strong> {status['paid_tools']}<br>"
+        f"<strong>Free MCP tools:</strong> {escape(free_tools)}</p>"
+        "<p><a href='/status.json'>Machine-readable status</a> · "
+        "<a href='/health'>Health probe</a> · "
+        "<a href='/v1/demo/pulse'>Free static demo</a></p>"
+    )
+    return _landing("Service status", body)
+
+
+@app.get("/.well-known/security.txt", response_class=PlainTextResponse, include_in_schema=False)
+async def security_txt() -> str:
+    return (
+        "Contact: mailto:maxzoa27@gmail.com\n"
+        "Canonical: https://1cent.maxzoa.ru/.well-known/security.txt\n"
+        "Policy: https://1cent.maxzoa.ru/terms\n"
+        "Expires: 2027-07-01T00:00:00Z\n"
+        "Preferred-Languages: en, ru\n"
     )
 
 
@@ -410,6 +461,7 @@ async def public_sitemap() -> Response:
         "",
         "/tools",
         "/pricing",
+        "/v1/demo/pulse",
         "/docs/getting-started",
         "/examples/python-x402",
         "/examples/typescript-x402",
@@ -431,6 +483,8 @@ async def public_llms() -> str:
         "# 1cent\nPay-per-call web intelligence for AI agents.\n"
         "MCP: https://1cent.maxzoa.ru/mcp/\n"
         "Catalog: https://1cent.maxzoa.ru/v1/catalog\n"
+        "Free static demo: https://1cent.maxzoa.ru/v1/demo/pulse\n"
+        "Public status: https://1cent.maxzoa.ru/status.json\n"
         "x402 discovery: https://1cent.maxzoa.ru/.well-known/x402\n"
         "Buyer guide: https://1cent.maxzoa.ru/docs/getting-started\n"
         "Python buyer: https://1cent.maxzoa.ru/examples/python-x402\n"
@@ -484,6 +538,20 @@ async def info(session: Annotated[AsyncSession, Depends(get_session)]) -> dict[s
             "redirects": settings.fetch_max_redirects,
         },
     }
+
+
+@app.get(
+    "/v1/demo/pulse",
+    response_model=DemoPulseResponse,
+    tags=["Free demo"],
+    summary="Preview a static URL Pulse response",
+    description=(
+        "Free precomputed product sample. It accepts no URL, performs no network request, "
+        "touches no payment path and requires no account."
+    ),
+)
+async def demo_pulse() -> DemoPulseResponse:
+    return DemoPulseResponse.model_validate(demo_pulse_result())
 
 
 async def gate(request: Request, session: AsyncSession, cfg: Settings) -> None:

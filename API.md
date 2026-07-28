@@ -8,6 +8,10 @@ OpenAPI JSON: `https://1cent.maxzoa.ru/openapi.json`
 
 ReDoc: `https://1cent.maxzoa.ru/redoc`
 
+Free static demo: `GET https://1cent.maxzoa.ru/v1/demo/pulse`
+
+Public trust status: `GET https://1cent.maxzoa.ru/status.json`
+
 All paid routes use x402 v2, `exact`, Base Mainnet `eip155:8453`, Base USDC. Send JSON with `Content-Type: application/json`. An unpaid request returns HTTP 402 and `PAYMENT-REQUIRED`. A valid paid request returns JSON and `PAYMENT-RESPONSE`.
 
 Prices are published dynamically in `GET /v1/catalog` and each HTTP 402 payment challenge.
@@ -20,7 +24,8 @@ prices and public limits. Every paid route accepts strict JSON with `url` and op
 unknown fields are rejected. Unpaid calls return x402 v2 requirements for Base Mainnet USDC.
 
 Categories: bundle, micro, metadata, content, discovery and security. The free MCP-only
-`catalog_search` performs a bounded local lookup and never fetches a URL.
+`catalog_search` performs a bounded local lookup and never fetches a URL. Free REST/MCP
+`demo_url_pulse` returns a fixed precomputed sample and accepts no URL.
 
 ## Pulse
 

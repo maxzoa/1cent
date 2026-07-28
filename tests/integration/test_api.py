@@ -81,7 +81,7 @@ def test_mcp_well_known_manifest(client: TestClient) -> None:
     assert manifest.headers["content-type"].startswith("application/json")
     body = manifest.json()
     assert body["name"] == "ru.maxzoa/1cent"
-    assert body["version"] == "0.2.0"
+    assert body["version"] == "0.3.0"
     assert body["websiteUrl"] == "https://1cent.maxzoa.ru"
     assert body["remotes"] == [
         {
@@ -99,6 +99,68 @@ def test_glama_claim_manifest(client: TestClient) -> None:
         "$schema": "https://glama.ai/mcp/schemas/connector.json",
         "maintainers": [{"email": "maxzoa27@gmail.com"}],
     }
+
+
+def test_free_demo_status_security_and_server_card(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    operation = AsyncMock()
+    funnel = AsyncMock()
+    monkeypatch.setattr("onecent.api.app.pulse", operation)
+    monkeypatch.setattr("onecent.services.payments._record_funnel", funnel)
+
+    demo = client.get("/v1/demo/pulse")
+    assert demo.status_code == 200
+    assert demo.json()["source"] == "precomputed"
+    assert demo.json()["network_request_performed"] is False
+    assert demo.json()["payment_required"] is False
+    assert "payment-required" not in demo.headers
+    operation.assert_not_awaited()
+    funnel.assert_not_awaited()
+
+    status = client.get("/status.json")
+    assert status.status_code == 200
+    assert status.json()["version"] == "0.3.0"
+    assert status.json()["paid_tools"] == 32
+    assert status.json()["free_mcp_tools"] == ["catalog_search", "demo_url_pulse"]
+    assert "seller" not in status.text.lower()
+
+    security = client.get("/.well-known/security.txt")
+    assert security.status_code == 200
+    assert "Contact: mailto:" in security.text
+    assert "Canonical: https://1cent.maxzoa.ru/.well-known/security.txt" in security.text
+
+    card = client.get("/.well-known/mcp/server-card.json").json()
+    assert len(card["tools"]) == 34
+    assert [tool["name"] for tool in card["tools"][:2]] == [
+        "catalog_search",
+        "demo_url_pulse",
+    ]
+    assert all(tool["outputSchema"] for tool in card["tools"])
+    assert all(tool["annotations"]["destructiveHint"] is False for tool in card["tools"])
+
+
+def test_mcp_rejects_untrusted_origin(client: TestClient) -> None:
+    response = client.post(
+        "/mcp/",
+        headers={
+            "Host": "1cent.maxzoa.ru",
+            "Origin": "https://attacker.invalid",
+            "Accept": "application/json, text/event-stream",
+            "Content-Type": "application/json",
+        },
+        json={
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2025-11-25",
+                "capabilities": {},
+                "clientInfo": {"name": "origin-security-test", "version": "1.0"},
+            },
+        },
+    )
+    assert response.status_code == 403
 
 
 def test_all_paid_endpoints_fail_closed_without_payment(client: TestClient) -> None:

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "onecent"
-version = "0.2.0"
+version = "0.3.0"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi==0.116.1", "uvicorn[standard]==0.35.0", "httpx==0.28.1",
@@ -26,6 +26,9 @@ dev = ["pytest==8.4.2", "pytest-asyncio==1.1.0", "respx==0.22.0", "ruff==0.12.12
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+onecent = ["py.typed"]
 
 [tool.ruff]
 line-length = 100
