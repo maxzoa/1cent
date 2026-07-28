@@ -91,6 +91,16 @@ def test_mcp_well_known_manifest(client: TestClient) -> None:
     ]
 
 
+def test_glama_claim_manifest(client: TestClient) -> None:
+    response = client.get("/.well-known/glama.json")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json() == {
+        "$schema": "https://glama.ai/mcp/schemas/connector.json",
+        "maintainers": [{"email": "maxzoa27@gmail.com"}],
+    }
+
+
 def test_all_paid_endpoints_fail_closed_without_payment(client: TestClient) -> None:
     app.dependency_overrides[get_session] = fake_session
     try:

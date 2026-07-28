@@ -237,6 +237,14 @@ async def _x402_manifest(session: AsyncSession) -> dict[str, object]:
     }
 
 
+@app.get("/.well-known/glama.json", include_in_schema=False)
+async def glama_claim() -> dict[str, object]:
+    return {
+        "$schema": "https://glama.ai/mcp/schemas/connector.json",
+        "maintainers": [{"email": "maxzoa27@gmail.com"}],
+    }
+
+
 @app.get("/.well-known/x402", include_in_schema=False)
 @app.get("/.well-known/x402.json", include_in_schema=False)
 async def x402_manifest(
