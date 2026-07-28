@@ -1,5 +1,7 @@
 # 1cent Web Intelligence for AI Agents
 
+[![Smithery](https://smithery.ai/badge/maxzoa27/onecent)](https://smithery.ai/servers/maxzoa27/onecent)
+
 Public SSRF-protected URL intelligence API and remote MCP server. Production uses x402 v2,
 Base Mainnet USDC and PayAI. Telegram is the only administrative UI.
 
