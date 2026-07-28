@@ -23,15 +23,30 @@ jobs:
           set -euo pipefail
           base=https://1cent.maxzoa.ru
           ua=onecent-smoke/github-health
-          curl -A "$ua" --fail --silent --show-error "$base/health" | grep -q '"status":"ok"'
-          curl -A "$ua" --fail --silent --show-error "$base/status.json" | grep -q '"network":"eip155:8453"'
-          curl -A "$ua" --fail --silent --show-error "$base/v1/demo/pulse" | grep -q '"network_request_performed":false'
-          code=$(curl -A "$ua" --silent --show-error --dump-header /tmp/headers \
-            --output /tmp/body --write-out '%{http_code}' \
+          work=$(mktemp -d)
+          trap 'rm -rf "$work"' EXIT
+
+          health_code=$(curl -A "$ua" --fail --silent --show-error \
+            --output "$work/health" --write-out '%{http_code}' "$base/health")
+          test "$health_code" = 200
+          grep -q '"status":"ok"' "$work/health"
+
+          status_code=$(curl -A "$ua" --fail --silent --show-error \
+            --output "$work/status" --write-out '%{http_code}' "$base/status.json")
+          test "$status_code" = 200
+          grep -q '"network":"eip155:8453"' "$work/status"
+
+          demo_code=$(curl -A "$ua" --fail --silent --show-error \
+            --output "$work/demo" --write-out '%{http_code}' "$base/v1/demo/pulse")
+          test "$demo_code" = 200
+          grep -q '"network_request_performed":false' "$work/demo"
+
+          code=$(curl -A "$ua" --silent --show-error --dump-header "$work/headers" \
+            --output "$work/body" --write-out '%{http_code}' \
             -H 'Content-Type: application/json' \
             -d '{"url":"https://example.com/","fresh":false}' \
             "$base/v1/url/status")
           test "$code" = 402
-          grep -qi '^payment-required:' /tmp/headers
-          grep -q 'eip155:8453' /tmp/body
+          grep -qi '^payment-required:' "$work/headers"
+          grep -q 'eip155:8453' "$work/body"
           echo external_health=PASS
