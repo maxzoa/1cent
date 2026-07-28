@@ -2,6 +2,7 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from onecent.config import Settings
+from onecent.repositories.funnel import FunnelStats
 from onecent.services.costs import cost_breakdown
 from onecent.services.readiness import backup_age_hours, mainnet_blockers, short_address
 
@@ -91,6 +92,77 @@ def today_summary_text(today: dict[str, int]) -> str:
         f"❌ Неверных платёжных payload: <b>{today['invalid_payloads']}</b>\n\n"
         "ℹ️ Запрос цены — это ответ HTTP 402, а не покупка и не отдельный посетитель."
     )
+
+
+def payment_funnel_text(stats: FunnelStats, reasons: list[tuple[str, int]]) -> str:
+    if stats.started_at is None:
+        return (
+            "🔎 <b>Почему не платят</b>\n\n"
+            "Новая диагностика включена. Данных пока нет. "
+            "Старые 402 не смешиваются с новой воронкой."
+        )
+    reason_names = {
+        "invalid_payment_payload": "сломанный платёжный payload",
+        "mcp_invalid_payment_meta": "сломанные данные оплаты MCP",
+        "network_mismatch": "неверная сеть",
+        "asset_mismatch": "неверный токен",
+        "seller_mismatch": "неверный получатель",
+        "amount_mismatch": "неверная сумма",
+        "unsupported_scheme": "неподдерживаемая схема оплаты",
+        "payment_rejected": "платёж отклонён",
+        "transport_or_sdk_exception": "нет однозначного ответа facilitator",
+        "missing_payment_response": "нет подтверждения settlement",
+        "invalid_signature": "неверная подпись",
+        "insufficient_funds": "нехватка средств",
+        "facilitator_rejected": "facilitator отклонил оплату",
+        "settlement_rejected": "settlement отклонён",
+    }
+    conversion = (
+        Decimal(stats.settlements) * Decimal(100) / Decimal(stats.challenges)
+        if stats.challenges
+        else Decimal(0)
+    )
+    lines = [
+        f"🔎 <b>Платёжная воронка · {stats.window_hours} ч</b>",
+        "",
+        f"Получили цену 402: <b>{stats.challenges}</b>",
+        f"Уникальных клиентов: <b>{stats.unique_clients}</b>",
+        f"Вероятно внешних 402: <b>{stats.probable_external_challenges}</b>",
+        f"Наших/owner 402: <b>{stats.internal_challenges + stats.owner_challenges}</b>",
+        f"Источник неясен: <b>{stats.unknown_challenges}</b>",
+        f"Вернулись с подписью: <b>{stats.signed_payloads}</b> "
+        f"({stats.signed_clients} клиентов)",
+        f"Payload прочитан: <b>{stats.decoded_payloads}</b>",
+        f"Ответ оплаты HTTP 200: <b>{stats.facilitator_successes}</b>",
+        f"Settlement подтверждён: <b>{stats.settlements}</b>",
+        f"Услуга выдана: <b>{stats.operations_delivered}</b>",
+        f"Конверсия 402 → оплата: <b>{conversion:.2f}%</b>",
+        "",
+        "<b>Где остановились:</b>",
+        f"Не вернулись с подписью за 15 минут: "
+        f"<b>{stats.no_signed_retry_clients}</b> клиентов",
+        f"Неверный payload: <b>{stats.invalid_payloads}</b>",
+        f"Не совпали сеть/токен/сумма/получатель: <b>{stats.precheck_failures}</b>",
+        f"Оплата отклонена: <b>{stats.facilitator_failures}</b>",
+        f"Неоднозначный результат: <b>{stats.unknown_results}</b>",
+        "",
+        f"REST 402: {stats.rest_challenges} · MCP 402: {stats.mcp_challenges}",
+    ]
+    if reasons:
+        lines.append("<b>Безопасные причины:</b>")
+        lines.extend(
+            f"• {reason_names.get(code, code)}: {count}" for code, count in reasons
+        )
+    lines.extend(
+        [
+            "",
+            "ℹ️ Если подпись не пришла, сервер не может узнать намерение клиента: "
+            "нет кошелька, клиент не умеет x402 или пользователь отказался. "
+            "Это ещё не ошибка PayAI.",
+            f"Метрики собираются с {stats.started_at:%d.%m.%Y %H:%M} UTC.",
+        ]
+    )
+    return "\n".join(lines)[:3500]
 
 
 def status_text(

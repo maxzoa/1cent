@@ -148,7 +148,9 @@ def test_corrupt_payment_signature_is_not_accepted(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     operation = AsyncMock()
+    funnel = AsyncMock()
     monkeypatch.setattr("onecent.api.app.pulse", operation)
+    monkeypatch.setattr("onecent.services.payments._record_funnel", funnel)
     response = client.post(
         "/v1/url/pulse",
         json={"url": "https://example.com"},
@@ -158,24 +160,35 @@ def test_corrupt_payment_signature_is_not_accepted(
     assert response.json()["detail"] == "invalid payment payload"
     assert "x-request-id" in response.headers
     operation.assert_not_awaited()
+    assert [call.args[:2] for call in funnel.await_args_list] == [
+        ("payload_received", "observed"),
+        ("payload_decoded", "failure"),
+    ]
 
 
 def test_unpaid_402_never_fetches_url(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     operation = AsyncMock()
+    funnel = AsyncMock()
     monkeypatch.setattr("onecent.api.app.pulse", operation)
+    monkeypatch.setattr("onecent.services.payments._record_funnel", funnel)
     response = client.post("/v1/url/pulse", json={"url": "https://example.com"})
     assert response.status_code == 402
     assert "x-request-id" in response.headers
     operation.assert_not_awaited()
+    assert ("challenge_issued", "success") in [
+        call.args[:2] for call in funnel.await_args_list
+    ]
 
 
 def test_verify_failure_never_fetches_url(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     operation = AsyncMock()
+    funnel = AsyncMock()
     monkeypatch.setattr("onecent.api.app.pulse", operation)
+    monkeypatch.setattr("onecent.services.payments._record_funnel", funnel)
     monkeypatch.setattr("onecent.services.payments.Session", MiddlewareSession)
     monkeypatch.setattr(
         "onecent.services.payments.service_enabled", AsyncMock(return_value=True)
@@ -216,3 +229,8 @@ def test_verify_failure_never_fetches_url(
     assert response.status_code != 200
     assert verify.called
     operation.assert_not_awaited()
+    stages = [call.args[0] for call in funnel.await_args_list]
+    assert "payload_received" in stages
+    assert "payload_decoded" in stages
+    assert "payload_precheck" in stages
+    assert "facilitator_roundtrip" in stages

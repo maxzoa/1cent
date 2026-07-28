@@ -9,6 +9,7 @@ MAIN_MENU = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="📊 Статус"), KeyboardButton(text="💰 Деньги")],
         [KeyboardButton(text="🧾 Платежи"), KeyboardButton(text="📈 Сегодня")],
+        [KeyboardButton(text="🔎 Почему не платят")],
         [KeyboardButton(text="🧰 Инструменты"), KeyboardButton(text="⚙️ Настройки")],
         [KeyboardButton(text="🚨 Ошибки"), KeyboardButton(text="👁 Видимость")],
         [KeyboardButton(text="🛠 Управление"), KeyboardButton(text="ℹ️ Помощь")],

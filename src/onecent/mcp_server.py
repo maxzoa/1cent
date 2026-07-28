@@ -14,6 +14,8 @@ from x402.http import (
 from x402.schemas import PaymentPayload
 
 from onecent.config import get_settings
+from onecent.db import Session
+from onecent.repositories.funnel import facilitator_label, record_funnel_event
 from onecent.services.discovery import ENDPOINT_DESCRIPTIONS
 from onecent.services.tool_catalog import TOOL_BY_KEY, TOOLS
 from onecent.services.tool_operations import catalog_search as search_catalog
@@ -88,6 +90,11 @@ async def _paid_rest_call(
 ) -> CallToolResult:
     payment = _payment_from_context(ctx)
     outer_traffic = current_traffic_context()
+    tool_key = operation if operation.startswith(("url_", "site_")) else f"url_{operation}"
+    path = TOOL_BY_KEY[tool_key].path
+    if outer_traffic:
+        outer_traffic.endpoint = path
+        outer_traffic.source = "mcp"
     request_id = outer_traffic.request_id if outer_traffic else str(uuid.uuid4())
     if outer_traffic:
         normalized_ua = outer_traffic.normalized_user_agent
@@ -114,10 +121,25 @@ async def _paid_rest_call(
             parsed = PaymentPayload.model_validate(payment)
             headers["PAYMENT-SIGNATURE"] = encode_payment_signature_header(parsed)
         except Exception:
+            try:
+                async with Session() as session:
+                    await record_funnel_event(
+                        session,
+                        "payload_received",
+                        "observed",
+                        facilitator=facilitator_label(mcp_settings.x402_facilitator_url),
+                    )
+                    await record_funnel_event(
+                        session,
+                        "payload_decoded",
+                        "failure",
+                        reason_code="mcp_invalid_payment_meta",
+                        facilitator=facilitator_label(mcp_settings.x402_facilitator_url),
+                    )
+            except Exception:
+                pass
             return _result({"error": "Invalid x402 payment payload"}, error=True)
 
-    tool_key = operation if operation.startswith(("url_", "site_")) else f"url_{operation}"
-    path = TOOL_BY_KEY[tool_key].path
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(
             f"{INTERNAL_API}{path}",

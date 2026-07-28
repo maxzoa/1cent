@@ -230,3 +230,31 @@ class PaymentAttempt(Base):
         String(24), default="unknown_historical", index=True
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class PaymentFunnelEvent(Base):
+    """Safe, append-only checkpoints for the payment conversion funnel."""
+
+    __tablename__ = "payment_funnel_events"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    stage: Mapped[str] = mapped_column(String(40), index=True)
+    outcome: Mapped[str] = mapped_column(String(16), index=True)
+    reason_code: Mapped[str | None] = mapped_column(String(80), nullable=True, index=True)
+    request_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    request_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    payment_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    endpoint: Mapped[str | None] = mapped_column(String(160), nullable=True, index=True)
+    source: Mapped[str] = mapped_column(String(16), default="unknown", index=True)
+    normalized_user_agent: Mapped[str] = mapped_column(String(80), default="unknown")
+    client_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    attribution: Mapped[str] = mapped_column(
+        String(24), default="unknown_historical", index=True
+    )
+    network: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    asset: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    pay_to: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    amount_atomic: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    facilitator: Mapped[str] = mapped_column(String(24), default="unknown")
+    http_status: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    elapsed_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)

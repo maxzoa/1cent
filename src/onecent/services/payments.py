@@ -4,6 +4,7 @@ import json
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from decimal import Decimal
+from time import monotonic
 from typing import Any, cast
 
 from fastapi import Request, Response
@@ -21,6 +22,7 @@ from x402.http import (
     FacilitatorConfig,
     HTTPFacilitatorClient,
     PaymentOption,
+    decode_payment_required_header,
     decode_payment_response_header,
     decode_payment_signature_header,
 )
@@ -33,6 +35,10 @@ from onecent.config import Settings
 from onecent.db import Session
 from onecent.repositories.catalog import price_promo_active, tool_price_atomic
 from onecent.repositories.data import service_enabled
+from onecent.repositories.funnel import (
+    facilitator_label,
+    record_funnel_event,
+)
 from onecent.repositories.payments import (
     daily_limit_allows,
     get_payment,
@@ -123,6 +129,126 @@ def _local_bypass(request: Request, settings: Settings) -> bool:
     )
 
 
+async def _record_funnel(
+    stage: str,
+    outcome: str,
+    *,
+    reason_code: str | None = None,
+    request_fingerprint: str | None = None,
+    payment_id: str | None = None,
+    network: str | None = None,
+    asset: str | None = None,
+    pay_to: str | None = None,
+    amount_atomic: int | None = None,
+    facilitator: str = "unknown",
+    http_status: int | None = None,
+    elapsed_ms: int | None = None,
+) -> None:
+    """Telemetry must never change payment availability or outcome."""
+    try:
+        async with Session() as session:
+            await record_funnel_event(
+                session,
+                stage,
+                outcome,
+                reason_code=reason_code,
+                request_fingerprint=request_fingerprint,
+                payment_id=payment_id,
+                network=network,
+                asset=asset,
+                pay_to=pay_to,
+                amount_atomic=amount_atomic,
+                facilitator=facilitator,
+                http_status=http_status,
+                elapsed_ms=elapsed_ms,
+            )
+    except Exception:
+        pass
+
+
+async def _effective_price_atomic(settings: Settings, operation: str) -> int:
+    atomic = TOOL_BY_KEY[operation].price_atomic
+    if settings.app_env != "test":
+        try:
+            async with Session() as session:
+                atomic = await tool_price_atomic(session, operation)
+                promo_active = await price_promo_active(session)
+        except Exception:
+            promo_active = False
+    else:
+        promo_active = False
+    floor = TOOL_BY_KEY[operation].floor_atomic
+    if not settings.owner_price_floor_approved and not promo_active and atomic < floor:
+        atomic = floor
+    return atomic
+
+
+def _payload_precheck_reason(payload: Any, settings: Settings, expected_amount: int) -> str | None:
+    accepted = payload.accepted
+    if str(accepted.scheme) != "exact":
+        return "unsupported_scheme"
+    if str(accepted.network) != settings.x402_network:
+        return "network_mismatch"
+    if str(accepted.asset).lower() != settings.x402_asset.lower():
+        return "asset_mismatch"
+    if str(accepted.pay_to).lower() != settings.x402_pay_to.lower():
+        return "seller_mismatch"
+    try:
+        amount = int(accepted.amount)
+    except (TypeError, ValueError):
+        return "invalid_amount"
+    if amount != expected_amount:
+        return "amount_mismatch"
+    return None
+
+
+def _response_reason_code(status_code: int, body: bytes) -> str:
+    try:
+        parsed = json.loads(body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        parsed = None
+    if isinstance(parsed, dict):
+        for key in ("invalidReason", "errorReason", "error", "detail", "message"):
+            value = parsed.get(key)
+            if isinstance(value, str):
+                lowered = value.lower()
+                if "signature" in lowered:
+                    return "invalid_signature"
+                if "balance" in lowered or "fund" in lowered:
+                    return "insufficient_funds"
+                if "network" in lowered or "chain" in lowered:
+                    return "facilitator_network_rejected"
+                if "amount" in lowered or "price" in lowered:
+                    return "facilitator_amount_rejected"
+                if "asset" in lowered or "token" in lowered:
+                    return "facilitator_asset_rejected"
+                return "facilitator_rejected"
+    if status_code == 402:
+        return "payment_rejected"
+    if status_code >= 500:
+        return "facilitator_or_sdk_error"
+    return f"payment_http_{status_code}"
+
+
+def _challenge_values(
+    headers: dict[str, str],
+) -> tuple[str | None, str | None, str | None, int | None]:
+    encoded = headers.get("payment-required")
+    if not encoded:
+        return None, None, None, None
+    try:
+        required = decode_payment_required_header(encoded)
+        accepted = required.accepts[0]
+        return (
+            str(accepted.network),
+            str(accepted.asset),
+            str(accepted.pay_to),
+            int(accepted.amount),
+        )
+    except Exception:
+        return None, None, None, None
+
+
 def build_x402_middleware(
     settings: Settings,
 ) -> Callable[[Request, Callable[[Request], Awaitable[Response]]], Awaitable[Response]]:
@@ -139,19 +265,7 @@ def build_x402_middleware(
 
     async def dynamic_price(context: HTTPRequestContext) -> str:
         operation = PAID_PATHS[context.path]
-        atomic = TOOL_BY_KEY[operation].price_atomic
-        if settings.app_env != "test":
-            try:
-                async with Session() as session:
-                    atomic = await tool_price_atomic(session, operation)
-                    promo_active = await price_promo_active(session)
-            except Exception:
-                promo_active = False
-        else:
-            promo_active = False
-        floor = TOOL_BY_KEY[operation].floor_atomic
-        if not settings.owner_price_floor_approved and not promo_active and atomic < floor:
-            atomic = floor
+        atomic = await _effective_price_atomic(settings, operation)
         return f"${Decimal(atomic) / Decimal(1_000_000):.6f}"
 
     routes = {
@@ -201,6 +315,13 @@ def build_x402_middleware(
         payment_id: str | None = None
         payload: Any = None
         if signature:
+            facilitator_name = facilitator_label(settings.x402_facilitator_url)
+            await _record_funnel(
+                "payload_received",
+                "observed",
+                request_fingerprint=fingerprint,
+                facilitator=facilitator_name,
+            )
             try:
                 payload = decode_payment_signature_header(signature)
                 if getattr(payload, "x402_version", 0) != 2:
@@ -209,6 +330,13 @@ def build_x402_middleware(
                 if not payment_id:
                     payment_id = _fallback_payment_id(signature)
             except Exception:
+                await _record_funnel(
+                    "payload_decoded",
+                    "failure",
+                    reason_code="invalid_payment_payload",
+                    request_fingerprint=fingerprint,
+                    facilitator=facilitator_name,
+                )
                 try:
                     async with Session() as session:
                         await record_attempt(session, "verify", False, error_safe="invalid payload")
@@ -228,12 +356,49 @@ def build_x402_middleware(
                 traffic.amount_atomic = int(accepted.amount)
                 if owner_payer(_payload_payer(payload), settings):
                     traffic.attribution = "owner"
+            await _record_funnel(
+                "payload_decoded",
+                "success",
+                request_fingerprint=fingerprint,
+                payment_id=payment_id,
+                network=str(accepted.network),
+                asset=str(accepted.asset),
+                pay_to=str(accepted.pay_to),
+                amount_atomic=int(accepted.amount),
+                facilitator=facilitator_name,
+            )
+            expected_amount = await _effective_price_atomic(
+                settings, PAID_PATHS[request.url.path]
+            )
+            precheck_reason = _payload_precheck_reason(payload, settings, expected_amount)
+            await _record_funnel(
+                "payload_precheck",
+                "failure" if precheck_reason else "success",
+                reason_code=precheck_reason,
+                request_fingerprint=fingerprint,
+                payment_id=payment_id,
+                network=str(accepted.network),
+                asset=str(accepted.asset),
+                pay_to=str(accepted.pay_to),
+                amount_atomic=int(accepted.amount),
+                facilitator=facilitator_name,
+            )
 
             async with Session() as session:
                 paused = settings.emergency_pause_force or not await service_enabled(
                     session, settings.service_enabled
                 )
                 if settings.x402_network == "eip155:8453" and paused:
+                    await _record_funnel(
+                        "pre_submit_gate",
+                        "failure",
+                        reason_code="emergency_pause",
+                        request_fingerprint=fingerprint,
+                        payment_id=payment_id,
+                        network=str(accepted.network),
+                        amount_atomic=int(accepted.amount),
+                        facilitator=facilitator_name,
+                    )
                     return JSONResponse(
                         status_code=503,
                         content={"detail": "emergency pause active; payment not submitted"},
@@ -242,6 +407,14 @@ def build_x402_middleware(
                 if existing and existing.request_fingerprint != fingerprint:
                     await record_attempt(
                         session, "verify", False, payment_id, "payment id fingerprint mismatch"
+                    )
+                    await _record_funnel(
+                        "pre_submit_gate",
+                        "failure",
+                        reason_code="payment_id_fingerprint_mismatch",
+                        request_fingerprint=fingerprint,
+                        payment_id=payment_id,
+                        facilitator=facilitator_name,
                     )
                     return JSONResponse(
                         status_code=409,
@@ -252,6 +425,15 @@ def build_x402_middleware(
                     and existing.settlement_status == "success"
                     and existing.response_body is not None
                 ):
+                    await _record_funnel(
+                        "idempotent_replay",
+                        "success",
+                        request_fingerprint=fingerprint,
+                        payment_id=payment_id,
+                        network=existing.network,
+                        amount_atomic=existing.amount_atomic,
+                        facilitator=facilitator_name,
+                    )
                     headers = {}
                     if existing.payment_response_header:
                         headers["PAYMENT-RESPONSE"] = existing.payment_response_header
@@ -299,6 +481,14 @@ def build_x402_middleware(
                                 ),
                             ):
                                 await session.rollback()
+                                await _record_funnel(
+                                    "pre_submit_gate",
+                                    "failure",
+                                    reason_code="commercial_quota",
+                                    request_fingerprint=fingerprint,
+                                    payment_id=payment_id,
+                                    facilitator=facilitator_name,
+                                )
                                 return JSONResponse(
                                     status_code=429,
                                     content={
@@ -316,11 +506,41 @@ def build_x402_middleware(
                             accepted.pay_to,
                             settings.x402_idempotency_ttl_seconds,
                         )
+                        await _record_funnel(
+                            "payment_reserved",
+                            "success",
+                            request_fingerprint=fingerprint,
+                            payment_id=payment_id,
+                            network=str(accepted.network),
+                            amount_atomic=int(accepted.amount),
+                            facilitator=facilitator_name,
+                        )
                     except IntegrityError:
                         await session.rollback()
+                        await _record_funnel(
+                            "payment_reserved",
+                            "failure",
+                            reason_code="payment_busy",
+                            request_fingerprint=fingerprint,
+                            payment_id=payment_id,
+                            facilitator=facilitator_name,
+                        )
                         return JSONResponse(status_code=409, content={"detail": "payment busy"})
 
-        response = await sdk_middleware(request, call_next)
+        roundtrip_started = monotonic()
+        try:
+            response = await sdk_middleware(request, call_next)
+        except Exception:
+            await _record_funnel(
+                "facilitator_roundtrip" if signature else "challenge_generation",
+                "unknown",
+                reason_code="transport_or_sdk_exception",
+                request_fingerprint=fingerprint,
+                payment_id=payment_id,
+                facilitator=facilitator_label(settings.x402_facilitator_url),
+                elapsed_ms=int((monotonic() - roundtrip_started) * 1000),
+            )
+            raise
         response_body = b""
         body_iterator = getattr(response, "body_iterator", None)
         if body_iterator is None:
@@ -329,11 +549,49 @@ def build_x402_middleware(
             async for chunk in body_iterator:
                 response_body += chunk
         headers = dict(response.headers)
+        roundtrip_ms = int((monotonic() - roundtrip_started) * 1000)
+        if signature:
+            roundtrip_outcome = (
+                "success"
+                if response.status_code == 200
+                else "unknown"
+                if response.status_code >= 500
+                else "failure"
+            )
+            await _record_funnel(
+                "facilitator_roundtrip",
+                roundtrip_outcome,
+                reason_code=(
+                    None
+                    if roundtrip_outcome == "success"
+                    else _response_reason_code(response.status_code, response_body)
+                ),
+                request_fingerprint=fingerprint,
+                payment_id=payment_id,
+                facilitator=facilitator_label(settings.x402_facilitator_url),
+                http_status=response.status_code,
+                elapsed_ms=roundtrip_ms,
+            )
 
         async with Session() as session:
             if response.status_code == 402 and not signature:
                 try:
+                    challenge_network, challenge_asset, challenge_pay_to, challenge_amount = (
+                        _challenge_values(headers)
+                    )
                     await record_attempt(session, "challenge", True)
+                    await _record_funnel(
+                        "challenge_issued",
+                        "success",
+                        request_fingerprint=fingerprint,
+                        network=challenge_network or settings.x402_network,
+                        asset=challenge_asset,
+                        pay_to=challenge_pay_to,
+                        amount_atomic=challenge_amount,
+                        facilitator=facilitator_label(settings.x402_facilitator_url),
+                        http_status=402,
+                        elapsed_ms=roundtrip_ms,
+                    )
                 except Exception:
                     await session.rollback()
             elif payment_id:
@@ -366,15 +624,66 @@ def build_x402_middleware(
                         await record_attempt(session, "verify", True, payment_id)
                         await record_attempt(session, "settlement", True, payment_id)
                         await session.commit()
+                        await _record_funnel(
+                            "settlement",
+                            "success",
+                            request_fingerprint=fingerprint,
+                            payment_id=payment_id,
+                            network=row.network,
+                            amount_atomic=row.amount_atomic,
+                            facilitator=facilitator_label(settings.x402_facilitator_url),
+                            http_status=response.status_code,
+                            elapsed_ms=roundtrip_ms,
+                        )
+                        await _record_funnel(
+                            "operation_delivered",
+                            "success",
+                            request_fingerprint=fingerprint,
+                            payment_id=payment_id,
+                            network=row.network,
+                            amount_atomic=row.amount_atomic,
+                            facilitator=facilitator_label(settings.x402_facilitator_url),
+                            http_status=response.status_code,
+                            elapsed_ms=roundtrip_ms,
+                        )
                     else:
                         row.settlement_status = "failure"
                         await record_attempt(session, "settlement", False, payment_id)
                         await session.commit()
+                        await _record_funnel(
+                            "settlement",
+                            "failure" if settlement is not None else "unknown",
+                            reason_code=(
+                                "settlement_rejected"
+                                if settlement is not None
+                                else "invalid_payment_response"
+                            ),
+                            request_fingerprint=fingerprint,
+                            payment_id=payment_id,
+                            network=row.network,
+                            amount_atomic=row.amount_atomic,
+                            facilitator=facilitator_label(settings.x402_facilitator_url),
+                            http_status=response.status_code,
+                            elapsed_ms=roundtrip_ms,
+                        )
                 elif row is not None:
                     row.verify_status = "failure"
                     row.settlement_status = "not_settled"
                     await record_attempt(session, "verify", False, payment_id)
                     await session.commit()
+                    if response.status_code == 200 and not settlement_header:
+                        await _record_funnel(
+                            "settlement",
+                            "unknown",
+                            reason_code="missing_payment_response",
+                            request_fingerprint=fingerprint,
+                            payment_id=payment_id,
+                            network=row.network,
+                            amount_atomic=row.amount_atomic,
+                            facilitator=facilitator_label(settings.x402_facilitator_url),
+                            http_status=response.status_code,
+                            elapsed_ms=roundtrip_ms,
+                        )
 
         return Response(
             content=response_body,

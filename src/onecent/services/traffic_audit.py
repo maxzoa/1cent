@@ -36,6 +36,15 @@ def normalize_user_agent(raw: str) -> str:
         return "unknown"
     families = (
         ("onecent-smoke", "onecent-smoke"),
+        ("payai", "payai"),
+        ("glama", "glama"),
+        ("smithery", "smithery"),
+        ("mcp.so", "mcp-directory"),
+        ("modelcontextprotocol", "mcp-client"),
+        ("claude", "claude"),
+        ("cursor", "cursor"),
+        ("openai", "openai"),
+        ("codex", "codex"),
         ("mcp", "mcp-client"),
         ("python-httpx", "python-httpx"),
         ("curl", "curl"),

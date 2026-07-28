@@ -6,6 +6,7 @@ from onecent.models.tables import (
     MessageTemplateUsage,
     PaymentAttempt,
     PaymentEvent,
+    PaymentFunnelEvent,
     RequestEvent,
     RuntimeSetting,
     ServiceSetting,
@@ -32,4 +33,5 @@ __all__ = [
     "UrlSnapshot",
     "PaymentAttempt",
     "PaymentEvent",
+    "PaymentFunnelEvent",
 ]

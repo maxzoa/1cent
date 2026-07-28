@@ -18,6 +18,7 @@ from x402.http import decode_payment_required_header
 from onecent.bot.commands import (
     format_atomic_usdc,
     format_usdc,
+    payment_funnel_text,
     payment_line,
     production_readiness_text,
     revenue_by_day_text,
@@ -42,6 +43,7 @@ from onecent.repositories.data import (
     set_service_enabled,
     today_stats,
 )
+from onecent.repositories.funnel import payment_funnel_reasons, payment_funnel_stats
 from onecent.repositories.payments import (
     mainnet_revenue_by_day,
     operation_price,
@@ -246,6 +248,20 @@ async def today(message: Message) -> None:
         values = await today_stats(session)
     await message.answer(today_summary_text(values))
     await log_command(message, "today", "ok")
+
+
+@router.message(Command("funnel"))
+@router.message(F.text == "🔎 Почему не платят")
+async def funnel(message: Message) -> None:
+    if not await authorized(message, "funnel"):
+        return
+    async with Session() as session:
+        values = await payment_funnel_stats(session)
+        reasons = await payment_funnel_reasons(session)
+    await message.answer(
+        payment_funnel_text(values, reasons), reply_markup=section_keyboard("funnel")
+    )
+    await log_command(message, "funnel", "ok")
 
 
 @router.message(Command("errors"))
@@ -650,6 +666,7 @@ async def main() -> None:
             BotCommand(command="payments", description="Платежи"),
             BotCommand(command="revenue", description="Деньги"),
             BotCommand(command="today", description="Сегодня"),
+            BotCommand(command="funnel", description="Почему не платят"),
             BotCommand(command="errors", description="Ошибки"),
             BotCommand(command="production_readiness", description="Готовность"),
         ]

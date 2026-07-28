@@ -4,6 +4,7 @@ from onecent.bot.commands import (
     commercial_limits_text,
     format_atomic_usdc,
     format_usdc,
+    payment_funnel_text,
     payment_line,
     prices_text,
     production_readiness_text,
@@ -12,6 +13,7 @@ from onecent.bot.commands import (
     today_summary_text,
 )
 from onecent.config import Settings
+from onecent.repositories.funnel import FunnelStats
 
 
 def test_prices_and_status_do_not_reveal_secrets() -> None:
@@ -116,3 +118,38 @@ def test_today_summary_is_clear_for_ordinary_user() -> None:
     assert "Наших проверок: <b>2</b>" in output
     assert "а не покупка" in output
     assert "quota" not in output.lower()
+
+
+def test_payment_funnel_explains_observed_drop_without_guessing() -> None:
+    output = payment_funnel_text(
+        FunnelStats(
+            window_hours=24,
+            started_at=datetime(2026, 7, 28, 10, 0, tzinfo=timezone.utc),
+            challenges=1200,
+            unique_clients=7,
+            signed_payloads=1,
+            signed_clients=1,
+            decoded_payloads=0,
+            invalid_payloads=1,
+            precheck_failures=0,
+            facilitator_successes=0,
+            facilitator_failures=0,
+            unknown_results=0,
+            settlements=0,
+            operations_delivered=0,
+            idempotent_replays=0,
+            no_signed_retry_clients=6,
+            rest_challenges=1190,
+            mcp_challenges=10,
+            probable_external_challenges=1180,
+            internal_challenges=10,
+            owner_challenges=2,
+            unknown_challenges=8,
+        ),
+        [("invalid_payment_payload", 1)],
+    )
+    assert "Получили цену 402: <b>1200</b>" in output
+    assert "Уникальных клиентов: <b>7</b>" in output
+    assert "Не вернулись с подписью за 15 минут: <b>6</b> клиентов" in output
+    assert "Это ещё не ошибка PayAI" in output
+    assert "IP" not in output
