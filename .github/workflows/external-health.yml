@@ -48,5 +48,28 @@ jobs:
             "$base/v1/url/status")
           test "$code" = 402
           grep -qi '^payment-required:' "$work/headers"
-          grep -q 'eip155:8453' "$work/body"
+          payment_required=$(sed -n \
+            's/^[Pp][Aa][Yy][Mm][Ee][Nn][Tt]-[Rr][Ee][Qq][Uu][Ii][Rr][Ee][Dd]:[[:space:]]*//p' \
+            "$work/headers" | tr -d '\r' | tail -1)
+          test -n "$payment_required"
+          PAYMENT_REQUIRED="$payment_required" python - <<'PY'
+          import base64
+          import json
+          import os
+
+          encoded = os.environ["PAYMENT_REQUIRED"]
+          payload = json.loads(
+              base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4))
+          )
+          accepts = payload["accepts"]
+          assert any(
+              item["network"] == "eip155:8453"
+              and item["amount"] == "1000"
+              and item["asset"].lower()
+              == "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+              and item["payTo"].lower()
+              == "0x4798e8401ba3b1566685257c82d06303ab90ea35"
+              for item in accepts
+          )
+          PY
           echo external_health=PASS
