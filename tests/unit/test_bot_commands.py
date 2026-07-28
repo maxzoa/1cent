@@ -146,6 +146,10 @@ def test_payment_funnel_explains_observed_drop_without_guessing() -> None:
             internal_challenges=10,
             owner_challenges=2,
             unknown_challenges=8,
+            facilitator_average_ms=410,
+            facilitator_p95_ms=900,
+            delivery_average_ms=760,
+            delivery_p95_ms=1400,
         ),
         [("invalid_payment_payload", 1)],
     )
@@ -153,4 +157,6 @@ def test_payment_funnel_explains_observed_drop_without_guessing() -> None:
     assert "Уникальных клиентов: <b>7</b>" in output
     assert "Не вернулись с подписью за 15 минут: <b>6</b> клиентов" in output
     assert "Это ещё не ошибка PayAI" in output
+    assert "PayAI: среднее 410 мс" in output
+    assert "95% не дольше 1400 мс" in output
     assert "IP" not in output

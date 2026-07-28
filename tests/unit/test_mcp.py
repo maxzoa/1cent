@@ -14,11 +14,11 @@ EXPECTED = set(TOOL_BY_KEY) | set(FREE_MCP_TOOL_NAMES)
 async def test_mcp_tools_have_strict_schemas_and_descriptions() -> None:
     tools = await mcp.list_tools()
     assert {tool.name for tool in tools} == EXPECTED
-    assert [tool.name for tool in tools[:2]] == list(FREE_MCP_TOOL_NAMES)
+    assert [tool.name for tool in tools[:3]] == list(FREE_MCP_TOOL_NAMES)
     for tool in tools:
         assert tool.description and len(tool.description) > 100
         assert tool.inputSchema["additionalProperties"] is False
-        if tool.name == "demo_url_pulse":
+        if tool.name in {"demo_url_pulse", "demo_live_url_pulse"}:
             assert tool.inputSchema.get("required", []) == []
             assert tool.inputSchema.get("properties", {}) == {}
         else:
@@ -28,6 +28,8 @@ async def test_mcp_tools_have_strict_schemas_and_descriptions() -> None:
         assert tool.outputSchema is not None
         assert tool.outputSchema["type"] == "object"
         assert tool.outputSchema["additionalProperties"] is False
+        if tool.name not in FREE_MCP_TOOL_NAMES:
+            assert "quality" in tool.outputSchema["properties"]
         assert tool.annotations is not None
         assert tool.annotations.destructiveHint is False
 
@@ -62,7 +64,7 @@ def test_registry_remote_metadata() -> None:
     document = json.loads((Path(__file__).parents[2] / "server.json").read_text("utf-8"))
     assert MCP_PROTOCOL_VERSION == "2025-11-25"
     assert document["name"] == "ru.maxzoa/1cent"
-    assert document["version"] == "0.3.0"
+    assert document["version"] == "0.4.0"
     assert document["remotes"] == [
         {"type": "streamable-http", "url": "https://1cent.maxzoa.ru/mcp"}
     ]

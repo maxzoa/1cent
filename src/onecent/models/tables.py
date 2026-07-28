@@ -62,6 +62,14 @@ class UrlSnapshot(Base):
     checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
 
 
+class FreeDemoUsage(Base):
+    __tablename__ = "free_demo_usage"
+    client_fingerprint: Mapped[str] = mapped_column(String(64), primary_key=True)
+    window_started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    request_count: Mapped[int] = mapped_column(Integer, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class ErrorEvent(Base):
     __tablename__ = "error_events"
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

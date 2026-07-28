@@ -40,6 +40,10 @@ class FunnelStats:
     internal_challenges: int
     owner_challenges: int
     unknown_challenges: int
+    facilitator_average_ms: int | None
+    facilitator_p95_ms: int | None
+    delivery_average_ms: int | None
+    delivery_p95_ms: int | None
 
 
 def safe_reason_code(value: str | None) -> str | None:
@@ -200,6 +204,31 @@ async def payment_funnel_stats(
         )
     )
     started_at = await session.scalar(select(func.min(PaymentFunnelEvent.created_at)))
+
+    async def latency_summary(stage: str) -> tuple[int | None, int | None]:
+        values = list(
+            await session.scalars(
+                select(PaymentFunnelEvent.elapsed_ms)
+                .where(
+                    PaymentFunnelEvent.created_at >= start,
+                    PaymentFunnelEvent.stage == stage,
+                    PaymentFunnelEvent.outcome == "success",
+                    PaymentFunnelEvent.elapsed_ms.is_not(None),
+                )
+                .order_by(PaymentFunnelEvent.elapsed_ms)
+            )
+        )
+        clean = [int(value) for value in values if value is not None]
+        if not clean:
+            return None, None
+        average = round(sum(clean) / len(clean))
+        p95_index = max(0, min(len(clean) - 1, ((len(clean) * 95 + 99) // 100) - 1))
+        return average, clean[p95_index]
+
+    facilitator_average_ms, facilitator_p95_ms = await latency_summary(
+        "facilitator_roundtrip"
+    )
+    delivery_average_ms, delivery_p95_ms = await latency_summary("operation_delivered")
     unknown_results = total("facilitator_roundtrip", "unknown") + total(
         "settlement", "unknown"
     )
@@ -234,6 +263,10 @@ async def payment_funnel_stats(
             "challenge_issued", "success", attribution="unknown"
         )
         + total("challenge_issued", "success", attribution="unknown_historical"),
+        facilitator_average_ms=facilitator_average_ms,
+        facilitator_p95_ms=facilitator_p95_ms,
+        delivery_average_ms=delivery_average_ms,
+        delivery_p95_ms=delivery_p95_ms,
     )
 
 

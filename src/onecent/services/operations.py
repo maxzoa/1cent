@@ -1,5 +1,6 @@
 import hashlib
 from datetime import datetime, timezone
+from time import monotonic
 from urllib.parse import urljoin, urlsplit
 from uuid import uuid4
 
@@ -22,13 +23,41 @@ from onecent.schemas import (
     ExtractResponse,
     PassportResponse,
     PulseResponse,
+    ResultQuality,
 )
 from onecent.services.fetcher import FetchResult, fetch_url
 from onecent.services.robots import robots_allowed
+from onecent.services.traffic_audit import current_traffic_context
 from onecent.services.url_guard import guard_url
 
 UTC = timezone.utc
 _extract_domain = tldextract.TLDExtract(suffix_list_urls=())
+
+
+def _request_id() -> str:
+    traffic = current_traffic_context()
+    return traffic.request_id if traffic else str(uuid4())
+
+
+def _quality(
+    started: float,
+    *,
+    cache_hit: bool,
+    network_ms: int = 0,
+    external_requests: int = 0,
+    truncated: bool = False,
+    completeness: float = 1.0,
+    warnings: list[str] | None = None,
+) -> ResultQuality:
+    return ResultQuality(
+        cache_hit=cache_hit,
+        processing_ms=max(0, int((monotonic() - started) * 1000)),
+        network_ms=max(0, network_ms),
+        external_requests=max(0, external_requests),
+        truncated=truncated,
+        completeness=completeness,
+        warnings=list(warnings or []),
+    )
 
 
 def registrable_domain(url: str) -> str:
@@ -58,7 +87,7 @@ def _pulse_from_fetch(
     language = soup.html.get("lang") if isinstance(soup.html, Tag) else None
     lowered = text.lower()
     return PulseResponse(
-        request_id=str(uuid4()),
+        request_id=_request_id(),
         url_requested=requested_url,
         url_final=result.url,
         reachable=True,
@@ -81,6 +110,18 @@ def _pulse_from_fetch(
 
 
 async def pulse(url: str, fresh: bool, settings: Settings, session: AsyncSession) -> PulseResponse:
+    return await pulse_with_audit(url, fresh, settings, session)
+
+
+async def pulse_with_audit(
+    url: str,
+    fresh: bool,
+    settings: Settings,
+    session: AsyncSession,
+    *,
+    audit_endpoint: str = "pulse",
+) -> PulseResponse:
+    started = monotonic()
     normalized = (await guard_url(url, settings.allowed_ports)).normalized
     key = cache_key("pulse", normalized)
     if not fresh:
@@ -88,9 +129,16 @@ async def pulse(url: str, fresh: bool, settings: Settings, session: AsyncSession
         if cached is not None:
             cached["from_cache"] = True
             response = PulseResponse.model_validate(cached)
+            response.request_id = _request_id()
+            response.quality = _quality(
+                started,
+                cache_hit=True,
+                warnings=["cached_result"],
+                completeness=response.quality.completeness,
+            )
             await record_request(
                 session,
-                "pulse",
+                audit_endpoint,
                 url,
                 normalized,
                 registrable_domain(normalized),
@@ -101,10 +149,25 @@ async def pulse(url: str, fresh: bool, settings: Settings, session: AsyncSession
             return response
     result, robots_ok, _ = await _page(normalized, settings)
     response = _pulse_from_fetch(url, result, robots_ok)
+    pulse_warnings: list[str] = []
+    if response.requires_javascript:
+        pulse_warnings.append("javascript_may_be_required")
+    if response.auth_required:
+        pulse_warnings.append("access_restricted")
+    if response.suspected_paywall:
+        pulse_warnings.append("suspected_paywall")
+    response.quality = _quality(
+        started,
+        cache_hit=False,
+        network_ms=result.elapsed_ms,
+        external_requests=1,
+        completeness=1.0 if response.title else 0.9,
+        warnings=pulse_warnings,
+    )
     await put_cache(
         session,
         key,
-        "pulse",
+        audit_endpoint,
         normalized,
         response.model_dump(mode="json"),
         settings.cache_pulse_ttl_seconds,
@@ -125,6 +188,7 @@ async def pulse(url: str, fresh: bool, settings: Settings, session: AsyncSession
 async def passport(
     url: str, fresh: bool, settings: Settings, session: AsyncSession
 ) -> PassportResponse:
+    started = monotonic()
     normalized = (await guard_url(url, settings.allowed_ports)).normalized
     key = cache_key("passport", normalized)
     if not fresh:
@@ -132,6 +196,13 @@ async def passport(
         if cached is not None:
             cached["from_cache"] = True
             response = PassportResponse.model_validate(cached)
+            response.request_id = _request_id()
+            response.quality = _quality(
+                started,
+                cache_hit=True,
+                warnings=["cached_result"],
+                completeness=response.quality.completeness,
+            )
             await record_request(
                 session, "passport", url, normalized, registrable_domain(normalized), "ok", True, 0
             )
@@ -181,6 +252,15 @@ async def passport(
         },
     )
     response = PassportResponse.model_validate(payload)
+    response.request_id = _request_id()
+    response.quality = _quality(
+        started,
+        cache_hit=False,
+        network_ms=result.elapsed_ms,
+        external_requests=1,
+        completeness=0.95 if response.metadata.description else 0.85,
+        warnings=[] if response.metadata.description else ["partial_metadata"],
+    )
     await put_cache(
         session,
         key,
@@ -232,7 +312,7 @@ def _extracted(result: FetchResult, settings: Settings, include_links: bool) -> 
     title = soup.title.get_text(strip=True) if soup.title else None
     language = soup.html.get("lang") if isinstance(soup.html, Tag) else None
     return ExtractResponse(
-        request_id=str(uuid4()),
+        request_id=_request_id(),
         url_final=result.url,
         title=title,
         author=meta("author"),
@@ -251,6 +331,7 @@ def _extracted(result: FetchResult, settings: Settings, include_links: bool) -> 
 async def extract(
     url: str, fresh: bool, include_links: bool, settings: Settings, session: AsyncSession
 ) -> ExtractResponse:
+    started = monotonic()
     normalized = (await guard_url(url, settings.allowed_ports)).normalized
     key = cache_key("extract", normalized, f"links={include_links}")
     if not fresh:
@@ -258,12 +339,29 @@ async def extract(
         if cached is not None:
             cached["from_cache"] = True
             response = ExtractResponse.model_validate(cached)
+            response.request_id = _request_id()
+            response.quality = _quality(
+                started,
+                cache_hit=True,
+                truncated=response.truncated,
+                completeness=0.85 if response.truncated else 1.0,
+                warnings=["cached_result"] + (["content_truncated"] if response.truncated else []),
+            )
             await record_request(
                 session, "extract", url, normalized, registrable_domain(normalized), "ok", True, 0
             )
             return response
     result, _, _ = await _page(normalized, settings)
     response = _extracted(result, settings, include_links)
+    response.quality = _quality(
+        started,
+        cache_hit=False,
+        network_ms=result.elapsed_ms,
+        external_requests=1,
+        truncated=response.truncated,
+        completeness=0.85 if response.truncated else 1.0,
+        warnings=["content_truncated"] if response.truncated else [],
+    )
     await put_cache(
         session,
         key,
@@ -287,6 +385,7 @@ async def extract(
 
 
 async def changed(url: str, settings: Settings, session: AsyncSession) -> ChangedResponse:
+    started = monotonic()
     normalized = (await guard_url(url, settings.allowed_ports)).normalized
     result, _, _ = await _page(normalized, settings)
     current = _extracted(result, settings, False)
@@ -317,4 +416,16 @@ async def changed(url: str, settings: Settings, session: AsyncSession) -> Change
         first_seen_at=snapshot.checked_at if previous is None else None,
         previous_checked_at=previous.checked_at if previous else None,
         checked_at=snapshot.checked_at,
+        quality=_quality(
+            started,
+            cache_hit=False,
+            network_ms=result.elapsed_ms,
+            external_requests=1,
+            truncated=current.truncated,
+            completeness=0.9 if current.truncated else 1.0,
+            warnings=(
+                ["content_truncated"] if current.truncated else []
+            )
+            + (["baseline_created"] if previous is None else []),
+        ),
     )

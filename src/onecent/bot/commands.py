@@ -147,6 +147,17 @@ def payment_funnel_text(stats: FunnelStats, reasons: list[tuple[str, int]]) -> s
         f"Оплата отклонена: <b>{stats.facilitator_failures}</b>",
         f"Неоднозначный результат: <b>{stats.unknown_results}</b>",
         "",
+        "",
+        "<b>Скорость после подписи:</b>",
+        (
+            f"PayAI: среднее {stats.facilitator_average_ms or 0} мс; "
+            f"95% не дольше {stats.facilitator_p95_ms or 0} мс"
+        ),
+        (
+            f"Готовый результат: среднее {stats.delivery_average_ms or 0} мс; "
+            f"95% не дольше {stats.delivery_p95_ms or 0} мс"
+        ),
+        "",
         f"REST 402: {stats.rest_challenges} · MCP 402: {stats.mcp_challenges}",
     ]
     if reasons:

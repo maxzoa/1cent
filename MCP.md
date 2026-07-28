@@ -11,7 +11,10 @@ Public endpoint: `https://1cent.maxzoa.ru/mcp`
 
 ## Tools
 
-Production publishes 34 MCP tools: 32 paid URL/site operations and two free local tools.
+Production publishes 35 MCP tools: 32 paid URL/site operations and three free tools.
+
+`demo_live_url_pulse` performs a real, rate-limited check only for fixed `example.com`; it accepts
+no URL and reuses the normal SSRF-safe fetch, cache and audit service.
 
 Free tools are listed first:
 

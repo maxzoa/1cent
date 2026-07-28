@@ -22,12 +22,14 @@ from onecent.schemas import (
     ChangedResponse,
     DemoPulseResponse,
     ExtractResponse,
+    LiveDemoPulseResponse,
     PassportResponse,
     PulseResponse,
     ToolResponse,
 )
 from onecent.services.demo import demo_pulse_result
 from onecent.services.discovery import ENDPOINT_DESCRIPTIONS
+from onecent.services.live_demo import LiveDemoRateLimited, live_demo_pulse
 from onecent.services.tool_catalog import TOOL_BY_KEY, TOOLS
 from onecent.services.tool_operations import catalog_search as search_catalog
 from onecent.services.traffic_audit import (
@@ -40,7 +42,7 @@ MCP_PROTOCOL_VERSION = "2025-11-25"
 MCP_PAYMENT_META_KEY = "x402/payment"
 MCP_PAYMENT_RESPONSE_META_KEY = "x402/payment-response"
 INTERNAL_API = "http://127.0.0.1:8013"
-FREE_MCP_TOOL_NAMES = ("catalog_search", "demo_url_pulse")
+FREE_MCP_TOOL_NAMES = ("catalog_search", "demo_url_pulse", "demo_live_url_pulse")
 mcp_settings = get_settings()
 
 mcp = FastMCP(
@@ -144,6 +146,31 @@ async def catalog_search(query: str) -> CallToolResult:
 )
 async def demo_url_pulse() -> CallToolResult:
     return _result(demo_pulse_result(), error=False)
+
+
+@mcp.tool(
+    name="demo_live_url_pulse",
+    title="Free live demo: check fixed example.com",
+    description=(
+        "Run the real SSRF-protected URL Pulse service against the fixed "
+        "https://example.com/ target without payment. The tool accepts no URL, is rate-limited "
+        "per client and preserves normal cache and audit behavior."
+    ),
+    annotations=_tool_annotations(open_world=True),
+)
+async def demo_live_url_pulse() -> CallToolResult:
+    async with Session() as session:
+        try:
+            response = await live_demo_pulse(mcp_settings, session)
+        except LiveDemoRateLimited:
+            return _result(
+                {
+                    "error": "live_demo_rate_limited",
+                    "message": "Free live demo limit reached; retry next UTC hour.",
+                },
+                error=True,
+            )
+    return _result(response.model_dump(mode="json"), error=False)
 
 
 async def _paid_rest_call(
@@ -318,6 +345,7 @@ for _definition in TOOLS:
 MCP_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
     "catalog_search": CatalogSearchResponse,
     "demo_url_pulse": DemoPulseResponse,
+    "demo_live_url_pulse": LiveDemoPulseResponse,
     "url_pulse": PulseResponse,
     "url_passport": PassportResponse,
     "url_extract": ExtractResponse,

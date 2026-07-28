@@ -23,9 +23,23 @@ jobs:
           python-version: "3.12"
           cache: pip
       - name: Install pinned dependencies
-        run: python -m pip install -e ".[dev]"
+        run: |
+          grep -q '^pywin32==312 ; sys_platform == "win32"' requirements-dev.lock
+          grep -q '^pywin32==312 ; sys_platform == "win32"' requirements.lock
+          grep -q '^uvloop==0.22.1 ; implementation_name == "cpython" and sys_platform != "win32"' requirements-dev.lock
+          grep -q '^uvloop==0.22.1 ; implementation_name == "cpython" and sys_platform != "win32"' requirements.lock
+          python -m pip install --require-hashes -r requirements-dev.lock
+          python -m pip install --no-deps -e .
       - name: Dependency consistency
         run: python -m pip check
+      - name: Python dependency audit
+        run: pip-audit --no-deps -r requirements.lock --progress-spinner off
+      - name: Generate CycloneDX SBOM
+        run: pip-audit --no-deps -r requirements.lock --format cyclonedx-json --output sbom.cdx.json --progress-spinner off
+      - uses: actions/upload-artifact@v4
+        with:
+          name: onecent-sbom
+          path: sbom.cdx.json
       - name: Ruff
         run: ruff check .
       - name: Mypy strict
@@ -40,3 +54,11 @@ jobs:
         run: find scripts -name '*.sh' -print0 | xargs -0 -n1 sh -n
       - name: Container build
         run: docker build --pull=false -t onecent:ci .
+      - name: Container vulnerability scan
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: onecent:ci
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH

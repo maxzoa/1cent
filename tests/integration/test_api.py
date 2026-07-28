@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from datetime import datetime, timezone
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -81,7 +82,7 @@ def test_mcp_well_known_manifest(client: TestClient) -> None:
     assert manifest.headers["content-type"].startswith("application/json")
     body = manifest.json()
     assert body["name"] == "ru.maxzoa/1cent"
-    assert body["version"] == "0.3.0"
+    assert body["version"] == "0.4.0"
     assert body["websiteUrl"] == "https://1cent.maxzoa.ru"
     assert body["remotes"] == [
         {
@@ -120,9 +121,13 @@ def test_free_demo_status_security_and_server_card(
 
     status = client.get("/status.json")
     assert status.status_code == 200
-    assert status.json()["version"] == "0.3.0"
+    assert status.json()["version"] == "0.4.0"
     assert status.json()["paid_tools"] == 32
-    assert status.json()["free_mcp_tools"] == ["catalog_search", "demo_url_pulse"]
+    assert status.json()["free_mcp_tools"] == [
+        "catalog_search",
+        "demo_url_pulse",
+        "demo_live_url_pulse",
+    ]
     assert "seller" not in status.text.lower()
 
     security = client.get("/.well-known/security.txt")
@@ -131,13 +136,63 @@ def test_free_demo_status_security_and_server_card(
     assert "Canonical: https://1cent.maxzoa.ru/.well-known/security.txt" in security.text
 
     card = client.get("/.well-known/mcp/server-card.json").json()
-    assert len(card["tools"]) == 34
-    assert [tool["name"] for tool in card["tools"][:2]] == [
+    assert len(card["tools"]) == 35
+    assert [tool["name"] for tool in card["tools"][:3]] == [
         "catalog_search",
         "demo_url_pulse",
+        "demo_live_url_pulse",
     ]
     assert all(tool["outputSchema"] for tool in card["tools"])
     assert all(tool["annotations"]["destructiveHint"] is False for tool in card["tools"])
+
+
+def test_live_demo_is_free_fixed_target_and_rate_limited_service(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    result = {
+        "demo": True,
+        "fixed_target": "https://example.com/",
+        "payment_required": False,
+        "rate_limit_per_hour": 3,
+        "result": {
+            "request_id": "live-demo-test",
+            "url_requested": "https://example.com/",
+            "url_final": "https://example.com/",
+            "reachable": True,
+            "status_code": 200,
+            "redirect_count": 0,
+            "content_type": "text/html",
+            "content_length": 100,
+            "response_time_ms": 20,
+            "title": "Example Domain",
+            "language": "en",
+            "canonical_url": None,
+            "requires_javascript": False,
+            "auth_required": False,
+            "suspected_paywall": False,
+            "robots_allowed": True,
+            "content_hash": "a" * 64,
+            "from_cache": False,
+            "checked_at": datetime.now(timezone.utc).isoformat(),
+            "quality": {
+                "cache_hit": False,
+                "processing_ms": 30,
+                "network_ms": 20,
+                "external_requests": 1,
+                "truncated": False,
+                "completeness": 1.0,
+                "warnings": [],
+            },
+        },
+    }
+    service = AsyncMock(return_value=result)
+    monkeypatch.setattr("onecent.api.app.live_demo_pulse", service)
+    response = client.get("/v1/demo/live-pulse")
+    assert response.status_code == 200
+    assert response.json()["fixed_target"] == "https://example.com/"
+    assert response.json()["result"]["quality"]["external_requests"] == 1
+    assert "payment-required" not in response.headers
+    service.assert_awaited_once()
 
 
 def test_mcp_rejects_untrusted_origin(client: TestClient) -> None:

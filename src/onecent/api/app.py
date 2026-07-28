@@ -20,6 +20,7 @@ from onecent.schemas import (
     DemoPulseResponse,
     ExtractRequest,
     ExtractResponse,
+    LiveDemoPulseResponse,
     PassportResponse,
     PulseResponse,
     ToolRequest,
@@ -28,6 +29,7 @@ from onecent.schemas import (
 )
 from onecent.services.demo import demo_pulse_result
 from onecent.services.discovery import ENDPOINT_DESCRIPTIONS
+from onecent.services.live_demo import LiveDemoRateLimited, live_demo_pulse
 from onecent.services.operations import changed, extract, passport, pulse
 from onecent.services.payments import build_x402_middleware
 from onecent.services.tool_catalog import TOOLS, public_catalog
@@ -73,7 +75,9 @@ app = FastAPI(
         {"name": "Service", "description": "Public service status and capabilities."},
         {
             "name": "Free demo",
-            "description": "Static product preview with no payment, DB access or URL fetch.",
+            "description": (
+                "Static preview plus a rate-limited live check of the fixed example.com target."
+            ),
         },
     ],
 )
@@ -120,7 +124,7 @@ async def root() -> HTMLResponse:
         "1cent Web Intelligence for AI Agents",
         "<p>Pay-per-call URL inspection through REST and MCP. No account or API key required.</p>"
         "<p><code>https://1cent.maxzoa.ru/mcp/</code></p><p><a href='/tools'>Browse tools</a> · "
-        "<a href='/v1/demo/pulse'>Free demo</a> · "
+        "<a href='/v1/demo/live-pulse'>Free live demo</a> · "
         "<a href='/docs'>OpenAPI</a> · <a href='/docs/getting-started'>Pay with x402</a> · "
         "<a href='https://registry.modelcontextprotocol.io'>MCP Registry</a> · "
         "<a href='https://smithery.ai/servers/maxzoa27/onecent' rel='me'>Smithery</a></p>",
@@ -281,9 +285,10 @@ def _landing(title: str, body: str) -> HTMLResponse:
 async def tools_page() -> HTMLResponse:
     return _landing(
         "Web intelligence tools",
-        "<p>32 paid REST/MCP tools plus two free MCP tools: "
-        "<code>catalog_search</code> and <code>demo_url_pulse</code>.</p>"
-        "<p><a href='/v1/demo/pulse'>Try the static demo</a> · "
+        "<p>32 paid REST/MCP tools plus three free MCP tools: "
+        "<code>catalog_search</code>, <code>demo_url_pulse</code> and "
+        "<code>demo_live_url_pulse</code>.</p>"
+        "<p><a href='/v1/demo/live-pulse'>Try the rate-limited live demo</a> · "
         "<a href='/v1/catalog'>Machine-readable catalog</a></p>",
     )
 
@@ -302,7 +307,9 @@ async def getting_started() -> HTMLResponse:
     return _landing(
         "Pay for a 1cent request",
         "<p><strong>Start free:</strong> call MCP <code>catalog_search</code> or "
-        "<code>demo_url_pulse</code>. Neither tool fetches a URL or requires payment.</p>"
+        "<code>demo_url_pulse</code>. For a real fixed-target fetch without payment, use "
+        "<code>demo_live_url_pulse</code> or <a href='/v1/demo/live-pulse'>REST live demo</a>. "
+        "The live demo is rate-limited and never accepts a caller-provided URL.</p>"
         "<p>No account or API key. Buyer needs a wallet with Base Mainnet USDC and an "
         "x402 v2 client.</p><ol><li>Read <a href='/.well-known/x402'>discovery manifest</a>."
         "</li><li>Install the official x402 client.</li><li>Call a REST endpoint; the "
@@ -434,7 +441,7 @@ async def status_page(
         f"<strong>Free MCP tools:</strong> {escape(free_tools)}</p>"
         "<p><a href='/status.json'>Machine-readable status</a> · "
         "<a href='/health'>Health probe</a> · "
-        "<a href='/v1/demo/pulse'>Free static demo</a></p>"
+        "<a href='/v1/demo/live-pulse'>Free live demo</a></p>"
     )
     return _landing("Service status", body)
 
@@ -462,6 +469,7 @@ async def public_sitemap() -> Response:
         "/tools",
         "/pricing",
         "/v1/demo/pulse",
+        "/v1/demo/live-pulse",
         "/docs/getting-started",
         "/examples/python-x402",
         "/examples/typescript-x402",
@@ -484,6 +492,7 @@ async def public_llms() -> str:
         "MCP: https://1cent.maxzoa.ru/mcp/\n"
         "Catalog: https://1cent.maxzoa.ru/v1/catalog\n"
         "Free static demo: https://1cent.maxzoa.ru/v1/demo/pulse\n"
+        "Free live demo: https://1cent.maxzoa.ru/v1/demo/live-pulse\n"
         "Public status: https://1cent.maxzoa.ru/status.json\n"
         "x402 discovery: https://1cent.maxzoa.ru/.well-known/x402\n"
         "Buyer guide: https://1cent.maxzoa.ru/docs/getting-started\n"
@@ -552,6 +561,30 @@ async def info(session: Annotated[AsyncSession, Depends(get_session)]) -> dict[s
 )
 async def demo_pulse() -> DemoPulseResponse:
     return DemoPulseResponse.model_validate(demo_pulse_result())
+
+
+@app.get(
+    "/v1/demo/live-pulse",
+    response_model=LiveDemoPulseResponse,
+    tags=["Free demo"],
+    summary="Run a free live URL Pulse against fixed example.com",
+    description=(
+        "Free, rate-limited live check of the fixed https://example.com/ target. It accepts no "
+        "caller-provided URL, uses the normal SSRF-safe fetch/cache/audit service and never "
+        "touches the payment path."
+    ),
+)
+async def demo_live_pulse(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> LiveDemoPulseResponse:
+    try:
+        return await live_demo_pulse(settings, session)
+    except LiveDemoRateLimited as exc:
+        raise HTTPException(
+            status_code=429,
+            detail="Free live demo limit reached; retry next UTC hour.",
+            headers={"Retry-After": "3600"},
+        ) from exc
 
 
 async def gate(request: Request, session: AsyncSession, cfg: Settings) -> None:
