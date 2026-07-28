@@ -114,7 +114,17 @@ async def root() -> HTMLResponse:
         "<p>Pay-per-call URL inspection through REST and MCP. No account or API key required.</p>"
         "<p><code>https://1cent.maxzoa.ru/mcp/</code></p><p><a href='/tools'>Browse tools</a> · "
         "<a href='/docs'>OpenAPI</a> · <a href='/docs/getting-started'>Pay with x402</a> · "
-        "<a href='https://registry.modelcontextprotocol.io'>MCP Registry</a></p>",
+        "<a href='https://registry.modelcontextprotocol.io'>MCP Registry</a> · "
+        "<a href='https://smithery.ai/servers/maxzoa27/onecent' rel='me'>Smithery</a></p>",
+    )
+
+
+@app.get("/smithery", response_class=HTMLResponse, include_in_schema=False)
+async def smithery_backlink() -> HTMLResponse:
+    return _landing(
+        "1cent on Smithery",
+        "<p>Connect to the verified public 1cent MCP listing on "
+        "<a href='https://smithery.ai/servers/maxzoa27/onecent' rel='me'>Smithery</a>.</p>",
     )
 
 
@@ -398,6 +408,7 @@ async def public_sitemap() -> Response:
         "/privacy",
         "/terms",
         "/status",
+        "/smithery",
     )
     urls = "".join(f"<url><loc>{settings.public_base_url}{path}</loc></url>" for path in paths)
     return Response(

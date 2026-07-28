@@ -45,7 +45,13 @@ def client() -> Any:
 
 
 def test_root_and_info(client: TestClient) -> None:
-    assert client.get("/").status_code == 200
+    root = client.get("/")
+    assert root.status_code == 200
+    assert "https://smithery.ai/servers/maxzoa27/onecent" in root.text
+    smithery = client.get("/smithery")
+    assert smithery.status_code == 200
+    assert smithery.headers["content-type"].startswith("text/html")
+    assert "https://smithery.ai/servers/maxzoa27/onecent" in smithery.text
     info = client.get("/info").json()
     assert info["network"] == "eip155:84532"
     assert len(info["operations"]) == 32
