@@ -58,6 +58,7 @@ The exact adoption gates are documented in `TRUST_AND_SCALING_READINESS.md`.
 | dedicated MCP unit tests | PASS; 4 passed |
 | shell syntax | PASS |
 | release/schema validator | PASS; version 0.3.0, 32 paid + 2 free tools |
+| GitHub Actions clean Ubuntu build | PASS on PR #1; tests, validators and container build |
 | official `mcp-publisher validate` | PASS |
 | official MCP Registry publication | PASS; 0.3.0, active, latest |
 | Docker Compose config on NAS | PASS |
@@ -156,8 +157,6 @@ was not changed or deleted.
   transitive lock file; the Docker build is deterministic at direct-package level only.
 - External catalog review/indexing delays remain controlled by each directory.
 - Free demo is deliberately precomputed and cannot demonstrate live target-specific fetches.
-- The local `gh` CLI token expired during release; the connected GitHub app is used as the safe
-  publication fallback if normal Git credential push is unavailable.
 
 ## Next measurement gate
 
