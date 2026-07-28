@@ -127,6 +127,7 @@ def payment_funnel_text(stats: FunnelStats, reasons: list[tuple[str, int]]) -> s
         "",
         f"Получили цену 402: <b>{stats.challenges}</b>",
         f"Уникальных клиентов: <b>{stats.unique_clients}</b>",
+        f"Уникальных внешних: <b>{stats.probable_external_clients}</b>",
         f"Вероятно внешних 402: <b>{stats.probable_external_challenges}</b>",
         f"Наших/owner 402: <b>{stats.internal_challenges + stats.owner_challenges}</b>",
         f"Источник неясен: <b>{stats.unknown_challenges}</b>",

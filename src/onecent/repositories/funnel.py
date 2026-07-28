@@ -21,6 +21,7 @@ class FunnelStats:
     started_at: datetime | None
     challenges: int
     unique_clients: int
+    probable_external_clients: int
     signed_payloads: int
     signed_clients: int
     decoded_payloads: int
@@ -166,6 +167,13 @@ async def payment_funnel_stats(
         select(func.count(func.distinct(PaymentFunnelEvent.client_fingerprint))).where(
             PaymentFunnelEvent.created_at >= start,
             PaymentFunnelEvent.stage == "challenge_issued",
+            PaymentFunnelEvent.client_fingerprint.is_not(None),
+        )
+    )
+    probable_external_clients = await session.scalar(
+        select(func.count(func.distinct(PaymentFunnelEvent.client_fingerprint))).where(
+            PaymentFunnelEvent.created_at >= start,
+            PaymentFunnelEvent.stage == "challenge_issued",
             PaymentFunnelEvent.attribution == "probable_external",
             PaymentFunnelEvent.client_fingerprint.is_not(None),
         )
@@ -200,6 +208,7 @@ async def payment_funnel_stats(
         started_at=started_at,
         challenges=total("challenge_issued", "success"),
         unique_clients=int(unique_clients or 0),
+        probable_external_clients=int(probable_external_clients or 0),
         signed_payloads=total("payload_received", "observed"),
         signed_clients=int(signed_clients or 0),
         decoded_payloads=total("payload_decoded", "success"),

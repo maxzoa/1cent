@@ -127,6 +127,7 @@ def test_payment_funnel_explains_observed_drop_without_guessing() -> None:
             started_at=datetime(2026, 7, 28, 10, 0, tzinfo=timezone.utc),
             challenges=1200,
             unique_clients=7,
+            probable_external_clients=5,
             signed_payloads=1,
             signed_clients=1,
             decoded_payloads=0,
