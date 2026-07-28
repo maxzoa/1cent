@@ -31,7 +31,9 @@ jobs:
       - name: Mypy strict
         run: mypy
       - name: Tests and security regression
-        run: pytest -q
+        # Module invocation keeps the repository root on sys.path, including
+        # the tracked scripts package used by operational unit tests.
+        run: python -m pytest -q
       - name: Release and MCP schema consistency
         run: python scripts/validate_release.py
       - name: Shell syntax
