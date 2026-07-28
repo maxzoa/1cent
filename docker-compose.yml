@@ -1,0 +1,60 @@
+services:
+  onecent-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-onecent}
+      POSTGRES_USER: ${POSTGRES_USER:-onecent}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_dev_only}
+    volumes:
+      - onecent-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  onecent-api:
+    build: .
+    env_file: [.env]
+    command: ["sh", "-c", "alembic upgrade head && uvicorn onecent.api.app:app --host 0.0.0.0 --port 8013 --workers 1"]
+    ports: ["${ONECENT_HOST_PORT:-8013}:8013"]
+    volumes: ["./backups:/backups:ro"]
+    depends_on:
+      onecent-db: {condition: service_healthy}
+    read_only: true
+    tmpfs: ["/tmp:size=16m,noexec,nosuid"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import json,urllib.request; d=json.load(urllib.request.urlopen('http://127.0.0.1:8013/health', timeout=2)); assert d['status']=='ok'"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+  onecent-bot:
+    build: .
+    env_file: [.env]
+    command: ["python", "-m", "onecent.bot.app"]
+    volumes: ["./backups:/backups:ro"]
+    depends_on:
+      onecent-db: {condition: service_healthy}
+      onecent-api: {condition: service_healthy}
+    read_only: true
+    tmpfs: ["/tmp:size=8m,noexec,nosuid"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "from pathlib import Path; assert Path('/tmp/onecent-bot-ready').exists()"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+  onecent-cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      onecent-api: {condition: service_healthy}
+    restart: unless-stopped
+volumes:
+  onecent-db-data:

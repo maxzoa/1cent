@@ -1,0 +1,13 @@
+{
+  "source": "PayAI production PAYMENT-RESPONSE captured after confirmed settlement",
+  "success": true,
+  "network": "base",
+  "transaction": "<redacted-transaction-hash>",
+  "payer": "<redacted-payer-address>",
+  "errorReason": null,
+  "evidence": {
+    "httpStatus": 200,
+    "receiptStatus": 1,
+    "transactionPresent": true
+  }
+}

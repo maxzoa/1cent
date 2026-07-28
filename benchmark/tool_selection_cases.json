@@ -1,0 +1,602 @@
+[
+  {
+    "id": "clear-001",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url status.",
+    "expected_tool": "url_status"
+  },
+  {
+    "id": "clear-002",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url redirects.",
+    "expected_tool": "url_redirects"
+  },
+  {
+    "id": "clear-003",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url headers.",
+    "expected_tool": "url_headers"
+  },
+  {
+    "id": "clear-004",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url timing.",
+    "expected_tool": "url_timing"
+  },
+  {
+    "id": "clear-005",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url content type.",
+    "expected_tool": "url_content_type"
+  },
+  {
+    "id": "clear-006",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url canonical.",
+    "expected_tool": "url_canonical"
+  },
+  {
+    "id": "clear-007",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url language.",
+    "expected_tool": "url_language"
+  },
+  {
+    "id": "clear-008",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url hash.",
+    "expected_tool": "url_hash"
+  },
+  {
+    "id": "clear-009",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url metadata.",
+    "expected_tool": "url_metadata"
+  },
+  {
+    "id": "clear-010",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url social cards.",
+    "expected_tool": "url_social_cards"
+  },
+  {
+    "id": "clear-011",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url jsonld.",
+    "expected_tool": "url_jsonld"
+  },
+  {
+    "id": "clear-012",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url headings.",
+    "expected_tool": "url_headings"
+  },
+  {
+    "id": "clear-013",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url word stats.",
+    "expected_tool": "url_word_stats"
+  },
+  {
+    "id": "clear-014",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url links.",
+    "expected_tool": "url_links"
+  },
+  {
+    "id": "clear-015",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url images.",
+    "expected_tool": "url_images"
+  },
+  {
+    "id": "clear-016",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url text.",
+    "expected_tool": "url_text"
+  },
+  {
+    "id": "clear-017",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url markdown.",
+    "expected_tool": "url_markdown"
+  },
+  {
+    "id": "clear-018",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url rag chunks.",
+    "expected_tool": "url_rag_chunks"
+  },
+  {
+    "id": "clear-019",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url diff.",
+    "expected_tool": "url_diff"
+  },
+  {
+    "id": "clear-020",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for site robots.",
+    "expected_tool": "site_robots"
+  },
+  {
+    "id": "clear-021",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for site sitemaps.",
+    "expected_tool": "site_sitemaps"
+  },
+  {
+    "id": "clear-022",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for site feeds.",
+    "expected_tool": "site_feeds"
+  },
+  {
+    "id": "clear-023",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for site llms txt.",
+    "expected_tool": "site_llms_txt"
+  },
+  {
+    "id": "clear-024",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for site security txt.",
+    "expected_tool": "site_security_txt"
+  },
+  {
+    "id": "clear-025",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for site openapi.",
+    "expected_tool": "site_openapi"
+  },
+  {
+    "id": "clear-026",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url security headers.",
+    "expected_tool": "url_security_headers"
+  },
+  {
+    "id": "clear-027",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url tls.",
+    "expected_tool": "url_tls"
+  },
+  {
+    "id": "clear-028",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url access flags.",
+    "expected_tool": "url_access_flags"
+  },
+  {
+    "id": "clear-029",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url pulse.",
+    "expected_tool": "url_pulse"
+  },
+  {
+    "id": "clear-030",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url passport.",
+    "expected_tool": "url_passport"
+  },
+  {
+    "id": "clear-031",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url extract.",
+    "expected_tool": "url_extract"
+  },
+  {
+    "id": "clear-032",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url changed.",
+    "expected_tool": "url_changed"
+  },
+  {
+    "id": "clear-033",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url status.",
+    "expected_tool": "url_status"
+  },
+  {
+    "id": "clear-034",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url redirects.",
+    "expected_tool": "url_redirects"
+  },
+  {
+    "id": "clear-035",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url headers.",
+    "expected_tool": "url_headers"
+  },
+  {
+    "id": "clear-036",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url timing.",
+    "expected_tool": "url_timing"
+  },
+  {
+    "id": "clear-037",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url content type.",
+    "expected_tool": "url_content_type"
+  },
+  {
+    "id": "clear-038",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url canonical.",
+    "expected_tool": "url_canonical"
+  },
+  {
+    "id": "clear-039",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url language.",
+    "expected_tool": "url_language"
+  },
+  {
+    "id": "clear-040",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url hash.",
+    "expected_tool": "url_hash"
+  },
+  {
+    "id": "clear-041",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url metadata.",
+    "expected_tool": "url_metadata"
+  },
+  {
+    "id": "clear-042",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url social cards.",
+    "expected_tool": "url_social_cards"
+  },
+  {
+    "id": "clear-043",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url jsonld.",
+    "expected_tool": "url_jsonld"
+  },
+  {
+    "id": "clear-044",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url headings.",
+    "expected_tool": "url_headings"
+  },
+  {
+    "id": "clear-045",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url word stats.",
+    "expected_tool": "url_word_stats"
+  },
+  {
+    "id": "clear-046",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url links.",
+    "expected_tool": "url_links"
+  },
+  {
+    "id": "clear-047",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url images.",
+    "expected_tool": "url_images"
+  },
+  {
+    "id": "clear-048",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url text.",
+    "expected_tool": "url_text"
+  },
+  {
+    "id": "clear-049",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url markdown.",
+    "expected_tool": "url_markdown"
+  },
+  {
+    "id": "clear-050",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url rag chunks.",
+    "expected_tool": "url_rag_chunks"
+  },
+  {
+    "id": "clear-051",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url diff.",
+    "expected_tool": "url_diff"
+  },
+  {
+    "id": "clear-052",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for site robots.",
+    "expected_tool": "site_robots"
+  },
+  {
+    "id": "clear-053",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for site sitemaps.",
+    "expected_tool": "site_sitemaps"
+  },
+  {
+    "id": "clear-054",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for site feeds.",
+    "expected_tool": "site_feeds"
+  },
+  {
+    "id": "clear-055",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for site llms txt.",
+    "expected_tool": "site_llms_txt"
+  },
+  {
+    "id": "clear-056",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for site security txt.",
+    "expected_tool": "site_security_txt"
+  },
+  {
+    "id": "clear-057",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for site openapi.",
+    "expected_tool": "site_openapi"
+  },
+  {
+    "id": "clear-058",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url security headers.",
+    "expected_tool": "url_security_headers"
+  },
+  {
+    "id": "clear-059",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url tls.",
+    "expected_tool": "url_tls"
+  },
+  {
+    "id": "clear-060",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url access flags.",
+    "expected_tool": "url_access_flags"
+  },
+  {
+    "id": "clear-061",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url pulse.",
+    "expected_tool": "url_pulse"
+  },
+  {
+    "id": "clear-062",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url passport.",
+    "expected_tool": "url_passport"
+  },
+  {
+    "id": "clear-063",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url extract.",
+    "expected_tool": "url_extract"
+  },
+  {
+    "id": "clear-064",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url changed.",
+    "expected_tool": "url_changed"
+  },
+  {
+    "id": "clear-065",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url status.",
+    "expected_tool": "url_status"
+  },
+  {
+    "id": "clear-066",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url redirects.",
+    "expected_tool": "url_redirects"
+  },
+  {
+    "id": "clear-067",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url headers.",
+    "expected_tool": "url_headers"
+  },
+  {
+    "id": "clear-068",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url timing.",
+    "expected_tool": "url_timing"
+  },
+  {
+    "id": "clear-069",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url content type.",
+    "expected_tool": "url_content_type"
+  },
+  {
+    "id": "clear-070",
+    "kind": "clear",
+    "prompt": "Use the precise 1cent capability for url canonical.",
+    "expected_tool": "url_canonical"
+  },
+  {
+    "id": "conflict-001",
+    "kind": "conflict",
+    "prompt": "I need both url status and url hash; select the narrower first step.",
+    "expected_tool": "url_status"
+  },
+  {
+    "id": "conflict-002",
+    "kind": "conflict",
+    "prompt": "I need both url redirects and url metadata; select the narrower first step.",
+    "expected_tool": "url_redirects"
+  },
+  {
+    "id": "conflict-003",
+    "kind": "conflict",
+    "prompt": "I need both url headers and url social cards; select the narrower first step.",
+    "expected_tool": "url_headers"
+  },
+  {
+    "id": "conflict-004",
+    "kind": "conflict",
+    "prompt": "I need both url timing and url jsonld; select the narrower first step.",
+    "expected_tool": "url_timing"
+  },
+  {
+    "id": "conflict-005",
+    "kind": "conflict",
+    "prompt": "I need both url content type and url headings; select the narrower first step.",
+    "expected_tool": "url_content_type"
+  },
+  {
+    "id": "conflict-006",
+    "kind": "conflict",
+    "prompt": "I need both url canonical and url word stats; select the narrower first step.",
+    "expected_tool": "url_canonical"
+  },
+  {
+    "id": "conflict-007",
+    "kind": "conflict",
+    "prompt": "I need both url language and url links; select the narrower first step.",
+    "expected_tool": "url_language"
+  },
+  {
+    "id": "conflict-008",
+    "kind": "conflict",
+    "prompt": "I need both url hash and url images; select the narrower first step.",
+    "expected_tool": "url_hash"
+  },
+  {
+    "id": "conflict-009",
+    "kind": "conflict",
+    "prompt": "I need both url metadata and url text; select the narrower first step.",
+    "expected_tool": "url_metadata"
+  },
+  {
+    "id": "conflict-010",
+    "kind": "conflict",
+    "prompt": "I need both url social cards and url markdown; select the narrower first step.",
+    "expected_tool": "url_social_cards"
+  },
+  {
+    "id": "conflict-011",
+    "kind": "conflict",
+    "prompt": "I need both url jsonld and url rag chunks; select the narrower first step.",
+    "expected_tool": "url_jsonld"
+  },
+  {
+    "id": "conflict-012",
+    "kind": "conflict",
+    "prompt": "I need both url headings and url diff; select the narrower first step.",
+    "expected_tool": "url_headings"
+  },
+  {
+    "id": "conflict-013",
+    "kind": "conflict",
+    "prompt": "I need both url word stats and site robots; select the narrower first step.",
+    "expected_tool": "url_word_stats"
+  },
+  {
+    "id": "conflict-014",
+    "kind": "conflict",
+    "prompt": "I need both url links and site sitemaps; select the narrower first step.",
+    "expected_tool": "url_links"
+  },
+  {
+    "id": "conflict-015",
+    "kind": "conflict",
+    "prompt": "I need both url images and site feeds; select the narrower first step.",
+    "expected_tool": "url_images"
+  },
+  {
+    "id": "conflict-016",
+    "kind": "conflict",
+    "prompt": "I need both url text and site llms txt; select the narrower first step.",
+    "expected_tool": "url_text"
+  },
+  {
+    "id": "conflict-017",
+    "kind": "conflict",
+    "prompt": "I need both url markdown and site security txt; select the narrower first step.",
+    "expected_tool": "url_markdown"
+  },
+  {
+    "id": "conflict-018",
+    "kind": "conflict",
+    "prompt": "I need both url rag chunks and site openapi; select the narrower first step.",
+    "expected_tool": "url_rag_chunks"
+  },
+  {
+    "id": "conflict-019",
+    "kind": "conflict",
+    "prompt": "I need both url diff and url security headers; select the narrower first step.",
+    "expected_tool": "url_diff"
+  },
+  {
+    "id": "conflict-020",
+    "kind": "conflict",
+    "prompt": "I need both site robots and url tls; select the narrower first step.",
+    "expected_tool": "site_robots"
+  },
+  {
+    "id": "negative-001",
+    "kind": "negative",
+    "prompt": "Log in, solve CAPTCHA, render JavaScript and bypass the paywall.",
+    "expected_tool": null
+  },
+  {
+    "id": "negative-002",
+    "kind": "negative",
+    "prompt": "Log in, solve CAPTCHA, render JavaScript and bypass the paywall.",
+    "expected_tool": null
+  },
+  {
+    "id": "negative-003",
+    "kind": "negative",
+    "prompt": "Log in, solve CAPTCHA, render JavaScript and bypass the paywall.",
+    "expected_tool": null
+  },
+  {
+    "id": "negative-004",
+    "kind": "negative",
+    "prompt": "Log in, solve CAPTCHA, render JavaScript and bypass the paywall.",
+    "expected_tool": null
+  },
+  {
+    "id": "negative-005",
+    "kind": "negative",
+    "prompt": "Log in, solve CAPTCHA, render JavaScript and bypass the paywall.",
+    "expected_tool": null
+  },
+  {
+    "id": "negative-006",
+    "kind": "negative",
+    "prompt": "Log in, solve CAPTCHA, render JavaScript and bypass the paywall.",
+    "expected_tool": null
+  },
+  {
+    "id": "negative-007",
+    "kind": "negative",
+    "prompt": "Log in, solve CAPTCHA, render JavaScript and bypass the paywall.",
+    "expected_tool": null
+  },
+  {
+    "id": "negative-008",
+    "kind": "negative",
+    "prompt": "Log in, solve CAPTCHA, render JavaScript and bypass the paywall.",
+    "expected_tool": null
+  },
+  {
+    "id": "negative-009",
+    "kind": "negative",
+    "prompt": "Log in, solve CAPTCHA, render JavaScript and bypass the paywall.",
+    "expected_tool": null
+  },
+  {
+    "id": "negative-010",
+    "kind": "negative",
+    "prompt": "Log in, solve CAPTCHA, render JavaScript and bypass the paywall.",
+    "expected_tool": null
+  }
+]
