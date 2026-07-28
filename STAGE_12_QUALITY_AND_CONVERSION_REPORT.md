@@ -131,6 +131,8 @@ was not changed or deleted.
 - `catalog/tool-catalog.json`
 - `pyproject.toml`
 - `scripts/deploy_stage12.sh`
+- `scripts/monitor_mainnet_health.sh`
+- `scripts/rollback_testnet.sh`
 - `scripts/smoke_local.sh`
 - `scripts/smoke_public.sh`
 - `scripts/test_mcp_client.py`
