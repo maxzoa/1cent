@@ -7,5 +7,5 @@ def test_backup_script_restricts_directory_and_dump_permissions() -> None:
     ).read_text(encoding="utf-8")
 
     assert "umask 077" in script
-    assert 'chmod 700 "$BACKUP_DIR"' in script
+    assert 'chmod 711 "$BACKUP_DIR"' in script
     assert 'chmod 600 "$TARGET"' in script

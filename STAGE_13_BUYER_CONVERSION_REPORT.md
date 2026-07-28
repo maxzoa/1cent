@@ -64,7 +64,9 @@ Stage 13 завершён и развёрнут в публичном production
 - Node `npm audit`: 0 vulnerabilities.
 - Создаётся CycloneDX SBOM; Trivy action закреплён точной версией.
 - Добавлены fresh backup, изолированный restore drill и rollback-safe deploy.
-- Backup directory теперь создаётся с mode `700`, dump — с mode `600`, `umask 077`.
+- Backup directory теперь создаётся с mode `711`, dump — с mode `600`, `umask 077`.
+  Mode `711` запрещает listing другим пользователям, но позволяет non-root API сделать
+  `stat` заранее известного backup path для mainnet readiness.
 
 ## Production deploy
 
@@ -155,8 +157,10 @@ Unpaid smoke отправлял только запросы без платёж�
    Ответы теперь сохраняются во временные файлы, HTTP codes проверяются явно.
 4. Network ошибочно искалась в 402 body. Теперь `PAYMENT-REQUIRED` декодируется как
    base64url JSON и проверяется по точным x402 полям.
-5. Backup script не закреплял file modes. Добавлены `umask 077`, directory `700`,
-   dump `600`; существующий свежий backup приведён к `600`.
+5. Backup script не закреплял file modes. Добавлены `umask 077`, directory `711`,
+   dump `600`; существующий свежий backup приведён к `600`. Первоначальный mode `700`
+   оказался несовместим с non-root readiness `stat`, был выявлен monitor и заменён на
+   минимальный traverse-only `711`; monitor после исправления `PASS`.
 
 ## Известные ограничения
 

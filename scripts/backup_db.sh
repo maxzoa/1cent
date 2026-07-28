@@ -8,7 +8,10 @@ DOCKER=${DOCKER:-/usr/local/bin/docker}
 test -x "$DOCKER" || DOCKER=docker
 umask 077
 mkdir -p "$BACKUP_DIR"
-chmod 700 "$BACKUP_DIR"
+# The API readiness gate must stat a known backup path from its non-root
+# container user. 711 prevents directory listing while allowing traversal;
+# dump contents remain owner-only at mode 600.
+chmod 711 "$BACKUP_DIR"
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 TARGET="$BACKUP_DIR/onecent-$STAMP.sql.gz"
 
