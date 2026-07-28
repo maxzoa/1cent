@@ -6,7 +6,9 @@ test -f .env
 BACKUP_DIR=/volume1/docker/1cent/backups
 DOCKER=${DOCKER:-/usr/local/bin/docker}
 test -x "$DOCKER" || DOCKER=docker
+umask 077
 mkdir -p "$BACKUP_DIR"
+chmod 700 "$BACKUP_DIR"
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 TARGET="$BACKUP_DIR/onecent-$STAMP.sql.gz"
 
@@ -23,5 +25,6 @@ if ! "$DOCKER" compose exec -T onecent-db \
   exit 1
 fi
 test -s "$TARGET" || { rm -f "$TARGET"; notify_failure; exit 1; }
+chmod 600 "$TARGET"
 find "$BACKUP_DIR" -type f -name 'onecent-*.sql.gz' -mtime +14 -delete
 echo "backup PASS: $TARGET"
