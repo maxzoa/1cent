@@ -12,6 +12,8 @@
   it now waits for final PID 1 `postgres` and a successful SQL query before restoring.
 - Run the final public-release validator inside the API container, guaranteeing the locked runtime
   dependencies are used instead of the Synology host Python.
+- Shortened and synchronized Registry descriptions to satisfy the official 100-character schema
+  maximum, with a regression test for root and catalog metadata.
 - Added full descriptions, constraints and examples to every MCP input property.
 - Added buyer prompt `choose_url_tool` and static resource `onecent://buyer-guide`.
 - Added LobeHub badge and a dated cross-marketplace acceptance report.
