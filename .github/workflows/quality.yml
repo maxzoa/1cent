@@ -31,6 +31,7 @@ jobs:
           grep -q '^keyring==25.7.0' requirements-buyer.lock
           grep -q '^jeepney==0.9.0' requirements-buyer.lock
           grep -q '^secretstorage==3.5.0' requirements-buyer.lock
+          grep -q '^uvloop==0.22.1' requirements-buyer.lock
           python -m pip install --require-hashes -r requirements-dev.lock
           python -m pip install --require-hashes -r requirements-buyer.lock
           python -m pip install --no-deps -e .

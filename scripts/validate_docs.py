@@ -130,7 +130,12 @@ def validate() -> None:
             raise AssertionError(f"buyer bridge documentation link missing: {name}")
 
     buyer_lock = _read("requirements-buyer.lock")
-    for dependency in ("keyring==25.7.0", "jeepney==0.9.0", "secretstorage==3.5.0"):
+    for dependency in (
+        "keyring==25.7.0",
+        "jeepney==0.9.0",
+        "secretstorage==3.5.0",
+        "uvloop==0.22.1",
+    ):
         if dependency not in buyer_lock:
             raise AssertionError(f"buyer lock does not pin dependency: {dependency}")
 
