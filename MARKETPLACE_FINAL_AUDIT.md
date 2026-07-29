@@ -29,6 +29,8 @@ settlement, network/facilitator/seller/price change or paid directory placement 
 | MCP.Directory | Existing free submission confirmed | reviewer queue |
 | MCPServers.org | Free submission accepted | reviewer queue |
 | PulseMCP | Eligible through Official Registry | documented daily/weekly importer |
+| modelcontext-protocol.com | Exact remote present; metadata remains `0.1.0` | its daily Registry mirror refresh |
+| AgentGrade | Historical `D` predates security hardening | platform restores its public passive-rescan path |
 | MCPfinder | Cannot submit safely | broken platform OAuth redirect |
 | Awesome MCP Servers | PR `#11089` includes current Glama badge and 35-tool copy | maintainer review/Glama claim |
 
@@ -65,3 +67,9 @@ Glama's public connector was last tested at `2026-07-29 00:32`, before this prod
 cached page therefore still renders blank parameter-description cells. Current source and MCP schema
 tests require descriptions and examples for every non-empty input schema. This is recorded as a
 crawler refresh, not claimed as a completed rescoring event.
+
+AgentGrade still exposes a cached `D` from before CSP/HSTS/frame/content-type/referrer/permissions
+headers were deployed. A fresh read-only scan attempt was blocked by AgentGrade's HTTP 502 and
+client-side blocking. The current public headers are proven directly above; a new grade remains
+external evidence and is not guessed. Public discovery remains unauthenticated by design, while
+paid results remain gated by x402 verify/settle.

@@ -15,6 +15,8 @@ does not change production, prices, payment processing or tool behavior.
 | MCP.Directory | Existing free submission is in review | No public result until review | Exact public searchable listing URL |
 | MCPfinder | Malformed OAuth redirect with undefined callback | Submission unavailable | Platform repairs OAuth and accepts normal login |
 | MCPServers.org | Free submission accepted and in review | No public result until review | Exact public searchable listing URL |
+| modelcontext-protocol.com | Automatic Registry mirror lists exact remote but stale `0.1.0` metadata | Buyers see old version/description | Mirror completes its stated daily refresh |
+| AgentGrade | Historical `D` scan predates deployed security headers; new public scan path returned HTTP 502 / client blocking | Stale security grade can discourage buyers | Fresh passive scan completes and reflects current HTTPS/CSP/HSTS/frame/content-type headers |
 
 ## Already healthy
 
@@ -25,6 +27,9 @@ does not change production, prices, payment processing or tool behavior.
   Current crawl predates the latest production deploy, so its blank parameter-description cells are
   recorded as stale until Glama rescans. The repository profile remains a separate platform surface.
 - GitHub recognizes Apache-2.0 and has stable release `v0.5.0`.
+- Public root and MCP redirect expose CSP, HSTS, frame, content-type, referrer and permissions
+  protections. Free connection/discovery remains intentionally unauthenticated; paid results remain
+  behind x402 verification and settlement.
 
 ## Repository corrections
 

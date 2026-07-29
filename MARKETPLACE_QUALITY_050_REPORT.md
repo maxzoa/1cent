@@ -64,6 +64,8 @@ public visibility. Paid placement and artificial payments are excluded.
 | MCPServers.org | free submission accepted; platform review pending |
 | PulseMCP | official Registry import is automatic and weekly; waiting for its next import |
 | MCPfinder | submission blocked by its broken OAuth redirect; this is a platform defect |
+| modelcontext-protocol.com | auto-imported exact remote is public, but mirror metadata remains `0.1.0` |
+| AgentGrade | historical `D` predates deployed security headers; fresh passive scan externally blocked |
 
 Smithery's remaining four points require a paid developer plan. No directory payment was made or
 authorized. Glama's separate GitHub-profile claim remains blocked because the GitHub authorization
@@ -104,3 +106,9 @@ Second controlled deploy result:
 Glama's current public score is based on a `2026-07-29 00:32` crawl and still displays blank
 parameter-description cells. Production was deployed later. Source tests require descriptions and
 examples on every non-empty MCP input schema; a new platform crawl remains external and asynchronous.
+
+AgentGrade's cached grade is also not treated as current acceptance evidence. Its old scan predates
+the public security-header correction, while its fresh scan surface returned HTTP 502 and was blocked
+client-side during this audit. Production now proves HTTPS, CSP, HSTS, frame, content-type, referrer
+and permissions protections directly. Anonymous MCP connection is intentional so free discovery and
+x402 requirements work; paid URL output is never anonymous because verify/settle remains mandatory.
