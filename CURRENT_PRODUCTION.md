@@ -7,7 +7,7 @@
 
 | Параметр | Текущее значение |
 |---|---|
-| Release | `0.4.0` |
+| Release | `0.5.0` |
 | REST | `https://1cent.maxzoa.ru` |
 | MCP | `https://1cent.maxzoa.ru/mcp` |
 | MCP protocol | `2025-11-25` |
@@ -20,13 +20,15 @@
 | Paid operations | 32 REST resources / 32 MCP tools |
 | Free MCP tools | 3: catalog, static demo, fixed-target live demo |
 | Total MCP tools | 35 |
+| MCP prompts | 1: `choose_url_tool` |
+| MCP resources | 1: `onecent://buyer-guide` |
 | NAS host port | `18013` |
 | API container port | `8013` |
 | PostgreSQL | internal `5432` |
 
 ## Buyer activation surface
 
-- Remote production remains release `0.4.0`; its REST/MCP payment logic is unchanged.
+- Release `0.5.0` changes discovery metadata only; REST/MCP payment logic is unchanged.
 - Repository includes optional local `1cent Buyer Bridge` version `0.1.0` for MCP clients without
   native x402 signing.
 - Bridge transport: local stdio MCP; it maps paid tools to the existing public REST resources.
@@ -89,7 +91,7 @@
 - Catalog/prices: `https://1cent.maxzoa.ru/v1/catalog`.
 - x402 manifest: `https://1cent.maxzoa.ru/.well-known/x402`.
 - OpenAPI: `https://1cent.maxzoa.ru/openapi.json`.
-- Official MCP Registry: `ru.maxzoa/1cent`, version `0.4.0`, active/latest at publication.
+- Official MCP Registry: `ru.maxzoa/1cent`, version `0.5.0`, active/latest at publication.
 
 При расхождении документа и live endpoint: остановить платные действия, считать состояние
 неподтверждённым и выполнить read-only диагностику. Не исправлять расхождение реальным платежом.

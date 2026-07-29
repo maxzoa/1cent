@@ -1,12 +1,12 @@
 import json
 import uuid
-from typing import Any
+from typing import Annotated, Any
 
 import httpx
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import CallToolResult, TextContent, ToolAnnotations
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from x402.http import (
     decode_payment_required_header,
     decode_payment_response_header,
@@ -44,6 +44,77 @@ MCP_PAYMENT_RESPONSE_META_KEY = "x402/payment-response"
 INTERNAL_API = "http://127.0.0.1:8013"
 FREE_MCP_TOOL_NAMES = ("catalog_search", "demo_url_pulse", "demo_live_url_pulse")
 mcp_settings = get_settings()
+
+PublicHttpUrl = Annotated[
+    str,
+    Field(
+        min_length=1,
+        max_length=2048,
+        pattern=r"^https?://",
+        description=(
+            "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, "
+            "metadata-service and otherwise SSRF-sensitive destinations are rejected."
+        ),
+        examples=["https://example.com/article"],
+    ),
+]
+FreshFlag = Annotated[
+    bool,
+    Field(
+        description=(
+            "Set true only when a new upstream fetch is required; false allows the bounded "
+            "cached result and is cheaper for the origin."
+        )
+    ),
+]
+IncludeLinksFlag = Annotated[
+    bool,
+    Field(
+        description=(
+            "Set true to include bounded normalized links in extraction output; false returns "
+            "the main document text without the optional link list."
+        )
+    ),
+]
+CatalogQuery = Annotated[
+    str,
+    Field(
+        min_length=1,
+        max_length=200,
+        description=(
+            "Short capability phrase such as 'redirect chain', 'security headers' or "
+            "'extract article text'."
+        ),
+        examples=["security headers"],
+    ),
+]
+PromptGoal = Annotated[
+    str,
+    Field(
+        min_length=1,
+        max_length=200,
+        description="Short description of the URL-inspection result the buyer needs.",
+        examples=["Check whether a page has safe security headers"],
+    ),
+]
+PromptTargetUrl = Annotated[
+    str,
+    Field(
+        min_length=1,
+        max_length=2048,
+        pattern=r"^https?://",
+        description=(
+            "Absolute public HTTP or HTTPS URL that the selected tool should inspect; private "
+            "and SSRF-sensitive destinations are rejected."
+        ),
+        examples=["https://example.com"],
+    ),
+]
+
+COMMON_PARAMETER_GUIDANCE = (
+    " Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set "
+    "fresh=true only when a new upstream fetch is required."
+)
 
 mcp = FastMCP(
     name="1cent URL Intelligence",
@@ -118,7 +189,7 @@ def _tool_annotations(
     ),
     annotations=_tool_annotations(open_world=False),
 )
-async def catalog_search(query: str) -> CallToolResult:
+async def catalog_search(query: CatalogQuery) -> CallToolResult:
     rows = search_catalog(query)
     data = {
         "results": [
@@ -171,6 +242,46 @@ async def demo_live_url_pulse() -> CallToolResult:
                 error=True,
             )
     return _result(response.model_dump(mode="json"), error=False)
+
+
+@mcp.prompt(
+    name="choose_url_tool",
+    title="Choose the safest 1cent URL tool",
+    description=(
+        "Build a concise plan that starts with free catalog discovery, selects one bounded "
+        "URL-analysis tool, and explains the x402 payment boundary before any paid call."
+    ),
+)
+def choose_url_tool(
+    goal: PromptGoal, target_url: PromptTargetUrl = "https://example.com"
+) -> str:
+    return (
+        "Use catalog_search first with this goal: "
+        f"{goal!r}. Target URL: {target_url!r}. Choose the narrowest matching tool. "
+        "Do not call a paid tool until the client has accepted the returned x402 requirement. "
+        "Never send credentials, private URLs or payment secrets to the target website."
+    )
+
+
+@mcp.resource(
+    "onecent://buyer-guide",
+    name="1cent buyer guide",
+    title="Connect, discover and pay safely",
+    description=(
+        "Short machine-readable buyer guide for the public 1cent Streamable HTTP MCP server."
+    ),
+    mime_type="text/markdown",
+)
+def buyer_guide_resource() -> str:
+    return (
+        "# 1cent buyer guide\n\n"
+        "Endpoint: `https://1cent.maxzoa.ru/mcp` (Streamable HTTP).\n\n"
+        "1. Call `catalog_search` to find the narrowest tool and current atomic USDC price.\n"
+        "2. Use `demo_url_pulse` or `demo_live_url_pulse` for a free integration check.\n"
+        "3. Paid calls return an x402 requirement for Base Mainnet USDC. Sign only client-side.\n"
+        "4. Reuse the same payment identifier after a definitive response; never retry UNKNOWN.\n"
+        "5. Only public HTTP(S) targets are accepted and SSRF-sensitive destinations fail closed.\n"
+    )
 
 
 async def _paid_rest_call(
@@ -272,7 +383,9 @@ async def _paid_rest_call(
     description=ENDPOINT_DESCRIPTIONS["pulse"],
     annotations=_tool_annotations(),
 )
-async def url_pulse(ctx: Context[Any, Any, Any], url: str, fresh: bool = False) -> CallToolResult:
+async def url_pulse(
+    ctx: Context[Any, Any, Any], url: PublicHttpUrl, fresh: FreshFlag = False
+) -> CallToolResult:
     return await _paid_rest_call("pulse", {"url": url, "fresh": fresh}, ctx)
 
 
@@ -283,7 +396,7 @@ async def url_pulse(ctx: Context[Any, Any, Any], url: str, fresh: bool = False) 
     annotations=_tool_annotations(),
 )
 async def url_passport(
-    ctx: Context[Any, Any, Any], url: str, fresh: bool = False
+    ctx: Context[Any, Any, Any], url: PublicHttpUrl, fresh: FreshFlag = False
 ) -> CallToolResult:
     return await _paid_rest_call("passport", {"url": url, "fresh": fresh}, ctx)
 
@@ -296,9 +409,9 @@ async def url_passport(
 )
 async def url_extract(
     ctx: Context[Any, Any, Any],
-    url: str,
-    fresh: bool = False,
-    include_links: bool = False,
+    url: PublicHttpUrl,
+    fresh: FreshFlag = False,
+    include_links: IncludeLinksFlag = False,
 ) -> CallToolResult:
     return await _paid_rest_call(
         "extract",
@@ -313,13 +426,15 @@ async def url_extract(
     description=ENDPOINT_DESCRIPTIONS["changed"],
     annotations=_tool_annotations(changes_snapshot=True),
 )
-async def url_changed(ctx: Context[Any, Any, Any], url: str, fresh: bool = False) -> CallToolResult:
+async def url_changed(
+    ctx: Context[Any, Any, Any], url: PublicHttpUrl, fresh: FreshFlag = False
+) -> CallToolResult:
     return await _paid_rest_call("changed", {"url": url, "fresh": fresh}, ctx)
 
 
 def _make_projection_tool(tool_key: str):  # type: ignore[no-untyped-def]
     async def projection(
-        ctx: Context[Any, Any, Any], url: str, fresh: bool = False
+        ctx: Context[Any, Any, Any], url: PublicHttpUrl, fresh: FreshFlag = False
     ) -> CallToolResult:
         return await _paid_rest_call(tool_key, {"url": url, "fresh": fresh}, ctx)
 
@@ -337,6 +452,7 @@ for _definition in TOOLS:
             _definition.description_en
             + " Use only for public HTTP(S) resources; it does not execute JavaScript "
             "or bypass access controls."
+            + COMMON_PARAMETER_GUIDANCE
         ),
         annotations=_tool_annotations(changes_snapshot=_definition.key == "url_diff"),
     )(_make_projection_tool(_definition.key))

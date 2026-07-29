@@ -35,6 +35,8 @@ The other 28 paid projections cover status, redirects, metadata, content, discov
 security evidence. Current names and prices come from `GET /v1/catalog`.
 
 Every tool publishes strict `inputSchema`, exact success `outputSchema` and MCP annotations.
+Every input property has a machine-readable description; URL fields publish HTTP(S) constraints,
+length bounds and examples, while cache and extraction flags explain their exact effect.
 Unknown fields are rejected. URL tools declare open-world access; change/diff tools disclose their
 snapshot side effect. Calls without payment return a tool error containing x402 requirements.
 A URL operation starts only after the existing gateway verifies payment. Paid MCP calls use the
@@ -54,6 +56,13 @@ idempotency controls as the REST API.
 Never place a buyer private key in MCP configuration sent to the server. Signing belongs in the
 buyer client. A plain remote MCP connection can discover 1cent but does not guarantee the host can
 sign x402 payments.
+
+## Prompt and resource
+
+- Prompt `choose_url_tool` produces a safe tool-selection plan that begins with free catalog
+  discovery and explains the x402 boundary before any paid call.
+- Resource `onecent://buyer-guide` is static Markdown with connection, discovery, signing,
+  idempotency and SSRF guidance. Reading it performs no URL operation and requires no payment.
 
 Clients without native x402 signing should run the local stdio
 [1cent Buyer Bridge](BUYER_BRIDGE.md). It exposes the same 32 paid tool names plus free catalog,

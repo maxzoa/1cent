@@ -2,8 +2,10 @@
 
 [![Quality](https://github.com/maxzoa/1cent/actions/workflows/quality.yml/badge.svg)](https://github.com/maxzoa/1cent/actions/workflows/quality.yml)
 [![External health](https://github.com/maxzoa/1cent/actions/workflows/external-health.yml/badge.svg)](https://github.com/maxzoa/1cent/actions/workflows/external-health.yml)
+[![1cent MCP server](https://glama.ai/mcp/servers/maxzoa/1cent/badges/card.svg)](https://glama.ai/mcp/servers/maxzoa/1cent)
 [![Glama score](https://glama.ai/mcp/servers/maxzoa/1cent/badges/score.svg)](https://glama.ai/mcp/servers/maxzoa/1cent)
 [![Smithery](https://smithery.ai/badge/maxzoa27/onecent)](https://smithery.ai/servers/maxzoa27/onecent)
+[![LobeHub](https://lobehub.com/badge/mcp/maxzoa-1cent)](https://lobehub.com/mcp/maxzoa-1cent)
 [![MCP Registry](https://img.shields.io/badge/MCP_Registry-ru.maxzoa%2F1cent-5c4ee5)](https://registry.modelcontextprotocol.io/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
@@ -29,6 +31,22 @@ Production exposes 32 paid REST/MCP operations plus three free MCP tools:
 - `catalog_search` — find the correct operation and live price without a URL fetch;
 - `demo_url_pulse` — inspect a fixed precomputed output sample without payment or network access.
 - `demo_live_url_pulse` — run the real safe service against fixed `example.com`, rate-limited.
+
+MCP also publishes one buyer prompt (`choose_url_tool`) and one static buyer-guide resource
+(`onecent://buyer-guide`). Every input field includes constraints, examples and machine-readable
+descriptions so agents can choose and call tools correctly on the first attempt.
+
+## Find 1cent
+
+- Official MCP Registry: `ru.maxzoa/1cent`;
+- Glama remote connector: `https://glama.ai/mcp/connectors/ru.maxzoa/1cent`;
+- Smithery: `https://smithery.ai/servers/maxzoa27/onecent`;
+- MCP.so: `https://mcp.so/servers/1cent`;
+- LobeHub: `https://lobehub.com/mcp/maxzoa-1cent`.
+
+Directory status is checked with dated evidence in
+[Marketplace quality report](MARKETPLACE_QUALITY_050_REPORT.md). A page returning HTTP 200 alone is
+not counted as a successful listing: it must be searchable, current and installable.
 
 Buyer setup starts with a no-payment diagnostic:
 
@@ -104,6 +122,7 @@ a fresh PostgreSQL backup, production preflight, development bypass disabled and
 - [Local MCP Buyer Bridge](BUYER_BRIDGE.md)
 - [Security policy](SECURITY.md)
 - [Release history](CHANGELOG.md)
+- [Marketplace quality report](MARKETPLACE_QUALITY_050_REPORT.md)
 - [Scaling and trust gates](TRUST_AND_SCALING_READINESS.md)
 - [Production operations](MAINNET_RUNBOOK.md)
 - [Incident response](INCIDENT_RESPONSE.md)

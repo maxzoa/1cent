@@ -25,6 +25,10 @@ async def test_mcp_tools_have_strict_schemas_and_descriptions() -> None:
             field = "query" if tool.name == "catalog_search" else "url"
             assert field in tool.inputSchema["required"]
             assert tool.inputSchema["properties"][field]["type"] == "string"
+            assert tool.inputSchema["properties"][field]["description"]
+            assert tool.inputSchema["properties"][field]["examples"]
+        for property_schema in tool.inputSchema.get("properties", {}).values():
+            assert property_schema.get("description"), tool.name
         assert tool.outputSchema is not None
         assert tool.outputSchema["type"] == "object"
         assert tool.outputSchema["additionalProperties"] is False
@@ -32,6 +36,20 @@ async def test_mcp_tools_have_strict_schemas_and_descriptions() -> None:
             assert "quality" in tool.outputSchema["properties"]
         assert tool.annotations is not None
         assert tool.annotations.destructiveHint is False
+
+
+@pytest.mark.asyncio
+async def test_mcp_publishes_buyer_prompt_and_resource() -> None:
+    prompts = await mcp.list_prompts()
+    assert [prompt.name for prompt in prompts] == ["choose_url_tool"]
+    assert prompts[0].description and "x402" in prompts[0].description
+    assert prompts[0].arguments
+    assert all(argument.description for argument in prompts[0].arguments)
+
+    resources = await mcp.list_resources()
+    assert [str(resource.uri) for resource in resources] == ["onecent://buyer-guide"]
+    assert resources[0].mimeType == "text/markdown"
+    assert resources[0].description and "Streamable HTTP" in resources[0].description
 
 
 @pytest.mark.asyncio
@@ -64,7 +82,7 @@ def test_registry_remote_metadata() -> None:
     document = json.loads((Path(__file__).parents[2] / "server.json").read_text("utf-8"))
     assert MCP_PROTOCOL_VERSION == "2025-11-25"
     assert document["name"] == "ru.maxzoa/1cent"
-    assert document["version"] == "0.4.0"
+    assert document["version"] == "0.5.0"
     assert document["remotes"] == [
         {"type": "streamable-http", "url": "https://1cent.maxzoa.ru/mcp"}
     ]

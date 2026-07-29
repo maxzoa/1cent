@@ -43,13 +43,14 @@ chmod 600 .env
 9. Monitor mainnet PASS.
 10. Settlement count/sum до/после должны совпасть, если платеж отдельно не разрешён.
 
-Release 0.4.0 использует:
+Release 0.5.0 использует:
 
 ```sh
-CONFIRM_STAGE13_DEPLOY=true sh scripts/deploy_stage13.sh
+CONFIRM_MARKETPLACE_050_DEPLOY=true sh scripts/deploy_marketplace_050.sh
 ```
 
-Следующая версия должна иметь обновлённый version-specific deploy evidence.
+Скрипт завершается только после public version/schema/prompt/resource checks и нулевого
+изменения count/sum успешных settlement.
 
 ## Backup
 

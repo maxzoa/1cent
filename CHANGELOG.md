@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 — 2026-07-29
+
+- Added full descriptions, constraints and examples to every MCP input property.
+- Added buyer prompt `choose_url_tool` and static resource `onecent://buyer-guide`.
+- Added LobeHub badge and a dated cross-marketplace acceptance report.
+- Added marketplace regression checks so stale version, missing discovery metadata and incomplete
+  schemas fail release validation.
+- Payment logic, network, facilitator, seller, prices and production safety controls are unchanged.
+
 ## Unreleased — Buyer activation
 
 - Added Glama ownership metadata, complete Python package discovery metadata and marketplace badges.

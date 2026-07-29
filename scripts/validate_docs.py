@@ -25,6 +25,7 @@ CURRENT_DOCS = (
     "MCP_REGISTRY_PUBLICATION_REPORT.md",
     "CATALOG_SUBMISSION_STATUS.md",
     "MARKETPLACE_PROFILE_AUDIT.md",
+    "MARKETPLACE_QUALITY_050_REPORT.md",
     "PRICE_PROMO_7_DAY_REPORT.md",
 )
 
@@ -58,12 +59,14 @@ ARCHIVE_DOCS = (
 )
 
 RUNTIME_FACTS = (
-    "0.4.0",
+    "0.5.0",
     "eip155:8453",
     "https://facilitator.payai.network",
     "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     "0x4798e8401ba3b1566685257c82d06303AB90EA35",
     "Total MCP tools | 35",
+    "MCP prompts | 1: `choose_url_tool`",
+    "MCP resources | 1: `onecent://buyer-guide`",
     "NAS host port | `18013`",
     "MAINNET_DAILY_SETTLEMENT_LIMIT_ENABLED=false",
     "MAINNET_DAILY_REVENUE_LIMIT_ENABLED=false",
@@ -161,7 +164,9 @@ def validate() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     for marker in (
         "glama.ai/mcp/servers/maxzoa/1cent/badges/score.svg",
+        "glama.ai/mcp/servers/maxzoa/1cent/badges/card.svg",
         "smithery.ai/badge/maxzoa27/onecent",
+        "lobehub.com/badge/mcp/maxzoa-1cent",
         "MCP_Registry-ru.maxzoa%2F1cent",
         "curl -sS https://1cent.maxzoa.ru/v1/demo/live-pulse",
     ):

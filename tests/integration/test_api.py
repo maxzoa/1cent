@@ -100,7 +100,7 @@ def test_mcp_well_known_manifest(client: TestClient) -> None:
     assert manifest.headers["content-type"].startswith("application/json")
     body = manifest.json()
     assert body["name"] == "ru.maxzoa/1cent"
-    assert body["version"] == "0.4.0"
+    assert body["version"] == "0.5.0"
     assert body["websiteUrl"] == "https://1cent.maxzoa.ru"
     assert body["remotes"] == [
         {
@@ -139,7 +139,7 @@ def test_free_demo_status_security_and_server_card(
 
     status = client.get("/status.json")
     assert status.status_code == 200
-    assert status.json()["version"] == "0.4.0"
+    assert status.json()["version"] == "0.5.0"
     assert status.json()["paid_tools"] == 32
     assert status.json()["free_mcp_tools"] == [
         "catalog_search",
@@ -154,6 +154,8 @@ def test_free_demo_status_security_and_server_card(
     assert "Canonical: https://1cent.maxzoa.ru/.well-known/security.txt" in security.text
 
     card = client.get("/.well-known/mcp/server-card.json").json()
+    assert [item["name"] for item in card["prompts"]] == ["choose_url_tool"]
+    assert [item["uri"] for item in card["resources"]] == ["onecent://buyer-guide"]
     assert len(card["tools"]) == 35
     assert [tool["name"] for tool in card["tools"][:3]] == [
         "catalog_search",
@@ -162,6 +164,11 @@ def test_free_demo_status_security_and_server_card(
     ]
     assert all(tool["outputSchema"] for tool in card["tools"])
     assert all(tool["annotations"]["destructiveHint"] is False for tool in card["tools"])
+
+    marketplace_page = client.get("/marketplaces")
+    assert marketplace_page.status_code == 200
+    for listing in ("Glama", "Smithery", "MCP.so", "LobeHub"):
+        assert listing in marketplace_page.text
 
 
 def test_live_demo_is_free_fixed_target_and_rate_limited_service(

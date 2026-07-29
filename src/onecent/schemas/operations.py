@@ -14,11 +14,25 @@ class UrlRequest(StrictModel):
         description="Public HTTP or HTTPS URL to inspect.",
         examples=["https://example.com"],
     )
-    fresh: bool = False
+    fresh: bool = Field(
+        default=False,
+        description=(
+            "Set true only when a new upstream fetch is required; false allows a bounded "
+            "cached response."
+        ),
+        examples=[False],
+    )
 
 
 class ExtractRequest(UrlRequest):
-    include_links: bool = False
+    include_links: bool = Field(
+        default=False,
+        description=(
+            "Set true to include bounded normalized links; false returns main text without "
+            "the optional link list."
+        ),
+        examples=[False],
+    )
 
 
 class ResultQuality(StrictModel):
@@ -132,7 +146,15 @@ class ToolResponse(StrictModel):
 
 
 class CatalogSearchRequest(StrictModel):
-    query: str = Field(min_length=1, max_length=200)
+    query: str = Field(
+        min_length=1,
+        max_length=200,
+        description=(
+            "Short capability phrase such as 'redirect chain', 'security headers' or "
+            "'extract article text'."
+        ),
+        examples=["security headers"],
+    )
 
 
 class CatalogSearchResult(StrictModel):
