@@ -6,6 +6,8 @@
   `onecent-latest.sql.gz` readiness path.
 - Decoupled the health monitor's runtime mode check from full application readiness validation,
   preventing a stale backup setting from disabling the monitor itself.
+- Made controlled deploy capture the rollback migration revision directly from PostgreSQL, so a
+  stale application readiness gate cannot prevent the fresh-backup repair step.
 - Added full descriptions, constraints and examples to every MCP input property.
 - Added buyer prompt `choose_url_tool` and static resource `onecent://buyer-guide`.
 - Added LobeHub badge and a dated cross-marketplace acceptance report.

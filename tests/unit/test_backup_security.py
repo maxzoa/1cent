@@ -33,4 +33,6 @@ def test_marketplace_deploy_uses_canonical_backup_without_echoing_env() -> None:
     assert "sh scripts/restore_drill.sh backups/onecent-latest.sql.gz" in script
     assert "set_env_value MAINNET_BACKUP_PATH /backups/onecent-latest.sql.gz" in script
     assert "cp .env .env.production.marketplace-050.saved" in script
+    assert "SELECT version_num FROM alembic_version" in script
+    assert "onecent-api alembic current" not in script
     assert "cat .env" not in script

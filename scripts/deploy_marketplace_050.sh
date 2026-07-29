@@ -16,7 +16,9 @@ chmod 700 "$STATE_DIR"
 
 old_api_image=$($DOCKER inspect -f '{{.Image}}' 1cent-onecent-api-1)
 old_bot_image=$($DOCKER inspect -f '{{.Image}}' 1cent-onecent-bot-1)
-old_revision=$($DOCKER compose exec -T onecent-api alembic current | awk 'NR==1 {print $1}')
+old_revision=$($DOCKER compose exec -T onecent-db psql -U onecent -d onecent -Atc \
+  "SELECT version_num FROM alembic_version")
+test -n "$old_revision"
 before_payments=$($DOCKER compose exec -T onecent-db psql -U onecent -d onecent -Atc \
   "select count(id)||'|'||coalesce(sum(amount_atomic),0) from payment_events where settlement_status='success'")
 switched=false
