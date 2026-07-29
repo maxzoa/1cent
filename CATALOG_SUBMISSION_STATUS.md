@@ -18,6 +18,8 @@ drift independently; dates below are part of the evidence.
 | MCPServers.org | review pending | Free submission accepted successfully; premium option remained disabled |
 | MCP Market | skipped | Paid placement offered; no payment authorized or made |
 | PulseMCP | automatic import pending | Its documented process imports Official Registry daily and reviews weekly; no duplicate or paid submission is appropriate yet |
+| modelcontext-protocol.com | auto-imported but stale | Public Official-Registry mirror shows exact remote URL but old `0.1.0` metadata; its own page says it updates daily |
+| AgentGrade | stale `D`; rescan externally blocked | Grade was collected before the security-header deploy; a fresh passive scan could not be submitted because the public scan page returned HTTP 502 / client-script blocking |
 
 No catalog is marked current without dated evidence. A 402 challenge is not a visitor, purchase or
 settlement. Revenue is counted only from confirmed settlement evidence. Catalog work must not use
@@ -29,6 +31,12 @@ examples on every required string field. A future Glama recrawl may change the g
 does not predict or fabricate that result. Glama's `Tool Count` and JavaScript/binary-content
 preferences are not product defects: 35 tools are intentionally distinct and JavaScript execution
 is excluded by the service's security model.
+
+AgentGrade's historical `D` must not be presented as current production evidence. The public MCP now
+serves HTTPS, CSP, HSTS, frame, content-type, referrer and permissions protections. Authentication is
+intentionally not required to connect because free discovery and x402 challenges must remain public;
+paid URL results still require verified settlement. No fake auth header or weakened payment flow will
+be added merely to satisfy a generic scanner rubric.
 
 Directory listings continue to point at the public remote MCP. Buyers whose MCP host cannot sign
 x402 should follow [BUYER_BRIDGE.md](BUYER_BRIDGE.md). The local bridge is not a duplicate public
