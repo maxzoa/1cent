@@ -84,6 +84,28 @@
 - Current DB migration: `0007`.
 - Последняя полная Stage 13 приёмка: `STAGE_13_BUYER_CONVERSION_REPORT.md`.
 
+### Marketplace trust hardening acceptance
+
+Production rollout `2026-07-29` is accepted with these exact operational results:
+
+- source revision: `19a82ae`;
+- fresh backup: `/volume1/docker/1cent/backups/onecent-20260729T155909Z.sql.gz`;
+- restore drill: `PASS`, 17 tables, migration `0007`;
+- API, bot and DB: healthy; `mainnet_health=PASS`;
+- `/mcp` returns absolute HTTPS `308` to `https://1cent.maxzoa.ru/mcp/`;
+- public root, favicon and Swagger: HTTP `200`;
+- CSP, HSTS, `X-Frame-Options`, `X-Content-Type-Options`, referrer and permissions
+  headers: present;
+- MCP: protocol `2025-11-25`, initialize, tools/list, schemas and unpaid x402: `PASS`;
+- unpaid challenge load: 25 requests, concurrency 5, average `2640.0 ms`, p95
+  `3873.5 ms` after one warm-up request;
+- confirmed settlements/revenue stayed `41 / 228000 atomic`; no settlement was made.
+
+The first rollout attempt stopped on a 15-second unpaid-load timeout and automatically restored
+the previous healthy images. Root cause was repeated dynamic-price DB reads under a cold concurrent
+burst. Revision `19a82ae` adds a one-second in-process price cache with concurrent-load collapse and
+keeps the paid-payload price precheck on the same value. The second controlled rollout passed.
+
 ## Live sources of truth
 
 - Health: `https://1cent.maxzoa.ru/health`.

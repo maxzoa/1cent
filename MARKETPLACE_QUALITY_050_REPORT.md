@@ -55,7 +55,7 @@ public visibility. Paid placement and artificial payments are excluded.
 |---|---|
 | Official MCP Registry | `0.5.0`, `active`, `latest`, exact remote `https://1cent.maxzoa.ru/mcp` |
 | PayAI Bazaar | all 32 paid REST resources remain indexed; no indexing payment was made |
-| Glama connector | healthy; 35/35 tools; tool-definition quality 4.4/5; coherence 4/5 |
+| Glama connector | healthy, ownership verified, 35/35 tools; cached public crawl rates quality A 4/5 |
 | Smithery | public and searchable; fresh release discovered 35 tools, 1 prompt and 1 resource; score 96/100 |
 | GitHub | public Apache-2.0 repository, current `v0.5.0` release, homepage and discovery topics |
 | MCP.so | public listing works; free metadata-refresh issue `#215` is pending |
@@ -77,3 +77,30 @@ The public reverse-proxy path exposed a relative slash redirect from `https://..
 adds CSP/HSTS/frame/content-type/referrer/permissions headers, and serves a stable first-party
 favicon. Regression tests cover the redirect, headers and icon. Payment processing, x402,
 facilitator, seller, prices and URL operations are unchanged.
+
+## Production rollout evidence
+
+The first controlled deploy stopped on the unpaid-load gate because a concurrent burst after MCP
+smoke approached the client's 15-second timeout. Automatic rollback restored the previous API and
+bot images; DB and confirmed settlements were unchanged. The cause was repeated PostgreSQL work for
+the same dynamic promotional price.
+
+Revision `19a82ae` caches each effective tool price for one second, collapses concurrent misses with
+an async lock and uses the same cached value for challenge and paid-payload price validation. Tests
+cover concurrent collapse, TTL refresh and test-environment bypass. The load smoke now performs one
+warm-up request before the measured burst.
+
+Second controlled deploy result:
+
+- backup `/volume1/docker/1cent/backups/onecent-20260729T155909Z.sql.gz`;
+- restore drill `PASS`, 17 tables, migration `0007`;
+- Docker build, candidate image, dependency check and migrations `PASS`;
+- local, public and MCP smoke `PASS`;
+- 25 unpaid challenges at concurrency 5: average `2640.0 ms`, p95 `3873.5 ms`;
+- absolute HTTPS MCP redirect and public security headers `PASS`;
+- API, bot and DB healthy; monitor `mainnet_health=PASS`;
+- settlements/revenue unchanged at `41 / 228000 atomic`; no payment was made.
+
+Glama's current public score is based on a `2026-07-29 00:32` crawl and still displays blank
+parameter-description cells. Production was deployed later. Source tests require descriptions and
+examples on every non-empty MCP input schema; a new platform crawl remains external and asynchronous.
