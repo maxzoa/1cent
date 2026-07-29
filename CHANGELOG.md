@@ -6,6 +6,9 @@
 - Added CSP, HSTS, clickjacking, MIME-sniffing, referrer and browser-permission headers.
 - Added a stable first-party favicon for directory cards and browser tabs.
 - Added regression coverage for the canonical MCP redirect, security headers and icon.
+- Collapsed concurrent dynamic-price reads into a one-second in-process cache shared by challenge
+  generation and paid-payload precheck; controlled price changes remain visible within one second.
+- Added a sequential unpaid warm-up before the bounded concurrent load gate.
 - Refreshed cross-marketplace status with dated evidence and honest paid/platform blockers.
 - Payment logic, network, facilitator, seller, prices and production safety controls remain unchanged.
 

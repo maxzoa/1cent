@@ -13,6 +13,7 @@ settlement, network/facilitator/seller/price change or paid directory placement 
 | Repository | public, Apache-2.0, CI, current `v0.5.0`, homepage, topics and `glama.json` |
 | Buyer safety | x402 remains before URL execution; SSRF, idempotency and UNKNOWN no-retry unchanged |
 | Public trust hardening | canonical HTTPS MCP redirect, security headers and first-party favicon covered by tests |
+| Challenge latency | concurrent dynamic-price reads collapse for one second; deploy requires warm-up plus bounded load smoke |
 
 ## Directory results
 

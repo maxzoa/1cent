@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+from asyncio import Lock
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -59,6 +60,36 @@ from onecent.services.traffic_audit import (
 
 UTC = timezone.utc
 PAID_PATHS = {path: definition.key for path, definition in TOOL_BY_PATH.items()}
+
+
+class _EffectivePriceCache:
+    """Collapse concurrent challenge price reads without hiding controlled updates."""
+
+    def __init__(
+        self,
+        loader: Callable[[Settings, str], Awaitable[int]],
+        ttl_seconds: float = 1.0,
+    ) -> None:
+        self._loader = loader
+        self._ttl_seconds = ttl_seconds
+        self._items: dict[str, tuple[float, int]] = {}
+        self._lock = Lock()
+
+    async def get(self, settings: Settings, operation: str) -> int:
+        if settings.app_env == "test" or self._ttl_seconds <= 0:
+            return await self._loader(settings, operation)
+        now = monotonic()
+        cached = self._items.get(operation)
+        if cached is not None and cached[0] > now:
+            return cached[1]
+        async with self._lock:
+            now = monotonic()
+            cached = self._items.get(operation)
+            if cached is not None and cached[0] > now:
+                return cached[1]
+            atomic = await self._loader(settings, operation)
+            self._items[operation] = (monotonic() + self._ttl_seconds, atomic)
+            return atomic
 
 
 class TestnetFacilitatorClient(HTTPFacilitatorClient):
@@ -262,10 +293,13 @@ def build_x402_middleware(
     server.register(settings.x402_network, ExactEvmServerScheme())  # type: ignore[no-untyped-call]
     server.register_extension(bazaar_resource_server_extension)  # type: ignore[arg-type]
     server.initialize()
+    price_cache = _EffectivePriceCache(
+        lambda active, operation: _effective_price_atomic(active, operation)
+    )
 
     async def dynamic_price(context: HTTPRequestContext) -> str:
         operation = PAID_PATHS[context.path]
-        atomic = await _effective_price_atomic(settings, operation)
+        atomic = await price_cache.get(settings, operation)
         return f"${Decimal(atomic) / Decimal(1_000_000):.6f}"
 
     routes = {
@@ -367,9 +401,7 @@ def build_x402_middleware(
                 amount_atomic=int(accepted.amount),
                 facilitator=facilitator_name,
             )
-            expected_amount = await _effective_price_atomic(
-                settings, PAID_PATHS[request.url.path]
-            )
+            expected_amount = await price_cache.get(settings, PAID_PATHS[request.url.path])
             precheck_reason = _payload_precheck_reason(payload, settings, expected_amount)
             await _record_funnel(
                 "payload_precheck",
