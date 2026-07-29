@@ -37,12 +37,13 @@ sh scripts/monitor_mainnet_health.sh
 ```sh
 cd /volume1/docker/1cent
 sh scripts/backup_db.sh
-latest=$(find backups -type f -name 'onecent-*.sql.gz' -print | sort | tail -1)
-stat -c '%a %n' backups "$latest"
-sh scripts/restore_drill.sh "$latest"
+stat -c '%a %n' backups backups/onecent-latest.sql.gz
+sh scripts/restore_drill.sh backups/onecent-latest.sql.gz
 ```
 
-Ожидается: directory `711`, dump `600`, restore drill PASS. Backup младше 24 часов обязателен
+Ожидается: directory `711`, timestamp dump и атомарно обновляемый
+`onecent-latest.sql.gz` имеют mode `600`, restore drill PASS. В production
+`MAINNET_BACKUP_PATH=/backups/onecent-latest.sql.gz`. Backup младше 24 часов обязателен
 перед controlled deploy или возвратом mainnet после rollback.
 
 ## PayAI capability check
@@ -72,6 +73,8 @@ Capability drift = deploy/paid-action stop; не проверять реальн
 `scripts/deploy_marketplace_050.sh` и требуют
 `CONFIRM_MARKETPLACE_050_DEPLOY=true`. Скрипт делает backup/restore drill, candidate checks,
 unpaid smoke, monitor check, settlement-count invariant и rollback только API/bot этого Compose project.
+Он сохраняет `.env` с mode `600` и безопасно меняет только `MAINNET_BACKUP_PATH` на канонический
+latest-файл, не печатая содержимое `.env`.
 
 ## Emergency pause
 

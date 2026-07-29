@@ -33,6 +33,21 @@ atomic_write() {
   mv -f "$temporary" "$target"
 }
 
+set_env_value() {
+  key=$1
+  value=$2
+  temporary=".env.tmp.$$"
+  umask 077
+  awk -v key="$key" -v value="$value" '
+    BEGIN { found = 0 }
+    index($0, key "=") == 1 { print key "=" value; found = 1; next }
+    { print }
+    END { if (!found) print key "=" value }
+  ' .env >"$temporary"
+  chmod 600 "$temporary"
+  mv -f "$temporary" .env
+}
+
 resume_service() {
   $DOCKER compose exec -T onecent-db psql -U onecent -d onecent -v ON_ERROR_STOP=1 \
     -c "UPDATE service_settings SET value='true',updated_at=now(),updated_by='marketplace-050-deploy' WHERE key='service_enabled'" >/dev/null
@@ -59,13 +74,15 @@ rollback() {
 }
 trap rollback EXIT INT TERM
 
-$DOCKER compose config >/dev/null
-sh scripts/backup_db.sh
-latest_backup=$(find backups -type f -name 'onecent-*.sql.gz' -print | sort | tail -1)
-sh scripts/restore_drill.sh "$latest_backup"
 umask 077
 cp .env .env.production.marketplace-050.saved
 chmod 600 .env.production.marketplace-050.saved
+$DOCKER compose config >/dev/null
+sh scripts/backup_db.sh
+test -s backups/onecent-latest.sql.gz
+sh scripts/restore_drill.sh backups/onecent-latest.sql.gz
+set_env_value MAINNET_BACKUP_PATH /backups/onecent-latest.sql.gz
+$DOCKER compose config >/dev/null
 
 $DOCKER compose build onecent-api onecent-bot
 built=true

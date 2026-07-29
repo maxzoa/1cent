@@ -14,6 +14,8 @@ mkdir -p "$BACKUP_DIR"
 chmod 711 "$BACKUP_DIR"
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 TARGET="$BACKUP_DIR/onecent-$STAMP.sql.gz"
+LATEST="$BACKUP_DIR/onecent-latest.sql.gz"
+LATEST_TMP="$BACKUP_DIR/.onecent-latest.sql.gz.tmp.$$"
 
 notify_failure() {
   "$DOCKER" compose run --rm --no-deps onecent-bot python -c \
@@ -29,5 +31,10 @@ if ! "$DOCKER" compose exec -T onecent-db \
 fi
 test -s "$TARGET" || { rm -f "$TARGET"; notify_failure; exit 1; }
 chmod 600 "$TARGET"
-find "$BACKUP_DIR" -type f -name 'onecent-*.sql.gz' -mtime +14 -delete
+rm -f "$LATEST_TMP"
+ln "$TARGET" "$LATEST_TMP"
+chmod 600 "$LATEST_TMP"
+mv -f "$LATEST_TMP" "$LATEST"
+find "$BACKUP_DIR" -type f -name 'onecent-*.sql.gz' \
+  ! -name 'onecent-latest.sql.gz' -mtime +14 -delete
 echo "backup PASS: $TARGET"

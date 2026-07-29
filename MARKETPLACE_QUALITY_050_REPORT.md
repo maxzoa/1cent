@@ -29,6 +29,9 @@ canonical repository and endpoint, and must expose every current tool with clear
 
 ## Release corrections
 
+- Production deployment safety was repaired before rollout: backup creation now atomically updates
+  the canonical latest path, and the monitor reads only non-secret runtime mode variables instead of
+  invoking the full readiness validator.
 - Version 0.5.0 is synchronized across package, Registry metadata and static catalog artifacts.
 - Every MCP input property has a description; URL inputs also publish length, scheme, SSRF scope
   and examples. Cache and extraction flags explain exact behavior.
