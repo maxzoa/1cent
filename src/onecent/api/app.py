@@ -126,8 +126,8 @@ async def root() -> HTMLResponse:
         "<p><code>https://1cent.maxzoa.ru/mcp/</code></p><p><a href='/tools'>Browse tools</a> · "
         "<a href='/v1/demo/live-pulse'>Free live demo</a> · "
         "<a href='/docs'>OpenAPI</a> · <a href='/docs/getting-started'>Pay with x402</a> · "
-        "<a href='https://registry.modelcontextprotocol.io'>MCP Registry</a> · "
-        "<a href='https://smithery.ai/servers/maxzoa27/onecent' rel='me'>Smithery</a></p>",
+        "<a href='https://smithery.ai/servers/maxzoa27/onecent' rel='me'>Smithery</a> · "
+        "<a href='/marketplaces'>Verified listings</a></p>",
     )
 
 
@@ -137,6 +137,22 @@ async def smithery_backlink() -> HTMLResponse:
         "1cent on Smithery",
         "<p>Connect to the verified public 1cent MCP listing on "
         "<a href='https://smithery.ai/servers/maxzoa27/onecent' rel='me'>Smithery</a>.</p>",
+    )
+
+
+@app.get("/marketplaces", response_class=HTMLResponse, include_in_schema=False)
+async def marketplace_links() -> HTMLResponse:
+    return _landing(
+        "Verified 1cent listings",
+        "<p>Canonical remote MCP endpoint: <code>https://1cent.maxzoa.ru/mcp</code>.</p>"
+        "<ul><li><a href='https://registry.modelcontextprotocol.io' rel='me'>"
+        "Official MCP Registry: ru.maxzoa/1cent</a></li>"
+        "<li><a href='https://glama.ai/mcp/connectors/ru.maxzoa/1cent' rel='me'>"
+        "Glama remote connector</a></li>"
+        "<li><a href='https://smithery.ai/servers/maxzoa27/onecent' rel='me'>Smithery</a></li>"
+        "<li><a href='https://mcp.so/servers/1cent' rel='me'>MCP.so</a></li>"
+        "<li><a href='https://lobehub.com/mcp/maxzoa-1cent' rel='me'>LobeHub</a></li></ul>"
+        "<p>Listings must resolve to this same endpoint. Buyer keys remain client-side.</p>",
     )
 
 
@@ -154,12 +170,17 @@ async def catalog(
 @app.get("/.well-known/mcp/server-card.json", include_in_schema=False)
 async def mcp_server_card() -> dict[str, object]:
     tools = await mcp.list_tools()
+    prompts = await mcp.list_prompts()
+    resources = await mcp.list_resources()
     return {
         "serverInfo": {"name": "ru.maxzoa/1cent", "version": __version__},
         "authentication": {"required": False, "schemes": []},
         "tools": [tool.model_dump(by_alias=True, exclude_none=True) for tool in tools],
-        "resources": [],
-        "prompts": [],
+        "resources": [
+            resource.model_dump(by_alias=True, mode="json", exclude_none=True)
+            for resource in resources
+        ],
+        "prompts": [prompt.model_dump(by_alias=True, exclude_none=True) for prompt in prompts],
     }
 
 
@@ -502,6 +523,7 @@ async def public_sitemap() -> Response:
         "/terms",
         "/status",
         "/smithery",
+        "/marketplaces",
     )
     urls = "".join(f"<url><loc>{settings.public_base_url}{path}</loc></url>" for path in paths)
     return Response(

@@ -20,23 +20,29 @@ ENDPOINT_DESCRIPTIONS = {
         "Check a public HTTP or HTTPS URL before expensive browsing or AI processing. "
         "Returns availability, redirects, content type, page metadata, language, cache state, "
         "content hash, robots policy, and access restrictions. Does not execute JavaScript."
+        " Pass url as an absolute public HTTP(S) URL. Keep fresh=false to reuse cache; set "
+        "fresh=true only when a new upstream fetch is required."
     ),
     "passport": (
         "Inspect a public HTTP or HTTPS URL and return a structured site passport. Includes "
         "pulse fields, registrable domain, robots and sitemap discovery, feeds, OpenAPI hints, "
         "and page metadata. Uses at most eight external HTTP requests and does not execute "
-        "JavaScript."
+        "JavaScript. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to reuse "
+        "cache; set fresh=true only when a new upstream fetch is required."
     ),
     "extract": (
         "Extract normalized main text and optional links from a public HTTP or HTTPS document. "
         "Returns title, author, publication time, language, content hash, truncation and cache "
         "state. "
-        "Output size and fetch time are bounded; JavaScript is not executed."
+        "Output size and fetch time are bounded; JavaScript is not executed. Pass url as an "
+        "absolute public HTTP(S) URL. Set include_links=true only when normalized links are "
+        "needed. Keep fresh=false to reuse cache."
     ),
     "changed": (
         "Compare a public HTTP or HTTPS URL with its previously stored normalized content hash. "
         "Creates a baseline on first use, then reports whether content changed and returns current "
-        "and previous hashes with timestamps. JavaScript is not executed."
+        "and previous hashes with timestamps. JavaScript is not executed. Pass url as an absolute "
+        "public HTTP(S) URL. Keep fresh=false to reuse cache; set fresh=true only for a new fetch."
     ),
 }
 
@@ -146,7 +152,9 @@ for _definition in TOOLS:
     elif _name not in ENDPOINT_DESCRIPTIONS:
         ENDPOINT_DESCRIPTIONS[_name] = (
             _definition.description_en
-            + " Only public HTTP(S) targets are accepted; JavaScript is not executed."
+            + " Only public HTTP(S) targets are accepted; JavaScript is not executed. Pass url "
+            "as an absolute public HTTP(S) URL. Keep fresh=false to reuse cache; set fresh=true "
+            "only when a new upstream fetch is required."
         )
         INPUT_EXAMPLES[_name] = {"url": "https://example.com", "fresh": False}
         OUTPUT_EXAMPLES[_name] = {

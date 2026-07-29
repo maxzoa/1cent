@@ -11,8 +11,11 @@ does not change production, prices, payment processing or tool behavior.
 | Smithery | 63/100 and explicitly unlisted | Does not appear in Smithery search | Public visibility plus refreshed release with searchable public page |
 | MCP.so | Public page lists 33 tools | Two free demos missing from listing | Refresh succeeds and public page lists 35 remote tools |
 | PulseMCP | Search returns zero results | No PulseMCP discovery traffic | Exact public search result for 1cent |
-| LobeHub | Last evidence was version 0.2.0 | Stale product and pricing story | Public listing reflects 0.4.0 metadata |
-| MCP.Directory / MCPfinder | Submission accepted; result unverified | Unknown discoverability | Exact public searchable listing URL |
+| LobeHub | Public version 0.2.0 | Stale product and pricing story | Public listing reflects 0.5.0 metadata |
+| LobeHub score | 61/100 (F), version 0.2.0 | Low trust despite working install | Current release, current README and score at least A |
+| MCP.Directory | Exact search returned no result | No directory traffic | Exact public searchable listing URL |
+| MCPfinder | Exact search returned no result | No directory traffic | Exact public searchable listing URL |
+| MCPServers.org | Exact search returned no result | No directory traffic | Exact public searchable listing URL |
 
 ## Already healthy
 
@@ -20,7 +23,7 @@ does not change production, prices, payment processing or tool behavior.
   `https://1cent.maxzoa.ru/mcp`.
 - PayAI Bazaar: all 32 paid REST resources indexed.
 - Glama remote connector: healthy remote endpoint and 35 tools; this does not replace the separate
-  incomplete GitHub server profile.
+  incomplete GitHub server profile. Live quality was A with 35/35 tools and coherence A.
 - GitHub recognizes Apache-2.0 and has stable release `v0.4.0`.
 
 ## Repository corrections
@@ -32,6 +35,8 @@ does not change production, prices, payment processing or tool behavior.
   no-payment live demo.
 - GitHub homepage and discovery topics are populated.
 - CI validates marketplace metadata so this class of omission cannot silently recur.
+- Release 0.5.0 adds descriptions, constraints and examples to every MCP input property plus a
+  buyer prompt and static buyer guide resource.
 
 ## Runtime safety
 

@@ -37,10 +37,16 @@ def _tracked_files() -> list[str]:
 
 async def _validate_mcp() -> None:
     tools = await mcp.list_tools()
+    prompts = await mcp.list_prompts()
+    resources = await mcp.list_resources()
     assert len(tools) == 35
+    assert [prompt.name for prompt in prompts] == ["choose_url_tool"]
+    assert [str(resource.uri) for resource in resources] == ["onecent://buyer-guide"]
     assert [tool.name for tool in tools[:3]] == list(FREE_MCP_TOOL_NAMES)
     for tool in tools:
         assert tool.inputSchema.get("additionalProperties") is False, tool.name
+        for property_schema in tool.inputSchema.get("properties", {}).values():
+            assert property_schema.get("description"), tool.name
         assert tool.outputSchema is not None, tool.name
         assert tool.outputSchema.get("additionalProperties") is False, tool.name
         assert tool.annotations is not None, tool.name
@@ -83,7 +89,7 @@ def main() -> None:
         str(catalog_registry["version"]),
         str(tool_catalog["version"]),
     }
-    assert versions == {"0.4.0"}, versions
+    assert versions == {"0.5.0"}, versions
     assert registry["name"] == catalog_registry["name"] == "ru.maxzoa/1cent"
     assert glama == {
         "$schema": "https://glama.ai/mcp/schemas/server.json",
@@ -117,8 +123,8 @@ def main() -> None:
     asyncio.run(_validate_mcp())
     asyncio.run(_validate_buyer_bridge())
     print(
-        "release_validation=PASS; version=0.4.0; paid_tools=32; "
-        "free_tools=3; buyer_bridge_tools=36"
+        "release_validation=PASS; version=0.5.0; paid_tools=32; "
+        "free_tools=3; prompts=1; resources=1; buyer_bridge_tools=36"
     )
 
 

@@ -36,5 +36,6 @@ logs/
 *.key
 *.p12
 *_REPORT.md
+!MARKETPLACE_QUALITY_050_REPORT.md
 PAYAI_*.md
 *CONTROL_PAYMENT*.md
