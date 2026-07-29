@@ -72,6 +72,7 @@ def main() -> None:
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     project = cast(dict[str, object], pyproject["project"])
     registry = _json("server.json")
+    glama = _json("glama.json")
     catalog_registry = _json("catalog/server.json")
     tool_catalog = _json("catalog/tool-catalog.json")
 
@@ -84,6 +85,10 @@ def main() -> None:
     }
     assert versions == {"0.4.0"}, versions
     assert registry["name"] == catalog_registry["name"] == "ru.maxzoa/1cent"
+    assert glama == {
+        "$schema": "https://glama.ai/mcp/schemas/server.json",
+        "maintainers": ["maxzoa"],
+    }
     assert registry["remotes"] == [
         {"type": "streamable-http", "url": "https://1cent.maxzoa.ru/mcp"}
     ]

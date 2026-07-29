@@ -2,11 +2,20 @@
 
 [![Quality](https://github.com/maxzoa/1cent/actions/workflows/quality.yml/badge.svg)](https://github.com/maxzoa/1cent/actions/workflows/quality.yml)
 [![External health](https://github.com/maxzoa/1cent/actions/workflows/external-health.yml/badge.svg)](https://github.com/maxzoa/1cent/actions/workflows/external-health.yml)
+[![Glama score](https://glama.ai/mcp/servers/maxzoa/1cent/badges/score.svg)](https://glama.ai/mcp/servers/maxzoa/1cent)
 [![Smithery](https://smithery.ai/badge/maxzoa27/onecent)](https://smithery.ai/servers/maxzoa27/onecent)
+[![MCP Registry](https://img.shields.io/badge/MCP_Registry-ru.maxzoa%2F1cent-5c4ee5)](https://registry.modelcontextprotocol.io/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-Public SSRF-protected URL intelligence API and remote MCP server. Production uses x402 v2,
-Base Mainnet USDC and PayAI. No account or API key. Telegram is the only administrative UI.
+Give AI agents safe, bounded web intelligence without subscriptions, API keys or handing a crawler
+unrestricted network access. Start with three free MCP tools; pay only for the URL operation used.
+Production uses x402 v2, Base Mainnet USDC and PayAI.
+
+Try the real safe fetch path in one command — fixed `example.com`, no payment:
+
+```bash
+curl -sS https://1cent.maxzoa.ru/v1/demo/live-pulse
+```
 
 - MCP: `https://1cent.maxzoa.ru/mcp`
 - Free product demo: `https://1cent.maxzoa.ru/v1/demo/pulse`

@@ -5,6 +5,23 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "onecent"
 version = "0.4.0"
+description = "Pay-per-call SSRF-safe web intelligence for AI agents through MCP and x402."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "maxzoa" }]
+maintainers = [{ name = "maxzoa" }]
+keywords = [
+  "mcp", "model-context-protocol", "x402", "web-intelligence",
+  "url-analysis", "ssrf-protection", "base-mainnet", "usdc",
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Framework :: FastAPI",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Internet :: WWW/HTTP",
+]
 requires-python = ">=3.12"
 dependencies = [
   "fastapi==0.139.2", "uvicorn[standard]==0.35.0", "httpx==0.28.1",
@@ -38,6 +55,14 @@ dev = [
 
 [project.scripts]
 onecent = "onecent.buyer_cli:main"
+
+[project.urls]
+Homepage = "https://1cent.maxzoa.ru"
+Documentation = "https://1cent.maxzoa.ru/docs/getting-started"
+Repository = "https://github.com/maxzoa/1cent"
+Issues = "https://github.com/maxzoa/1cent/issues"
+Changelog = "https://github.com/maxzoa/1cent/blob/main/CHANGELOG.md"
+"MCP endpoint" = "https://1cent.maxzoa.ru/mcp"
 
 [tool.setuptools.packages.find]
 where = ["src"]
