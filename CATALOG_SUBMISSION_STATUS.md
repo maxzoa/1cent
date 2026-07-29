@@ -21,3 +21,7 @@ drift independently; dates below are part of the evidence.
 No catalog is marked current without dated evidence. A 402 challenge is not a visitor, purchase or
 settlement. Revenue is counted only from confirmed settlement evidence. Catalog work must not use
 artificial settlement, premium purchase, backend source, internal address or credentials.
+
+Directory listings continue to point at the public remote MCP. Buyers whose MCP host cannot sign
+x402 should follow [BUYER_BRIDGE.md](BUYER_BRIDGE.md). The local bridge is not a duplicate public
+listing and must not replace Official Registry metadata for `ru.maxzoa/1cent`.

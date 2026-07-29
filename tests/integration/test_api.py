@@ -59,6 +59,24 @@ def test_root_and_info(client: TestClient) -> None:
     assert {"url_pulse", "url_status", "site_openapi"} <= set(info["operations"])
 
 
+def test_public_buyer_bridge_documentation(client: TestClient) -> None:
+    guide = client.get("/docs/buyer-bridge")
+    assert guide.status_code == 200
+    assert "onecent wallet set" in guide.text
+    assert "--confirm-charge PAY-ONCE" in guide.text
+    assert "private key" in guide.text
+
+    getting_started = client.get("/docs/getting-started")
+    assert getting_started.status_code == 200
+    assert "/docs/buyer-bridge" in getting_started.text
+
+    sitemap = client.get("/sitemap.xml")
+    assert "/docs/buyer-bridge" in sitemap.text
+    assert "Buyer Bridge: https://1cent.maxzoa.ru/docs/buyer-bridge" in client.get(
+        "/llms.txt"
+    ).text
+
+
 def test_x402_well_known_manifest(client: TestClient) -> None:
     manifest = client.get("/.well-known/x402").json()
     assert manifest["x402Version"] == 2
@@ -251,7 +269,18 @@ def test_public_hostname_cannot_use_development_bypass(client: TestClient) -> No
     assert response.status_code == 402
 
 
-def test_stage11_all_paid_routes_return_correct_unpaid_requirement(client: TestClient) -> None:
+def test_stage11_all_paid_routes_return_correct_unpaid_requirement(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The challenge contract is the subject of this test. Keep database-backed
+    # telemetry out of the loop so 32 requests do not depend on a local Postgres.
+    monkeypatch.setattr("onecent.services.payments.Session", MiddlewareSession)
+    monkeypatch.setattr("onecent.services.payments._record_funnel", AsyncMock())
+    prices = {tool.key: tool.price_atomic for tool in TOOLS}
+    monkeypatch.setattr(
+        "onecent.services.payments._effective_price_atomic",
+        AsyncMock(side_effect=lambda _settings, operation: prices[operation]),
+    )
     for tool in TOOLS:
         response = client.post(tool.path, json={"url": "https://example.com", "fresh": False})
         assert response.status_code == 402, tool.key

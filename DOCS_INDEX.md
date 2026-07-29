@@ -11,6 +11,7 @@
 | [API.md](API.md) | Публичный REST API и x402 flow |
 | [MCP.md](MCP.md) | Remote MCP, tools, schemas и payment metadata |
 | [BUYER_QUICKSTART.md](BUYER_QUICKSTART.md) | Безопасный старт покупателя |
+| [BUYER_BRIDGE.md](BUYER_BRIDGE.md) | Локальная MCP-оплата, OS keyring, approval и spend caps |
 | [SECURITY.md](SECURITY.md) | Security policy и гарантии |
 | [MAINNET_RUNBOOK.md](MAINNET_RUNBOOK.md) | Обслуживание работающего Base Mainnet production |
 | [MAINNET_ROLLBACK.md](MAINNET_ROLLBACK.md) | Аварийный возврат на сохранённый testnet |
@@ -45,6 +46,8 @@
 - `PAYAI_BAZAAR_STATUS_INDEX_TEST.md`, `PAYAI_BAZAAR_FULL_INDEX_REPORT.md`,
   `INDEXING_PAYMENT_PLAN.md`;
 - Stage 11/12/13, pricing, Telegram, traffic, funnel, compatibility и unlimited-mode reports.
+- `BUYER_BRIDGE_IMPLEMENTATION_REPORT.md` — implementation and verification snapshot for
+  the local buyer-side x402 MCP bridge.
 
 ## Maintenance rule
 
@@ -53,3 +56,5 @@
 2. Current-документы ссылаются на live catalog/challenge для цены.
 3. Старый отчёт не переписывается задним числом: добавляется архивная плашка.
 4. `python scripts/validate_docs.py` обязан пройти до merge.
+5. Любое изменение buyer CLI/bridge синхронно обновляет `README.md`, `BUYER_QUICKSTART.md`,
+   `BUYER_BRIDGE.md`, `MCP.md`, `SECURITY.md` и current production note.

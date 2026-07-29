@@ -19,6 +19,10 @@ All paid routes use x402 v2, `exact`, Base Mainnet `eip155:8453`, Base USDC. Sen
 Prices are published dynamically in `GET /v1/catalog` and each HTTP 402 payment challenge.
 Clients must use the advertised amount instead of hard-coding a price.
 
+MCP hosts that cannot sign x402 may use the local [Buyer Bridge](BUYER_BRIDGE.md). The bridge maps
+the paid MCP tool to this existing REST route, validates the fresh 402 and uses the official x402
+client locally. It does not create a second business-logic or payment path on the server.
+
 ## Catalog
 
 `GET /v1/catalog` is the machine-readable source for all 32 paid tools, REST paths, MCP names,

@@ -34,3 +34,7 @@ sh scripts/smoke_mcp.sh
 
 Не публиковать metadata для версии, которая ещё не работает публично. Registry publication не
 требует и не должна выполнять x402 settlement.
+
+`1cent Buyer Bridge` is buyer-side stdio software. It is not a second Registry remote and does not
+change `server.json`. Registry stays bound to the public Streamable HTTP service; bridge setup lives
+in [BUYER_BRIDGE.md](BUYER_BRIDGE.md).

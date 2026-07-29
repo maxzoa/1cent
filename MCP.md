@@ -52,4 +52,12 @@ idempotency controls as the REST API.
 7. Require `_meta["x402/payment-response"]` in the successful result.
 
 Never place a buyer private key in MCP configuration sent to the server. Signing belongs in the
-buyer client. See `scripts/test_mcp_client.py` and [BUYER_QUICKSTART.md](BUYER_QUICKSTART.md).
+buyer client. A plain remote MCP connection can discover 1cent but does not guarantee the host can
+sign x402 payments.
+
+Clients without native x402 signing should run the local stdio
+[1cent Buyer Bridge](BUYER_BRIDGE.md). It exposes the same 32 paid tool names plus free catalog,
+demos and `buyer_bridge_status`, validates the live REST 402 challenge and signs only inside the
+buyer process. Manual one-call approval is default; capped automatic mode requires explicit gates.
+See `scripts/smoke_buyer_bridge.py`, `scripts/test_mcp_client.py` and
+[BUYER_QUICKSTART.md](BUYER_QUICKSTART.md).

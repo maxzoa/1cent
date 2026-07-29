@@ -47,3 +47,10 @@ pause, payer/unpaid rate limits, global/domain concurrency, queue и circuit bre
 
 Mainnet resume требует root cause, owner approval, fresh mode-600 backup, restore drill,
 PayAI capability PASS, preflight exit 0, unpaid candidate/public/MCP smoke и monitor PASS.
+
+## Buyer Bridge UNKNOWN
+
+Bridge marks a signed ambiguous attempt `unknown`, counts its amount against the local daily cap and
+blocks the same fingerprint. Do not delete the row or repeat the tool call. Correlate request ID with
+server evidence and chain receipt first. Buyer wallet secret and payment signature are not incident
+report fields. See [BUYER_BRIDGE.md](BUYER_BRIDGE.md).
