@@ -2,6 +2,9 @@
 
 ## Unreleased — Buyer activation
 
+- Added Glama ownership metadata, complete Python package discovery metadata and marketplace badges.
+- Added a dated cross-directory profile audit and corrected optimistic catalog status claims.
+- Added CI validation for license, author, project URLs, Glama maintainer metadata and README badges.
 - Added local stdio `1cent Buyer Bridge` for MCP hosts without native x402 signing.
 - Added OS-keyring wallet storage; headless environment injection remains optional.
 - Added manual one-call approval as default and fully gated capped automatic mode.

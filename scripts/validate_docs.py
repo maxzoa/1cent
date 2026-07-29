@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -23,6 +24,7 @@ CURRENT_DOCS = (
     "MCP_REGISTRY_READINESS.md",
     "MCP_REGISTRY_PUBLICATION_REPORT.md",
     "CATALOG_SUBMISSION_STATUS.md",
+    "MARKETPLACE_PROFILE_AUDIT.md",
     "PRICE_PROMO_7_DAY_REPORT.md",
 )
 
@@ -138,6 +140,33 @@ def validate() -> None:
     ):
         if dependency not in buyer_lock:
             raise AssertionError(f"buyer lock does not pin dependency: {dependency}")
+
+    glama = json.loads((ROOT / "glama.json").read_text(encoding="utf-8"))
+    if glama != {
+        "$schema": "https://glama.ai/mcp/schemas/server.json",
+        "maintainers": ["maxzoa"],
+    }:
+        raise AssertionError("glama.json must declare the canonical maxzoa maintainer")
+
+    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    for marker in (
+        'description = "Pay-per-call SSRF-safe web intelligence',
+        'license = { file = "LICENSE" }',
+        'Homepage = "https://1cent.maxzoa.ru"',
+        'Repository = "https://github.com/maxzoa/1cent"',
+    ):
+        if marker not in pyproject:
+            raise AssertionError(f"pyproject marketplace metadata missing: {marker}")
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    for marker in (
+        "glama.ai/mcp/servers/maxzoa/1cent/badges/score.svg",
+        "smithery.ai/badge/maxzoa27/onecent",
+        "MCP_Registry-ru.maxzoa%2F1cent",
+        "curl -sS https://1cent.maxzoa.ru/v1/demo/live-pulse",
+    ):
+        if marker not in readme:
+            raise AssertionError(f"README marketplace marker missing: {marker}")
 
 
 def main() -> int:

@@ -21,6 +21,7 @@
 | [MCP_REGISTRY_READINESS.md](MCP_REGISTRY_READINESS.md) | Текущий Registry status и публикация следующей версии |
 | [MCP_REGISTRY_PUBLICATION_REPORT.md](MCP_REGISTRY_PUBLICATION_REPORT.md) | История официальных Registry versions и текущий latest |
 | [CATALOG_SUBMISSION_STATUS.md](CATALOG_SUBMISSION_STATUS.md) | Статус внешних каталогов |
+| [MARKETPLACE_PROFILE_AUDIT.md](MARKETPLACE_PROFILE_AUDIT.md) | Проверяемые качество и видимость buyer-facing профилей |
 | [PRICE_PROMO_7_DAY_REPORT.md](PRICE_PROMO_7_DAY_REPORT.md) | Действующее до 2026-08-04 промо |
 | [TRUST_AND_SCALING_READINESS.md](TRUST_AND_SCALING_READINESS.md) | Условия следующих trust/scaling изменений |
 | [CHANGELOG.md](CHANGELOG.md) | История releases |
