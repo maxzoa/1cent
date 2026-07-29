@@ -55,6 +55,7 @@ dev = [
 
 [project.scripts]
 onecent = "onecent.buyer_cli:main"
+onecent-glama = "onecent.glama_stdio:main"
 
 [project.urls]
 Homepage = "https://1cent.maxzoa.ru"

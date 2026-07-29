@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - Glama release compatibility
+
+- Added a Glama-compatible local stdio entry point for release verification, reusing the canonical
+  MCP tool registry without adding a payment bypass or changing production runtime behavior.
+
 ## Unreleased — Marketplace trust hardening
 
 - Corrected the public `/mcp` slash redirect to preserve HTTPS explicitly behind the reverse proxy.

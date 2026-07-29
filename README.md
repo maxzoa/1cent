@@ -43,6 +43,10 @@ descriptions so agents can choose and call tools correctly on the first attempt.
 - MCP.so: `https://mcp.so/servers/1cent`;
 - LobeHub: `https://lobehub.com/mcp/maxzoa-1cent`.
 
+Glama release verification uses the repository's `onecent-glama` stdio entry point. It loads the
+same MCP tool registry as production for schema inspection; it does not provide a payment bypass
+or a second implementation of paid URL operations.
+
 Directory status is checked with dated evidence in
 [Marketplace quality report](MARKETPLACE_QUALITY_050_REPORT.md). A page returning HTTP 200 alone is
 not counted as a successful listing: it must be searchable, current and installable.
