@@ -79,7 +79,8 @@
 - Monitor: `scripts/monitor_mainnet_health.sh`, не чаще одного запуска в 5 минут.
 - Mainnet marker: `.state/public-mainnet-active.env` с
   `PUBLIC_MAINNET_ACTIVE=true`.
-- Backup directory mode: `711`; dump mode: `600`; retention: 14 days.
+- Backup directory mode: `711`; dump mode: `600`; retention: 14 days; readiness использует
+  атомарный `/backups/onecent-latest.sql.gz`.
 - Current DB migration: `0007`.
 - Последняя полная Stage 13 приёмка: `STAGE_13_BUYER_CONVERSION_REPORT.md`.
 

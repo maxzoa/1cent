@@ -2,6 +2,10 @@
 
 ## 0.5.0 — 2026-07-29
 
+- Fixed the production backup gate: successful backups now atomically update the canonical
+  `onecent-latest.sql.gz` readiness path.
+- Decoupled the health monitor's runtime mode check from full application readiness validation,
+  preventing a stale backup setting from disabling the monitor itself.
 - Added full descriptions, constraints and examples to every MCP input property.
 - Added buyer prompt `choose_url_tool` and static resource `onecent://buyer-guide`.
 - Added LobeHub badge and a dated cross-marketplace acceptance report.

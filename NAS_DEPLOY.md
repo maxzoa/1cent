@@ -61,6 +61,9 @@ sh scripts/backup_db.sh
 - Directory: `/volume1/docker/1cent/backups`, mode `711` — traverse известного path для
   non-root readiness, без directory listing.
 - Dump: `onecent-<UTC>.sql.gz`, mode `600`.
+- Canonical readiness path: `/volume1/docker/1cent/backups/onecent-latest.sql.gz`, mode `600`;
+  он атомарно заменяется только после успешного dump.
+- Production env указывает `MAINNET_BACKUP_PATH=/backups/onecent-latest.sql.gz`.
 - Retention: 14 days.
 - `.env` в dump не входит.
 

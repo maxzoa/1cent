@@ -33,8 +33,9 @@ atomic_write() {
 }
 
 runtime_state=$(
-  "$DOCKER" compose exec -T onecent-api python -c \
-    "from onecent.config import get_settings; s=get_settings(); print('|'.join((s.app_env,s.x402_environment,s.x402_network,str(s.owner_mainnet_approved).lower())))"
+  "$DOCKER" compose exec -T onecent-api sh -c \
+    'printf "%s|%s|%s|%s\n" "$APP_ENV" "$X402_ENVIRONMENT" "$X402_NETWORK" "$OWNER_MAINNET_APPROVED"' \
+    | tr -d '\r'
 )
 
 if [ "$runtime_state" = "development|testnet|eip155:84532|false" ] || \
