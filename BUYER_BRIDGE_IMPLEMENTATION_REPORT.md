@@ -55,6 +55,10 @@ containers were not changed. No testnet or mainnet settlement was performed.
 | Buyer lock vulnerability audit | PASS; no known vulnerabilities |
 | Docker build | NOT RUN locally: Docker CLI unavailable; GitHub quality CI is required |
 
+CI portability follow-up: the buyer extra explicitly pins Linux keyring dependencies
+`SecretStorage 3.5.0` and `jeepney 0.9.0`; this prevents a Windows-generated hash lock from
+omitting packages required by Linux CI and buyer hosts.
+
 The public smoke removed the buyer-key environment variable from the child process. It only
 requested a quote and could not create or submit a payment.
 

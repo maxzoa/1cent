@@ -9,6 +9,7 @@
 - Added local SQLite approval/spend/outcome ledger without keys or signatures.
 - Added UNKNOWN fingerprint lockout, per-call/UTC-day buyer caps and strict MCP schemas.
 - Added no-payment bridge smoke, unit tests and complete buyer/client documentation.
+- Pinned the Linux keyring backend dependencies for cross-platform hash-locked installs.
 - Remote production payment logic, public prices, PayAI, seller and Base Mainnet remain unchanged.
 
 ## 0.4.0 — 2026-07-28
