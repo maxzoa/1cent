@@ -5,7 +5,7 @@ from time import monotonic
 from typing import Annotated, cast
 
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, PlainTextResponse, Response
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse, Response
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -44,6 +44,12 @@ from onecent.services.url_guard import UnsafeUrl
 
 started = monotonic()
 settings = get_settings()
+
+BRAND_ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<rect width="64" height="64" rx="12" fill="#111827"/>
+<path d="M18 14h10v36H18zM35 14h11v8H35zM35 28h11v8H35zM35 42h11v8H35z" fill="#f97316"/>
+<circle cx="23" cy="32" r="4" fill="#fff"/>
+</svg>"""
 
 
 async def get_session() -> AsyncIterator[AsyncSession]:
@@ -95,6 +101,19 @@ async def request_trace_middleware(request: Request, call_next):  # type: ignore
     try:
         response = await call_next(request)
         response.headers["X-Request-ID"] = traffic.request_id
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
+            "style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
+            "img-src 'self' data: https://fastapi.tiangolo.com; connect-src 'self'; "
+            "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        )
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         return response
     except Exception as exc:
         try:
@@ -108,6 +127,14 @@ async def request_trace_middleware(request: Request, call_next):  # type: ignore
             reset_traffic_context(token)
 
 
+@app.api_route("/mcp", methods=["GET", "POST", "DELETE"], include_in_schema=False)
+async def canonical_mcp_redirect() -> RedirectResponse:
+    return RedirectResponse(
+        f"{settings.public_base_url.rstrip('/')}/mcp/",
+        status_code=308,
+    )
+
+
 app.mount("/mcp", mcp.streamable_http_app())
 
 
@@ -116,6 +143,16 @@ async def unsafe_url_handler(request: Request, exc: UnsafeUrl) -> object:
     from fastapi.responses import JSONResponse
 
     return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+
+@app.get("/favicon.svg", include_in_schema=False)
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon() -> Response:
+    return Response(
+        BRAND_ICON_SVG,
+        media_type="image/svg+xml",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @app.get("/", response_class=HTMLResponse, tags=["Service"], summary="Public landing")
@@ -287,6 +324,9 @@ def _landing(title: str, body: str) -> HTMLResponse:
         "<meta name='viewport' content='width=device-width'>"
         f"<title>{title} · 1cent</title>"
         "<meta name='description' content='Pay-per-call web intelligence for AI agents'>"
+        "<meta name='theme-color' content='#111827'>"
+        "<link rel='icon' type='image/svg+xml' href='/favicon.svg'>"
+        "<link rel='shortcut icon' href='/favicon.ico'>"
         f"<link rel='canonical' href='{settings.public_base_url}'></head>"
     )
     nav = (

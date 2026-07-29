@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — Marketplace trust hardening
+
+- Corrected the public `/mcp` slash redirect to preserve HTTPS explicitly behind the reverse proxy.
+- Added CSP, HSTS, clickjacking, MIME-sniffing, referrer and browser-permission headers.
+- Added a stable first-party favicon for directory cards and browser tabs.
+- Added regression coverage for the canonical MCP redirect, security headers and icon.
+- Refreshed cross-marketplace status with dated evidence and honest paid/platform blockers.
+- Payment logic, network, facilitator, seller, prices and production safety controls remain unchanged.
+
 ## 0.5.0 — 2026-07-29
 
 - Fixed the production backup gate: successful backups now atomically update the canonical
