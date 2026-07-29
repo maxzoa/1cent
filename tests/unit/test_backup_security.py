@@ -36,3 +36,14 @@ def test_marketplace_deploy_uses_canonical_backup_without_echoing_env() -> None:
     assert "SELECT version_num FROM alembic_version" in script
     assert "onecent-api alembic current" not in script
     assert "cat .env" not in script
+
+
+def test_restore_drill_waits_for_final_postgres_not_temporary_init_server() -> None:
+    script = (
+        Path(__file__).resolve().parents[2] / "scripts" / "restore_drill.sh"
+    ).read_text(encoding="utf-8")
+
+    assert 'test "$(cat /proc/1/comm)" = postgres' in script
+    assert "-c 'SELECT 1'" in script
+    assert 'while [ "$attempt" -lt 60 ]' in script
+    assert 'exec "$NAME" pg_isready' not in script

@@ -27,8 +27,14 @@ trap cleanup EXIT INT TERM
 
 ready=false
 attempt=0
-while [ "$attempt" -lt 30 ]; do
-  if "$DOCKER" exec "$NAME" pg_isready -U postgres >/dev/null 2>&1; then
+while [ "$attempt" -lt 60 ]; do
+  # The official image briefly exposes a temporary postmaster during init and
+  # then restarts it. pg_isready alone can therefore race with that restart.
+  # PID 1 becomes postgres only after the final server is exec'd.
+  if "$DOCKER" exec "$NAME" sh -c \
+      'test "$(cat /proc/1/comm)" = postgres' >/dev/null 2>&1 && \
+     [ "$("$DOCKER" exec "$NAME" psql -At -U postgres -d postgres \
+       -c 'SELECT 1' 2>/dev/null)" = "1" ]; then
     ready=true
     break
   fi
@@ -37,13 +43,14 @@ while [ "$attempt" -lt 30 ]; do
 done
 test "$ready" = true
 
-"$DOCKER" exec "$NAME" psql -v ON_ERROR_STOP=1 -U postgres \
+"$DOCKER" exec "$NAME" psql -v ON_ERROR_STOP=1 -U postgres -d postgres \
   -c "CREATE ROLE onecent NOLOGIN" >/dev/null
-gzip -dc "$BACKUP" | "$DOCKER" exec -i "$NAME" psql -v ON_ERROR_STOP=1 -U postgres >/dev/null
-tables=$("$DOCKER" exec "$NAME" psql -At -U postgres -c \
+gzip -dc "$BACKUP" | "$DOCKER" exec -i "$NAME" psql \
+  -v ON_ERROR_STOP=1 -U postgres -d postgres >/dev/null
+tables=$("$DOCKER" exec "$NAME" psql -At -U postgres -d postgres -c \
   "SELECT count(*) FROM pg_catalog.pg_tables WHERE schemaname='public'")
 test "$tables" -gt 0
-version=$("$DOCKER" exec "$NAME" psql -At -U postgres -c \
+version=$("$DOCKER" exec "$NAME" psql -At -U postgres -d postgres -c \
   "SELECT version_num FROM alembic_version LIMIT 1")
 test -n "$version"
 echo "restore_drill=PASS tables=$tables migration=$version"

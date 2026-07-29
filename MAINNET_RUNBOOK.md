@@ -45,6 +45,8 @@ sh scripts/restore_drill.sh backups/onecent-latest.sql.gz
 `onecent-latest.sql.gz` имеют mode `600`, restore drill PASS. В production
 `MAINNET_BACKUP_PATH=/backups/onecent-latest.sql.gz`. Backup младше 24 часов обязателен
 перед controlled deploy или возвратом mainnet после rollback.
+Restore drill ждёт финальный PostgreSQL process и реальный `SELECT 1`; временный init-server
+официального образа не считается readiness.
 
 ## PayAI capability check
 
