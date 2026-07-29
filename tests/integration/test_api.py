@@ -48,7 +48,28 @@ def client() -> Any:
 def test_root_and_info(client: TestClient) -> None:
     root = client.get("/")
     assert root.status_code == 200
+    assert root.headers["content-security-policy"].startswith("default-src 'self'")
+    assert root.headers["strict-transport-security"] == "max-age=31536000; includeSubDomains"
+    assert root.headers["x-frame-options"] == "DENY"
+    assert root.headers["x-content-type-options"] == "nosniff"
+    assert root.headers["referrer-policy"] == "no-referrer"
+    assert root.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
+    assert "script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'" in root.headers[
+        "content-security-policy"
+    ]
     assert "https://smithery.ai/servers/maxzoa27/onecent" in root.text
+    assert "rel='icon' type='image/svg+xml' href='/favicon.svg'" in root.text
+    favicon = client.get("/favicon.svg")
+    assert favicon.status_code == 200
+    assert favicon.headers["content-type"].startswith("image/svg+xml")
+    assert favicon.headers["cache-control"] == "public, max-age=86400"
+    assert "<svg" in favicon.text
+    mcp_redirect = client.get("/mcp", follow_redirects=False)
+    assert mcp_redirect.status_code == 308
+    assert mcp_redirect.headers["location"] == "https://1cent.maxzoa.ru/mcp/"
+    docs = client.get("/docs")
+    assert docs.status_code == 200
+    assert "Swagger UI" in docs.text
     smithery = client.get("/smithery")
     assert smithery.status_code == 200
     assert smithery.headers["content-type"].startswith("text/html")

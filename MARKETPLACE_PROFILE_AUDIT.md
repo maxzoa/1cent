@@ -7,24 +7,23 @@ does not change production, prices, payment processing or tool behavior.
 
 | Surface | Current evidence | Buyer impact | Acceptance gate |
 |---|---|---|---|
-| Glama GitHub server | Profile completion 8% | Low ranking; not installable from Glama | Claimed author, Glama release, recognized license, current CI, `glama.json`, quality/coherence scores |
-| Smithery | 63/100 and explicitly unlisted | Does not appear in Smithery search | Public visibility plus refreshed release with searchable public page |
-| MCP.so | Public page lists 33 tools | Two free demos missing from listing | Refresh succeeds and public page lists 35 remote tools |
-| PulseMCP | Search returns zero results | No PulseMCP discovery traffic | Exact public search result for 1cent |
-| LobeHub | Public version 0.2.0 | Stale product and pricing story | Public listing reflects 0.5.0 metadata |
-| LobeHub score | 61/100 (F), version 0.2.0 | Low trust despite working install | Current release, current README and score at least A |
-| MCP.Directory | Exact search returned no result | No directory traffic | Exact public searchable listing URL |
-| MCPfinder | Exact search returned no result | No directory traffic | Exact public searchable listing URL |
-| MCPServers.org | Exact search returned no result | No directory traffic | Exact public searchable listing URL |
+| Glama GitHub server | Repository metadata fixed; ownership claim blocked by disabled OAuth authorization control | Separate GitHub profile cannot become verified | Platform must restore its OAuth claim flow; no authentication bypass is acceptable |
+| Smithery | 96/100, public, current 35-tool release | Only optional paid-plan points are missing | Complete for free publication; do not buy score |
+| MCP.so | Public tools current; marketing copy still says 33 | Tool count in prose is stale | Issue `daodao97/chatmcp#215` accepted/merged and public page refreshed |
+| PulseMCP | Waiting for documented Registry import cycle | No PulseMCP discovery traffic yet | Exact public result after daily/weekly ingestion |
+| LobeHub | Authenticated 0.5.0 import submitted; public page can remain 0.2.0 asynchronously | Stale page until import completes | Public listing reflects 0.5.0 metadata |
+| MCP.Directory | Existing free submission is in review | No public result until review | Exact public searchable listing URL |
+| MCPfinder | Malformed OAuth redirect with undefined callback | Submission unavailable | Platform repairs OAuth and accepts normal login |
+| MCPServers.org | Free submission accepted and in review | No public result until review | Exact public searchable listing URL |
 
 ## Already healthy
 
-- Official MCP Registry: `ru.maxzoa/1cent` version 0.4.0, remote
+- Official MCP Registry: `ru.maxzoa/1cent` version 0.5.0, active/latest, remote
   `https://1cent.maxzoa.ru/mcp`.
 - PayAI Bazaar: all 32 paid REST resources indexed.
 - Glama remote connector: healthy remote endpoint and 35 tools; this does not replace the separate
-  incomplete GitHub server profile. Live quality was A with 35/35 tools and coherence A.
-- GitHub recognizes Apache-2.0 and has stable release `v0.4.0`.
+  GitHub server profile. Live tool-definition quality was 4.4/5 and coherence 4/5.
+- GitHub recognizes Apache-2.0 and has stable release `v0.5.0`.
 
 ## Repository corrections
 

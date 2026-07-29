@@ -49,8 +49,31 @@ No surface is marked complete from submission alone. Final acceptance requires e
 current version/description, correct endpoint, current tool count, working install/introspection and
 public visibility. Paid placement and artificial payments are excluded.
 
-## Verification
+## Verified result
 
-Implementation and external publication checks are recorded after CI, production metadata deploy
-and asynchronous catalog rescans finish. Any platform-controlled review or usage score remains an
-external pending item, not a fabricated PASS.
+| Surface | Verified result on 2026-07-29 |
+|---|---|
+| Official MCP Registry | `0.5.0`, `active`, `latest`, exact remote `https://1cent.maxzoa.ru/mcp` |
+| PayAI Bazaar | all 32 paid REST resources remain indexed; no indexing payment was made |
+| Glama connector | healthy; 35/35 tools; tool-definition quality 4.4/5; coherence 4/5 |
+| Smithery | public and searchable; fresh release discovered 35 tools, 1 prompt and 1 resource; score 96/100 |
+| GitHub | public Apache-2.0 repository, current `v0.5.0` release, homepage and discovery topics |
+| MCP.so | public listing works; free metadata-refresh issue `#215` is pending |
+| LobeHub | authenticated `0.5.0` import submitted; public update is asynchronous |
+| MCP.Directory | already submitted; platform review pending |
+| MCPServers.org | free submission accepted; platform review pending |
+| PulseMCP | official Registry import is automatic and weekly; waiting for its next import |
+| MCPfinder | submission blocked by its broken OAuth redirect; this is a platform defect |
+
+Smithery's remaining four points require a paid developer plan. No directory payment was made or
+authorized. Glama's separate GitHub-profile claim remains blocked because the GitHub authorization
+control is disabled by the platform. These external or paid gates are not represented as project
+defects or fabricated PASS results.
+
+## Security correction found during marketplace audit
+
+The public reverse-proxy path exposed a relative slash redirect from `https://.../mcp` to an
+`http://.../mcp/` Location. Release hardening replaces it with an explicit absolute HTTPS 308,
+adds CSP/HSTS/frame/content-type/referrer/permissions headers, and serves a stable first-party
+favicon. Regression tests cover the redirect, headers and icon. Payment processing, x402,
+facilitator, seller, prices and URL operations are unchanged.

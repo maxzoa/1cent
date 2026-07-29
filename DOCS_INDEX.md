@@ -23,6 +23,7 @@
 | [CATALOG_SUBMISSION_STATUS.md](CATALOG_SUBMISSION_STATUS.md) | Статус внешних каталогов |
 | [MARKETPLACE_PROFILE_AUDIT.md](MARKETPLACE_PROFILE_AUDIT.md) | Проверяемые качество и видимость buyer-facing профилей |
 | [MARKETPLACE_QUALITY_050_REPORT.md](MARKETPLACE_QUALITY_050_REPORT.md) | Release 0.5.0 и повторная приёмка всех витрин |
+| [MARKETPLACE_FINAL_AUDIT.md](MARKETPLACE_FINAL_AUDIT.md) | Финальные маркеты, quality gates и честные внешние блокеры |
 | [PRICE_PROMO_7_DAY_REPORT.md](PRICE_PROMO_7_DAY_REPORT.md) | Действующее до 2026-08-04 промо |
 | [TRUST_AND_SCALING_READINESS.md](TRUST_AND_SCALING_READINESS.md) | Условия следующих trust/scaling изменений |
 | [CHANGELOG.md](CHANGELOG.md) | История releases |
