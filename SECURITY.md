@@ -9,7 +9,8 @@ Public security contact: `https://1cent.maxzoa.ru/.well-known/security.txt`.
 
 ## Supported release
 
-Only the current production release and latest `main` revision receive security fixes.
+Only current production release `0.4.0` and latest `main` revision receive security fixes.
+See [CURRENT_PRODUCTION.md](CURRENT_PRODUCTION.md) for the active runtime contract.
 
 ## Scope
 

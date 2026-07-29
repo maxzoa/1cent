@@ -3,6 +3,8 @@
 Version 0.4.0 improves buyer conversion, independent verification and result transparency without
 changing production payment behavior.
 
+Current runtime facts are maintained in [CURRENT_PRODUCTION.md](CURRENT_PRODUCTION.md).
+
 ## Delivered now
 
 - exact MCP input/output schemas and tool annotations;

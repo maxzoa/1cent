@@ -1,5 +1,10 @@
 # Payment Funnel Diagnostics Report
 
+> [!IMPORTANT]
+> **ARCHIVE / HISTORICAL SNAPSHOT.** This file records state at its stated stage/date. It is not
+> current operating guidance. See [CURRENT_PRODUCTION.md](CURRENT_PRODUCTION.md) and
+> [DOCS_INDEX.md](DOCS_INDEX.md).
+
 Date: 2026-07-28 UTC  
 Production: Base Mainnet, PayAI, public REST and MCP  
 Scope: diagnostics only; no price, network, seller, facilitator or payment-flow change

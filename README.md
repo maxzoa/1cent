@@ -74,11 +74,15 @@ a fresh PostgreSQL backup, production preflight, development bypass disabled and
 
 ## Documentation
 
+- [Current production state](CURRENT_PRODUCTION.md)
+- [Documentation map](DOCS_INDEX.md)
 - [Public REST API](API.md)
 - [Remote MCP server](MCP.md)
 - [Buyer quickstart](BUYER_QUICKSTART.md)
 - [Security policy](SECURITY.md)
 - [Release history](CHANGELOG.md)
 - [Scaling and trust gates](TRUST_AND_SCALING_READINESS.md)
+- [Production operations](MAINNET_RUNBOOK.md)
+- [Incident response](INCIDENT_RESPONSE.md)
 
 Licensed under Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

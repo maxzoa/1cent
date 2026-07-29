@@ -1,5 +1,10 @@
 # Stage 13 — Buyer conversion, trust and production evidence
 
+> [!IMPORTANT]
+> **ARCHIVE / HISTORICAL SNAPSHOT.** This file records release acceptance at its stated date. It is
+> evidence, not current operating guidance. See [CURRENT_PRODUCTION.md](CURRENT_PRODUCTION.md) and
+> [DOCS_INDEX.md](DOCS_INDEX.md).
+
 ## Итог
 
 Stage 13 завершён и развёрнут в публичном production. Версия API и MCP: `0.4.0`.
