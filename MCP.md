@@ -19,7 +19,8 @@ no URL and reuses the normal SSRF-safe fetch, cache and audit service.
 Free tools are listed first:
 
 - `catalog_search` — bounded local tool/price search;
-- `demo_url_pulse` — fixed precomputed sample; no URL input, payment, DB or network.
+- `demo_url_pulse` — fixed precomputed sample; no URL input, payment, DB or network;
+- `demo_live_url_pulse` — rate-limited live check of fixed `example.com` through the safe service.
 
 Recommended paid bundles:
 

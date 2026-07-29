@@ -3,6 +3,8 @@
 1cent is a remote MCP server and REST API paid per successful request with x402 v2 USDC on
 Base Mainnet. No account or API key is required.
 
+Current network, asset, seller and facilitator: [CURRENT_PRODUCTION.md](CURRENT_PRODUCTION.md).
+
 ## 1. Preview without payment
 
 - MCP: call `catalog_search` to choose a tool and read its current price.
