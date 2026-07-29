@@ -117,7 +117,8 @@ BASE_URL=http://127.0.0.1:18013 EXPECTED_X402_NETWORK=eip155:8453 sh scripts/smo
 EXPECTED_X402_NETWORK=eip155:8453 sh scripts/smoke_public.sh
 EXPECTED_X402_NETWORK=eip155:8453 EXPECTED_X402_AMOUNT=1000 sh scripts/smoke_mcp.sh
 BASE_URL=http://127.0.0.1:18013 sh scripts/smoke_unpaid_load.sh
-python scripts/verify_public_release.py
+$DOCKER compose exec -T onecent-api python scripts/verify_public_release.py \
+  --base-url http://127.0.0.1:8013
 curl -fsS http://127.0.0.1:18013/status.json | grep -q '"version":"0.5.0"'
 rm -f "$MAINTENANCE_FILE"
 sh scripts/monitor_mainnet_health.sh | grep -q 'mainnet_health=PASS'
