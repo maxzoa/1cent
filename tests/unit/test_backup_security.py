@@ -35,6 +35,9 @@ def test_marketplace_deploy_uses_canonical_backup_without_echoing_env() -> None:
     assert "cp .env .env.production.marketplace-050.saved" in script
     assert "SELECT version_num FROM alembic_version" in script
     assert "onecent-api alembic current" not in script
+    assert "$DOCKER compose exec -T onecent-api python scripts/verify_public_release.py" in script
+    assert "--base-url http://127.0.0.1:8013" in script
+    assert "\npython scripts/verify_public_release.py\n" not in script
     assert "cat .env" not in script
 
 

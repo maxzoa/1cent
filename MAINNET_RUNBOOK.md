@@ -77,6 +77,8 @@ Capability drift = deploy/paid-action stop; не проверять реальн
 unpaid smoke, monitor check, settlement-count invariant и rollback только API/bot этого Compose project.
 Он сохраняет `.env` с mode `600` и безопасно меняет только `MAINNET_BACKUP_PATH` на канонический
 latest-файл, не печатая содержимое `.env`.
+Финальный release validator запускается внутри API container с locked dependencies; NAS host Python
+для acceptance не используется.
 
 ## Emergency pause
 
