@@ -1,11 +1,12 @@
 import json
 import uuid
+from collections.abc import Sequence
 from typing import Annotated, Any
 
 import httpx
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
-from mcp.types import CallToolResult, TextContent, ToolAnnotations
+from mcp.types import CallToolResult, ContentBlock, TextContent, Tool, ToolAnnotations
 from pydantic import BaseModel, Field
 from x402.http import (
     decode_payment_required_header,
@@ -42,8 +43,44 @@ MCP_PROTOCOL_VERSION = "2025-11-25"
 MCP_PAYMENT_META_KEY = "x402/payment"
 MCP_PAYMENT_RESPONSE_META_KEY = "x402/payment-response"
 INTERNAL_API = "http://127.0.0.1:8013"
-FREE_MCP_TOOL_NAMES = ("catalog_search", "demo_url_pulse", "demo_live_url_pulse")
+LEGACY_FREE_MCP_TOOL_NAMES = ("catalog_search", "demo_url_pulse", "demo_live_url_pulse")
 mcp_settings = get_settings()
+
+
+def public_mcp_tool_name(legacy_name: str) -> str:
+    """Return the stable public dot-notation name used by MCP discovery."""
+    namespace, separator, operation = legacy_name.partition("_")
+    if not separator:
+        return legacy_name
+    return f"{namespace}.{operation}"
+
+
+MCP_TOOL_PUBLIC_NAMES = {
+    legacy_name: public_mcp_tool_name(legacy_name)
+    for legacy_name in LEGACY_FREE_MCP_TOOL_NAMES + tuple(item.key for item in TOOLS)
+}
+MCP_TOOL_LEGACY_NAMES = {
+    public_name: legacy_name for legacy_name, public_name in MCP_TOOL_PUBLIC_NAMES.items()
+}
+FREE_MCP_TOOL_NAMES = tuple(
+    MCP_TOOL_PUBLIC_NAMES[legacy_name] for legacy_name in LEGACY_FREE_MCP_TOOL_NAMES
+)
+
+
+class OnecentFastMCP(FastMCP):
+    """Publish navigable names while accepting pre-0.6 underscore aliases."""
+
+    async def list_tools(self) -> list[Tool]:
+        tools = await super().list_tools()
+        for tool in tools:
+            tool.name = MCP_TOOL_PUBLIC_NAMES.get(tool.name, tool.name)
+        return tools
+
+    async def call_tool(
+        self, name: str, arguments: dict[str, Any]
+    ) -> Sequence[ContentBlock] | dict[str, Any]:
+        legacy_name = MCP_TOOL_LEGACY_NAMES.get(name, name)
+        return await super().call_tool(legacy_name, arguments)
 
 PublicHttpUrl = Annotated[
     str,
@@ -116,7 +153,7 @@ COMMON_PARAMETER_GUIDANCE = (
     "fresh=true only when a new upstream fetch is required."
 )
 
-mcp = FastMCP(
+mcp = OnecentFastMCP(
     name="1cent URL Intelligence",
     instructions=(
         f"Paid URL intelligence tools. All URL operations require x402 v2 payment on "
@@ -194,7 +231,7 @@ async def catalog_search(query: CatalogQuery) -> CallToolResult:
     data = {
         "results": [
             {
-                "tool": row["tool"],
+                "tool": MCP_TOOL_PUBLIC_NAMES[str(row["tool"])],
                 "description": row["description"],
                 "price_atomic": row["price_atomic"],
                 "rest_path": row["rest_path"],
@@ -256,7 +293,7 @@ def choose_url_tool(
     goal: PromptGoal, target_url: PromptTargetUrl = "https://example.com"
 ) -> str:
     return (
-        "Use catalog_search first with this goal: "
+        "Use catalog.search first with this goal: "
         f"{goal!r}. Target URL: {target_url!r}. Choose the narrowest matching tool. "
         "Do not call a paid tool until the client has accepted the returned x402 requirement. "
         "Never send credentials, private URLs or payment secrets to the target website."
@@ -276,8 +313,8 @@ def buyer_guide_resource() -> str:
     return (
         "# 1cent buyer guide\n\n"
         "Endpoint: `https://1cent.maxzoa.ru/mcp` (Streamable HTTP).\n\n"
-        "1. Call `catalog_search` to find the narrowest tool and current atomic USDC price.\n"
-        "2. Use `demo_url_pulse` or `demo_live_url_pulse` for a free integration check.\n"
+        "1. Call `catalog.search` to find the narrowest tool and current atomic USDC price.\n"
+        "2. Use `demo.url_pulse` or `demo.live_url_pulse` for a free integration check.\n"
         "3. Paid calls return an x402 requirement for Base Mainnet USDC. Sign only client-side.\n"
         "4. Reuse the same payment identifier after a definitive response; never retry UNKNOWN.\n"
         "5. Only public HTTP(S) targets are accepted and SSRF-sensitive destinations fail closed.\n"
@@ -474,7 +511,7 @@ MCP_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
 }
 
 
-for _tool_name in FREE_MCP_TOOL_NAMES + tuple(item.key for item in TOOLS):
+for _tool_name in LEGACY_FREE_MCP_TOOL_NAMES + tuple(item.key for item in TOOLS):
     _tool = mcp._tool_manager.get_tool(_tool_name)
     if _tool is not None:
         _tool.parameters["additionalProperties"] = False

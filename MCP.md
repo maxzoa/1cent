@@ -13,26 +13,29 @@ Public endpoint: `https://1cent.maxzoa.ru/mcp`
 
 Production publishes 35 MCP tools: 32 paid URL/site operations and three free tools.
 
-`demo_live_url_pulse` performs a real, rate-limited check only for fixed `example.com`; it accepts
+`demo.live_url_pulse` performs a real, rate-limited check only for fixed `example.com`; it accepts
 no URL and reuses the normal SSRF-safe fetch, cache and audit service.
 
 Free tools are listed first:
 
-- `catalog_search` — bounded local tool/price search;
-- `demo_url_pulse` — fixed precomputed sample; no URL input, payment, DB or network;
-- `demo_live_url_pulse` — rate-limited live check of fixed `example.com` through the safe service.
+- `catalog.search` — bounded local tool/price search;
+- `demo.url_pulse` — fixed precomputed sample; no URL input, payment, DB or network;
+- `demo.live_url_pulse` — rate-limited live check of fixed `example.com` through the safe service.
 
 Recommended paid bundles:
 
 | Tool | Purpose | Input |
 |---|---|---|
-| `url_pulse` | Fast URL reachability, timing and content summary | `url`, optional `fresh` |
-| `url_passport` | Identity, redirects, TLS, discovery and page metadata | `url`, optional `fresh` |
-| `url_extract` | Safe readable text and optional public links | `url`, optional `fresh`, `include_links` |
-| `url_changed` | Compare current public content with prior snapshot | `url`, optional `fresh` |
+| `url.pulse` | Fast URL reachability, timing and content summary | `url`, optional `fresh` |
+| `url.passport` | Identity, redirects, TLS, discovery and page metadata | `url`, optional `fresh` |
+| `url.extract` | Safe readable text and optional public links | `url`, optional `fresh`, `include_links` |
+| `url.changed` | Compare current public content with prior snapshot | `url`, optional `fresh` |
 
 The other 28 paid projections cover status, redirects, metadata, content, discovery, TLS and
 security evidence. Current names and prices come from `GET /v1/catalog`.
+
+`tools/list` publishes navigable dot-notation: `url.*`, `site.*`, `catalog.*` and `demo.*`.
+Legacy underscore names from releases before 0.6 remain callable as hidden compatibility aliases.
 
 Every tool publishes strict `inputSchema`, exact success `outputSchema` and MCP annotations.
 Every input property has a machine-readable description; URL fields publish HTTP(S) constraints,
@@ -47,7 +50,7 @@ idempotency controls as the REST API.
 
 1. Connect with Streamable HTTP and run `initialize`.
 2. Run `tools/list`.
-3. Call free `catalog_search` or `demo_url_pulse` first.
+3. Call free `catalog.search` or `demo.url_pulse` first.
 4. Call a paid tool without payment to receive x402 requirements.
 5. Validate network, scheme, asset, amount, payee and resource in client policy.
 6. Sign the advertised payment and repeat the call with `_meta["x402/payment"]`.

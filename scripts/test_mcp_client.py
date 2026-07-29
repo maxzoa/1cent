@@ -17,7 +17,7 @@ from x402.mechanisms.evm import EthAccountSigner
 from x402.mechanisms.evm.exact.register import register_exact_evm_client
 from x402.schemas import PaymentRequired
 
-EXPECTED_TOOLS = {
+EXPECTED_LEGACY_TOOLS = {
     "catalog_search",
     "demo_url_pulse",
     "demo_live_url_pulse",
@@ -54,6 +54,7 @@ EXPECTED_TOOLS = {
     "url_tls",
     "url_access_flags",
 }
+EXPECTED_TOOLS = {name.replace("_", ".", 1) for name in EXPECTED_LEGACY_TOOLS}
 EXPECTED_NETWORK = os.environ.get("EXPECTED_X402_NETWORK", "eip155:84532")
 EXPECTED_AMOUNT = os.environ.get("EXPECTED_X402_AMOUNT", "3000")
 
@@ -73,17 +74,17 @@ async def run(endpoint: str, paid: bool) -> None:
             if names != EXPECTED_TOOLS:
                 raise RuntimeError(f"unexpected tools: {sorted(names)}")
             if [tool.name for tool in tools.tools[:3]] != [
-                "catalog_search",
-                "demo_url_pulse",
-                "demo_live_url_pulse",
+                "catalog.search",
+                "demo.url_pulse",
+                "demo.live_url_pulse",
             ]:
                 raise RuntimeError("free discovery tools are not listed first")
             for tool in tools.tools:
                 schema = tool.inputSchema
                 if schema.get("additionalProperties") is not False:
                     raise RuntimeError(f"{tool.name}: input schema is not strict")
-                if tool.name not in {"demo_url_pulse", "demo_live_url_pulse"}:
-                    required_field = "query" if tool.name == "catalog_search" else "url"
+                if tool.name not in {"demo.url_pulse", "demo.live_url_pulse"}:
+                    required_field = "query" if tool.name == "catalog.search" else "url"
                     if required_field not in schema.get("required", []):
                         raise RuntimeError(f"{tool.name}: required field missing")
                 if not tool.outputSchema:
@@ -91,11 +92,11 @@ async def run(endpoint: str, paid: bool) -> None:
                 if not tool.annotations or tool.annotations.destructiveHint is not False:
                     raise RuntimeError(f"{tool.name}: safe annotations missing")
 
-            search = await session.call_tool("catalog_search", {"query": "redirect chain"})
-            if search.isError or "url_redirects" not in str(search.structuredContent):
-                raise RuntimeError("free catalog_search failed")
+            search = await session.call_tool("catalog.search", {"query": "redirect chain"})
+            if search.isError or "url.redirects" not in str(search.structuredContent):
+                raise RuntimeError("free catalog.search failed")
 
-            demo = await session.call_tool("demo_url_pulse", {})
+            demo = await session.call_tool("demo.url_pulse", {})
             demo_data = demo.structuredContent
             if (
                 demo.isError
@@ -104,11 +105,11 @@ async def run(endpoint: str, paid: bool) -> None:
                 or demo_data.get("network_request_performed") is not False
                 or demo_data.get("payment_required") is not False
             ):
-                raise RuntimeError("free demo_url_pulse failed")
+                raise RuntimeError("free demo.url_pulse failed")
 
             arguments = {"url": "https://example.com", "fresh": False}
             unpaid = await session.call_tool(
-                "url_pulse", arguments, read_timeout_seconds=timedelta(seconds=90)
+                "url.pulse", arguments, read_timeout_seconds=timedelta(seconds=90)
             )
             required_data = unpaid.structuredContent
             if not unpaid.isError or not isinstance(required_data, dict):
@@ -140,7 +141,7 @@ async def run(endpoint: str, paid: bool) -> None:
             payment_meta = {"x402/payment": payload.model_dump(by_alias=True, exclude_none=True)}
 
             result = await session.call_tool(
-                "url_pulse",
+                "url.pulse",
                 arguments,
                 meta=payment_meta,
                 read_timeout_seconds=timedelta(seconds=120),
@@ -152,7 +153,7 @@ async def run(endpoint: str, paid: bool) -> None:
                 raise RuntimeError("MCP PAYMENT-RESPONSE missing or failed")
 
             retry = await session.call_tool(
-                "url_pulse",
+                "url.pulse",
                 arguments,
                 meta=payment_meta,
                 read_timeout_seconds=timedelta(seconds=120),

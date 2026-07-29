@@ -8,6 +8,7 @@
 | Параметр | Текущее значение |
 |---|---|
 | Release | `0.5.0` |
+| Validated release candidate | `0.6.0` (not public until controlled deployment passes) |
 | REST | `https://1cent.maxzoa.ru` |
 | MCP | `https://1cent.maxzoa.ru/mcp` |
 | MCP protocol | `2025-11-25` |

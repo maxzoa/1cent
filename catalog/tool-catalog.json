@@ -1,10 +1,11 @@
 {
-  "version": "0.5.0",
+  "version": "0.6.0",
   "currency": "USDC",
   "network": "eip155:8453",
   "tools": [
     {
       "tool": "url_pulse",
+      "mcp_tool": "url.pulse",
       "rest_path": "/v1/url/pulse",
       "category": "bundle",
       "price_atomic": 3000,
@@ -12,6 +13,7 @@
     },
     {
       "tool": "url_passport",
+      "mcp_tool": "url.passport",
       "rest_path": "/v1/url/passport",
       "category": "bundle",
       "price_atomic": 10000,
@@ -19,6 +21,7 @@
     },
     {
       "tool": "url_extract",
+      "mcp_tool": "url.extract",
       "rest_path": "/v1/url/extract",
       "category": "bundle",
       "price_atomic": 10000,
@@ -26,6 +29,7 @@
     },
     {
       "tool": "url_changed",
+      "mcp_tool": "url.changed",
       "rest_path": "/v1/url/changed",
       "category": "bundle",
       "price_atomic": 3000,
@@ -33,6 +37,7 @@
     },
     {
       "tool": "url_status",
+      "mcp_tool": "url.status",
       "rest_path": "/v1/url/status",
       "category": "micro",
       "price_atomic": 2000,
@@ -40,6 +45,7 @@
     },
     {
       "tool": "url_redirects",
+      "mcp_tool": "url.redirects",
       "rest_path": "/v1/url/redirects",
       "category": "micro",
       "price_atomic": 2000,
@@ -47,6 +53,7 @@
     },
     {
       "tool": "url_headers",
+      "mcp_tool": "url.headers",
       "rest_path": "/v1/url/headers",
       "category": "micro",
       "price_atomic": 2000,
@@ -54,6 +61,7 @@
     },
     {
       "tool": "url_timing",
+      "mcp_tool": "url.timing",
       "rest_path": "/v1/url/timing",
       "category": "micro",
       "price_atomic": 2000,
@@ -61,6 +69,7 @@
     },
     {
       "tool": "url_content_type",
+      "mcp_tool": "url.content_type",
       "rest_path": "/v1/url/content-type",
       "category": "micro",
       "price_atomic": 2000,
@@ -68,6 +77,7 @@
     },
     {
       "tool": "url_canonical",
+      "mcp_tool": "url.canonical",
       "rest_path": "/v1/url/canonical",
       "category": "micro",
       "price_atomic": 2000,
@@ -75,6 +85,7 @@
     },
     {
       "tool": "url_language",
+      "mcp_tool": "url.language",
       "rest_path": "/v1/url/language",
       "category": "micro",
       "price_atomic": 2000,
@@ -82,6 +93,7 @@
     },
     {
       "tool": "url_hash",
+      "mcp_tool": "url.hash",
       "rest_path": "/v1/url/hash",
       "category": "micro",
       "price_atomic": 2000,
@@ -89,6 +101,7 @@
     },
     {
       "tool": "url_metadata",
+      "mcp_tool": "url.metadata",
       "rest_path": "/v1/url/metadata",
       "category": "metadata",
       "price_atomic": 3000,
@@ -96,6 +109,7 @@
     },
     {
       "tool": "url_social_cards",
+      "mcp_tool": "url.social_cards",
       "rest_path": "/v1/url/social-cards",
       "category": "metadata",
       "price_atomic": 3000,
@@ -103,6 +117,7 @@
     },
     {
       "tool": "url_jsonld",
+      "mcp_tool": "url.jsonld",
       "rest_path": "/v1/url/jsonld",
       "category": "metadata",
       "price_atomic": 3000,
@@ -110,6 +125,7 @@
     },
     {
       "tool": "url_headings",
+      "mcp_tool": "url.headings",
       "rest_path": "/v1/url/headings",
       "category": "metadata",
       "price_atomic": 3000,
@@ -117,6 +133,7 @@
     },
     {
       "tool": "url_word_stats",
+      "mcp_tool": "url.word_stats",
       "rest_path": "/v1/url/word-stats",
       "category": "metadata",
       "price_atomic": 3000,
@@ -124,6 +141,7 @@
     },
     {
       "tool": "url_links",
+      "mcp_tool": "url.links",
       "rest_path": "/v1/url/links",
       "category": "content",
       "price_atomic": 4000,
@@ -131,6 +149,7 @@
     },
     {
       "tool": "url_images",
+      "mcp_tool": "url.images",
       "rest_path": "/v1/url/images",
       "category": "content",
       "price_atomic": 4000,
@@ -138,6 +157,7 @@
     },
     {
       "tool": "url_text",
+      "mcp_tool": "url.text",
       "rest_path": "/v1/url/text",
       "category": "content",
       "price_atomic": 4000,
@@ -145,6 +165,7 @@
     },
     {
       "tool": "url_markdown",
+      "mcp_tool": "url.markdown",
       "rest_path": "/v1/url/markdown",
       "category": "content",
       "price_atomic": 5000,
@@ -152,6 +173,7 @@
     },
     {
       "tool": "url_rag_chunks",
+      "mcp_tool": "url.rag_chunks",
       "rest_path": "/v1/url/rag-chunks",
       "category": "content",
       "price_atomic": 7000,
@@ -159,6 +181,7 @@
     },
     {
       "tool": "url_diff",
+      "mcp_tool": "url.diff",
       "rest_path": "/v1/url/diff",
       "category": "content",
       "price_atomic": 5000,
@@ -166,6 +189,7 @@
     },
     {
       "tool": "site_robots",
+      "mcp_tool": "site.robots",
       "rest_path": "/v1/site/robots",
       "category": "discovery",
       "price_atomic": 3000,
@@ -173,6 +197,7 @@
     },
     {
       "tool": "site_sitemaps",
+      "mcp_tool": "site.sitemaps",
       "rest_path": "/v1/site/sitemaps",
       "category": "discovery",
       "price_atomic": 4000,
@@ -180,6 +205,7 @@
     },
     {
       "tool": "site_feeds",
+      "mcp_tool": "site.feeds",
       "rest_path": "/v1/site/feeds",
       "category": "discovery",
       "price_atomic": 3000,
@@ -187,6 +213,7 @@
     },
     {
       "tool": "site_llms_txt",
+      "mcp_tool": "site.llms_txt",
       "rest_path": "/v1/site/llms-txt",
       "category": "discovery",
       "price_atomic": 3000,
@@ -194,6 +221,7 @@
     },
     {
       "tool": "site_security_txt",
+      "mcp_tool": "site.security_txt",
       "rest_path": "/v1/site/security-txt",
       "category": "discovery",
       "price_atomic": 3000,
@@ -201,6 +229,7 @@
     },
     {
       "tool": "site_openapi",
+      "mcp_tool": "site.openapi",
       "rest_path": "/v1/site/openapi",
       "category": "discovery",
       "price_atomic": 4000,
@@ -208,6 +237,7 @@
     },
     {
       "tool": "url_security_headers",
+      "mcp_tool": "url.security_headers",
       "rest_path": "/v1/url/security-headers",
       "category": "security",
       "price_atomic": 3000,
@@ -215,6 +245,7 @@
     },
     {
       "tool": "url_tls",
+      "mcp_tool": "url.tls",
       "rest_path": "/v1/url/tls",
       "category": "security",
       "price_atomic": 3000,
@@ -222,6 +253,7 @@
     },
     {
       "tool": "url_access_flags",
+      "mcp_tool": "url.access_flags",
       "rest_path": "/v1/url/access-flags",
       "category": "security",
       "price_atomic": 3000,

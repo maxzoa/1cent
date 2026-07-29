@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from onecent import __version__
 from onecent.config import Settings, get_settings
 from onecent.db import Session, engine
-from onecent.mcp_server import FREE_MCP_TOOL_NAMES, mcp
+from onecent.mcp_server import FREE_MCP_TOOL_NAMES, mcp, public_mcp_tool_name
 from onecent.repositories.catalog import price_promo_status, public_catalog_rows, tool_enabled
 from onecent.repositories.data import record_error, service_enabled
 from onecent.schemas import (
@@ -199,9 +199,12 @@ async def catalog(
 ) -> list[dict[str, object]]:
     try:
         rows = await public_catalog_rows(session)
-        return rows or public_catalog()
+        selected = rows or public_catalog()
     except Exception:
-        return public_catalog()
+        selected = public_catalog()
+    return [
+        {**row, "mcp_tool": public_mcp_tool_name(str(row["tool"]))} for row in selected
+    ]
 
 
 @app.get("/.well-known/mcp/server-card.json", include_in_schema=False)
@@ -347,8 +350,8 @@ async def tools_page() -> HTMLResponse:
     return _landing(
         "Web intelligence tools",
         "<p>32 paid REST/MCP tools plus three free MCP tools: "
-        "<code>catalog_search</code>, <code>demo_url_pulse</code> and "
-        "<code>demo_live_url_pulse</code>.</p>"
+        "<code>catalog.search</code>, <code>demo.url_pulse</code> and "
+        "<code>demo.live_url_pulse</code>.</p>"
         "<p><a href='/v1/demo/live-pulse'>Try the rate-limited live demo</a> · "
         "<a href='/v1/catalog'>Machine-readable catalog</a></p>",
     )
@@ -367,9 +370,9 @@ async def pricing_page() -> HTMLResponse:
 async def getting_started() -> HTMLResponse:
     return _landing(
         "Pay for a 1cent request",
-        "<p><strong>Start free:</strong> call MCP <code>catalog_search</code> or "
-        "<code>demo_url_pulse</code>. For a real fixed-target fetch without payment, use "
-        "<code>demo_live_url_pulse</code> or <a href='/v1/demo/live-pulse'>REST live demo</a>. "
+        "<p><strong>Start free:</strong> call MCP <code>catalog.search</code> or "
+        "<code>demo.url_pulse</code>. For a real fixed-target fetch without payment, use "
+        "<code>demo.live_url_pulse</code> or <a href='/v1/demo/live-pulse'>REST live demo</a>. "
         "The live demo is rate-limited and never accepts a caller-provided URL.</p>"
         "<p><strong>Fastest MCP path:</strong> install the local "
         "<a href='/docs/buyer-bridge'>1cent Buyer Bridge</a>. It adds local x402 signing to "

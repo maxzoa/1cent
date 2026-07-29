@@ -27,9 +27,13 @@ curl -sS https://1cent.maxzoa.ru/v1/demo/live-pulse
 
 Production exposes 32 paid REST/MCP operations plus three free MCP tools:
 
-- `catalog_search` — find the correct operation and live price without a URL fetch;
-- `demo_url_pulse` — inspect a fixed precomputed output sample without payment or network access.
-- `demo_live_url_pulse` — run the real safe service against fixed `example.com`, rate-limited.
+- `catalog.search` — find the correct operation and live price without a URL fetch;
+- `demo.url_pulse` — inspect a fixed precomputed output sample without payment or network access.
+- `demo.live_url_pulse` — run the real safe service against fixed `example.com`, rate-limited.
+
+Public MCP discovery uses navigable dot-notation (`url.status`, `site.openapi`). Pre-0.6
+underscore names remain accepted as compatibility aliases but are intentionally omitted from
+`tools/list`.
 
 MCP also publishes one buyer prompt (`choose_url_tool`) and one static buyer-guide resource
 (`onecent://buyer-guide`). Every input field includes constraints, examples and machine-readable

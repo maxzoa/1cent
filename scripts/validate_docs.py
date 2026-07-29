@@ -59,7 +59,7 @@ ARCHIVE_DOCS = (
 )
 
 RUNTIME_FACTS = (
-    "0.5.0",
+        "0.6.0",
     "eip155:8453",
     "https://facilitator.payai.network",
     "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",

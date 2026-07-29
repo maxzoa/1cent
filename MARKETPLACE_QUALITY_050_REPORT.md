@@ -67,10 +67,11 @@ public visibility. Paid placement and artificial payments are excluded.
 | modelcontext-protocol.com | auto-imported exact remote is public, but mirror metadata remains `0.1.0` |
 | AgentGrade | historical `D` predates deployed security headers; fresh passive scan externally blocked |
 
-Smithery's remaining four points require a paid developer plan. No directory payment was made or
-authorized. Glama's separate GitHub-profile claim remains blocked because the GitHub authorization
-control is disabled by the platform. These external or paid gates are not represented as project
-defects or fabricated PASS results.
+Correction recorded 2026-07-30: Smithery's public 96/100 quality score was not caused by the paid
+developer-plan verification item. The score breakdown showed 36/40 for capability quality and the
+only failed capability criterion was flat tool naming. Release 0.6.0 replaces public discovery names
+with a navigable dot hierarchy while retaining underscore compatibility aliases. The paid plan is a
+separate verification gate and remains intentionally unused. No directory payment was made.
 
 ## Security correction found during marketplace audit
 

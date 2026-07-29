@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 — 2026-07-30
+
+- Published MCP tools under navigable dot-notation namespaces (`url.*`, `site.*`, `catalog.*`
+  and `demo.*`) for stronger agent selection and marketplace naming quality.
+- Kept every pre-0.6 underscore tool name callable as a hidden compatibility alias.
+- Updated catalog-search results, public server card, buyer guidance, smoke tests and release
+  validators to use the canonical public names.
+- Payment verification, settlement, prices, Base Mainnet, PayAI, seller and production safety
+  controls are unchanged; the release does not execute a payment.
+
 ## Unreleased - Glama release compatibility
 
 - Added a Glama-compatible local stdio entry point for release verification, reusing the canonical
