@@ -310,6 +310,9 @@ async def getting_started() -> HTMLResponse:
         "<code>demo_url_pulse</code>. For a real fixed-target fetch without payment, use "
         "<code>demo_live_url_pulse</code> or <a href='/v1/demo/live-pulse'>REST live demo</a>. "
         "The live demo is rate-limited and never accepts a caller-provided URL.</p>"
+        "<p><strong>Fastest MCP path:</strong> install the local "
+        "<a href='/docs/buyer-bridge'>1cent Buyer Bridge</a>. It adds local x402 signing to "
+        "Claude, Cursor, VS Code or Codex. Manual one-call approval is the default.</p>"
         "<p>No account or API key. Buyer needs a wallet with Base Mainnet USDC and an "
         "x402 v2 client.</p><ol><li>Read <a href='/.well-known/x402'>discovery manifest</a>."
         "</li><li>Install the official x402 client.</li><li>Call a REST endpoint; the "
@@ -319,6 +322,27 @@ async def getting_started() -> HTMLResponse:
         "<p>MCP transport: <code>https://1cent.maxzoa.ru/mcp/</code>. "
         "Private keys stay only inside the buyer client and are never sent to 1cent. "
         "Always read the current advertised price instead of hard-coding it.</p>",
+    )
+
+
+@app.get("/docs/buyer-bridge", response_class=HTMLResponse, include_in_schema=False)
+async def buyer_bridge_guide() -> HTMLResponse:
+    return _landing(
+        "Connect and pay from an MCP client",
+        "<p>Buyer Bridge is a local stdio MCP server. Wallet signing stays on your computer; "
+        "1cent and MCP directories never receive the private key.</p>"
+        "<pre><code>pipx install &quot;onecent[buyer] @ "
+        "git+https://github.com/maxzoa/1cent.git&quot;\n"
+        "onecent wallet set\n"
+        "onecent doctor</code></pre>"
+        "<p>Add this local command to your MCP client:</p>"
+        "<pre><code>onecent bridge --max-usdc-per-call 0.001 "
+        "--daily-limit-usdc 0.01</code></pre>"
+        "<p>First paid call returns a quote and performs no payment. Review it, run the exact "
+        "<code>onecent approve ... --confirm-charge PAY-ONCE</code> command, then repeat the same "
+        "tool call once. UNKNOWN outcomes are never retried automatically.</p>"
+        "<p><a href='https://github.com/maxzoa/1cent/blob/main/BUYER_BRIDGE.md'>"
+        "Full Claude, Cursor, VS Code and Codex setup</a></p>",
     )
 
 
@@ -471,6 +495,7 @@ async def public_sitemap() -> Response:
         "/v1/demo/pulse",
         "/v1/demo/live-pulse",
         "/docs/getting-started",
+        "/docs/buyer-bridge",
         "/examples/python-x402",
         "/examples/typescript-x402",
         "/privacy",
@@ -496,6 +521,7 @@ async def public_llms() -> str:
         "Public status: https://1cent.maxzoa.ru/status.json\n"
         "x402 discovery: https://1cent.maxzoa.ru/.well-known/x402\n"
         "Buyer guide: https://1cent.maxzoa.ru/docs/getting-started\n"
+        "Buyer Bridge: https://1cent.maxzoa.ru/docs/buyer-bridge\n"
         "Python buyer: https://1cent.maxzoa.ru/examples/python-x402\n"
         "TypeScript buyer: https://1cent.maxzoa.ru/examples/typescript-x402\n"
     )

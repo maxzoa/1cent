@@ -6,6 +6,9 @@
 Этот runbook обслуживает работающий production. Он не разрешает искусственные платежи,
 смену seller/network/facilitator или ослабление payment/security controls.
 
+Buyer Bridge работает только на машине покупателя. Не устанавливать buyer wallet/keyring на NAS,
+не передавать `ONECENT_BUYER_PRIVATE_KEY` в API/bot Compose и не копировать buyer SQLite в backup.
+
 ## Daily read-only check
 
 Из `/volume1/docker/1cent`:

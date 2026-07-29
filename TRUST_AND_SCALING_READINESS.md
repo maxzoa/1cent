@@ -18,6 +18,11 @@ Current runtime facts are maintained in [CURRENT_PRODUCTION.md](CURRENT_PRODUCTI
 - external scheduled health evidence, isolated restore drill and unpaid load smoke;
 - hashed transitive lock, dependency audit, SBOM and pinned container scan;
 - cache/timing/completeness/warning metadata in successful results.
+- local stdio Buyer Bridge for MCP hosts lacking native x402 signing;
+- OS-keyring signer storage and keyless local approval/outcome ledger;
+- manual one-call approval by default, explicit capped auto-pay for headless buyers;
+- exact network/asset/seller/resource/amount validation before every signature;
+- buyer-side UNKNOWN lockout and unpaid bridge smoke.
 
 ## Signed offers and receipts
 
@@ -51,7 +56,8 @@ availability failures. Never retry `settle` against another facilitator after an
 
 Evaluate the active promotion after 72 hours or 20 unique probable external fingerprints:
 
-- no signed payloads: improve buyer distribution and wallet compatibility;
+- no signed payloads: distribute [BUYER_BRIDGE.md](BUYER_BRIDGE.md), verify install-to-quote and
+  approval-to-signed-payload conversion before changing price/facilitator;
 - decode/precheck failures: repair examples or advertised requirements;
 - facilitator failures: investigate PayAI or qualified failover;
 - settlement success without delivery: treat as service incident.

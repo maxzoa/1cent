@@ -27,8 +27,21 @@ Buyer setup starts with a no-payment diagnostic:
 onecent doctor
 ```
 
-The CLI refuses a paid call unless the buyer explicitly supplies a maximum amount, confirms Base
-Mainnet and types the one-call confirmation. See `examples/buyer-python` and `examples/buyer-node`.
+For MCP clients without native x402 signing, install the local Buyer Bridge:
+
+```bash
+pipx install "onecent[buyer] @ git+https://github.com/maxzoa/1cent.git"
+onecent wallet set
+onecent bridge --max-usdc-per-call 0.001 --daily-limit-usdc 0.01
+```
+
+Manual one-call approval is the default. The OS keyring holds the buyer secret; 1cent, remote MCP
+and catalog services never receive it. UNKNOWN outcomes are never retried. See
+[Buyer Bridge](BUYER_BRIDGE.md) for Claude, Cursor, VS Code and Codex setup.
+
+The direct CLI also refuses a paid call unless the buyer explicitly supplies a maximum amount,
+confirms Base Mainnet and types the one-call confirmation. See `examples/buyer-python` and
+`examples/buyer-node`.
 
 PostgreSQL is the runtime source for tool availability and atomic Base USDC prices. Config
 values are clean-install fallbacks. Paid URL work begins only after successful payment checks.
@@ -79,6 +92,7 @@ a fresh PostgreSQL backup, production preflight, development bypass disabled and
 - [Public REST API](API.md)
 - [Remote MCP server](MCP.md)
 - [Buyer quickstart](BUYER_QUICKSTART.md)
+- [Local MCP Buyer Bridge](BUYER_BRIDGE.md)
 - [Security policy](SECURITY.md)
 - [Release history](CHANGELOG.md)
 - [Scaling and trust gates](TRUST_AND_SCALING_READINESS.md)

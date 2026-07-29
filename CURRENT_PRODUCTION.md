@@ -24,6 +24,18 @@
 | API container port | `8013` |
 | PostgreSQL | internal `5432` |
 
+## Buyer activation surface
+
+- Remote production remains release `0.4.0`; its REST/MCP payment logic is unchanged.
+- Repository includes optional local `1cent Buyer Bridge` version `0.1.0` for MCP clients without
+  native x402 signing.
+- Bridge transport: local stdio MCP; it maps paid tools to the existing public REST resources.
+- Default: one live quote, then one explicit user approval per exact call.
+- Optional auto-pay is bounded by mandatory buyer-side per-call/daily limits plus exact
+  network/asset/seller confirmations.
+- Buyer secret source: OS keyring or headless process environment. It is never sent to production.
+- Canonical setup and recovery: [BUYER_BRIDGE.md](BUYER_BRIDGE.md).
+
 ## Pricing
 
 Все 32 платных ресурса участвуют в owner-approved промо:
@@ -43,6 +55,7 @@
 - `payment-identifier` необязателен; при отсутствии создаётся детерминированный server ID.
 - Повтор одного signed payload идемпотентен.
 - UNKNOWN settlement не повторяется автоматически и не получает новый payment ID.
+- Buyer Bridge также сохраняет UNKNOWN локально и блокирует тот же request fingerprint.
 - Buyer private key и seller private key на сервере отсутствуют.
 - Development bypass в production запрещён.
 

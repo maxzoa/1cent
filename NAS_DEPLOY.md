@@ -15,6 +15,9 @@
 
 Router port-forward не нужен. Docker socket не монтируется.
 
+`1cent Buyer Bridge` на NAS не запускается. Buyer private key, OS-keyring credentials и локальный
+bridge ledger не входят в deployment и не должны появляться в `.env`, Compose или backup.
+
 ## File sync
 
 Копировать только файлы проекта. Не перезаписывать `.env`, `.secrets`, backups, logs,

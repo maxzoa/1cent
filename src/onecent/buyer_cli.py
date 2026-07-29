@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import getpass
 import json
 import os
 import sys
@@ -15,11 +16,26 @@ from x402.http.clients import x402HttpxClient
 from x402.mechanisms.evm import EthAccountSigner
 from x402.mechanisms.evm.exact.register import register_exact_evm_client
 
+from onecent.buyer_bridge import (
+    BASE_USDC,
+    SELLER,
+    BridgePolicy,
+    BuyerBridgeError,
+    BuyerBridgeService,
+    create_buyer_bridge,
+    validate_auto_mode,
+)
+from onecent.buyer_state import BuyerLedger, BuyerStateError, default_state_path
+from onecent.buyer_wallet import (
+    BuyerWalletError,
+    delete_private_key,
+    store_private_key,
+    wallet_status,
+)
+
 DEFAULT_BASE_URL = "https://1cent.maxzoa.ru"
 DEFAULT_ENDPOINT = "/v1/url/status"
 BASE_MAINNET = "eip155:8453"
-BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-SELLER = "0x4798e8401ba3b1566685257c82d06303AB90EA35"
 USDC_DECIMALS = 6
 
 
@@ -148,6 +164,96 @@ def validate_paid_confirmation(args: argparse.Namespace) -> int:
     return atomic_from_usdc(args.max_usdc)
 
 
+def approve_bridge_call(args: argparse.Namespace) -> int:
+    if args.confirm_charge != "PAY-ONCE":
+        raise BuyerBridgeError("--confirm-charge must equal PAY-ONCE")
+    ledger = BuyerLedger(args.state_path)
+    entry = ledger.approve(args.approval_id)
+    print(
+        json.dumps(
+            {
+                "approved": True,
+                "approval_id": entry.entry_id,
+                "tool": entry.tool,
+                "amount_atomic": entry.amount_atomic,
+                "network": entry.network,
+                "pay_to": _short_address(entry.pay_to),
+                "expires_at": entry.expires_at,
+                "payment_executed": False,
+                "next_action": "Repeat the same MCP tool call once.",
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+    return 0
+
+
+def bridge_state(args: argparse.Namespace) -> int:
+    ledger = BuyerLedger(args.state_path)
+    print(json.dumps(ledger.snapshot(), ensure_ascii=False, indent=2))
+    return 0
+
+
+def wallet_command(args: argparse.Namespace) -> int:
+    if args.wallet_action == "set":
+        private_key = getpass.getpass("Buyer private key (hidden): ")
+        address = store_private_key(private_key)
+        print(
+            json.dumps(
+                {
+                    "configured": True,
+                    "storage": "OS keyring",
+                    "buyer": _short_address(address),
+                    "secret_printed": False,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
+    if args.wallet_action == "delete":
+        if args.confirm_delete != "DELETE-WALLET":
+            raise BuyerWalletError("--confirm-delete must equal DELETE-WALLET")
+        delete_private_key()
+        print("buyer_wallet_deleted=true")
+        return 0
+    status = wallet_status()
+    print(
+        json.dumps(
+            {
+                "configured": status.configured,
+                "source": status.source,
+                "buyer": _short_address(status.address or "") if status.address else None,
+                "secret_printed": False,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+    return 0
+
+
+def run_bridge(args: argparse.Namespace) -> None:
+    approval_mode = validate_auto_mode(
+        enabled=args.auto_pay,
+        confirm_network=args.confirm_network,
+        confirm_asset=args.confirm_asset,
+        confirm_seller=args.confirm_seller,
+        confirm_charge=args.confirm_charge,
+    )
+    policy = BridgePolicy(
+        max_per_call_atomic=atomic_from_usdc(args.max_usdc_per_call),
+        daily_limit_atomic=atomic_from_usdc(args.daily_limit_usdc),
+        approval_mode=approval_mode,
+        base_url=args.base_url,
+        timeout_seconds=args.timeout,
+    )
+    service = BuyerBridgeService(policy, BuyerLedger(args.state_path))
+    bridge = create_buyer_bridge(service)
+    bridge.run(transport="stdio")
+
+
 async def paid_call(args: argparse.Namespace) -> int:
     max_atomic = validate_paid_confirmation(args)
     private_key = os.getenv("ONECENT_BUYER_PRIVATE_KEY")
@@ -211,6 +317,38 @@ def _parser() -> argparse.ArgumentParser:
     call_parser.add_argument("--max-usdc", required=True)
     call_parser.add_argument("--confirm-network")
     call_parser.add_argument("--confirm-charge")
+    bridge_parser = subparsers.add_parser(
+        "bridge",
+        help="run the local stdio MCP buyer bridge; manual approval is the default",
+    )
+    bridge_parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
+    bridge_parser.add_argument("--max-usdc-per-call", required=True)
+    bridge_parser.add_argument("--daily-limit-usdc", required=True)
+    bridge_parser.add_argument("--state-path", default=str(default_state_path()))
+    bridge_parser.add_argument("--timeout", type=float, default=30.0)
+    bridge_parser.add_argument("--auto-pay", action="store_true")
+    bridge_parser.add_argument("--confirm-network")
+    bridge_parser.add_argument("--confirm-asset")
+    bridge_parser.add_argument("--confirm-seller")
+    bridge_parser.add_argument("--confirm-charge")
+    approve_parser = subparsers.add_parser(
+        "approve",
+        help="approve exactly one quoted bridge call; this command never pays",
+    )
+    approve_parser.add_argument("approval_id")
+    approve_parser.add_argument("--confirm-charge", required=True)
+    approve_parser.add_argument("--state-path", default=str(default_state_path()))
+    state_parser = subparsers.add_parser(
+        "bridge-state",
+        help="show local bridge spend and unresolved outcome counts",
+    )
+    state_parser.add_argument("--state-path", default=str(default_state_path()))
+    wallet_parser = subparsers.add_parser(
+        "wallet",
+        help="store, inspect or delete the local buyer signer using the OS keyring",
+    )
+    wallet_parser.add_argument("wallet_action", choices=("set", "status", "delete"))
+    wallet_parser.add_argument("--confirm-delete")
     return parser
 
 
@@ -218,13 +356,25 @@ async def _async_main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if args.command == "doctor":
         return await doctor(args)
+    if args.command == "approve":
+        return approve_bridge_call(args)
+    if args.command == "bridge-state":
+        return bridge_state(args)
+    if args.command == "wallet":
+        return wallet_command(args)
+    if args.command == "bridge":
+        raise BuyerBridgeError("bridge must be started by the synchronous CLI entrypoint")
     return await paid_call(args)
 
 
 def main() -> None:
     try:
-        raise SystemExit(asyncio.run(_async_main()))
-    except BuyerSafetyError as exc:
+        args = _parser().parse_args()
+        if args.command == "bridge":
+            run_bridge(args)
+            return
+        raise SystemExit(asyncio.run(_async_main(sys.argv[1:])))
+    except (BuyerSafetyError, BuyerBridgeError, BuyerStateError, BuyerWalletError) as exc:
         print(f"BLOCKED: {exc}", file=sys.stderr)
         raise SystemExit(1) from exc
 

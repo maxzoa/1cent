@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased — Buyer activation
+
+- Added local stdio `1cent Buyer Bridge` for MCP hosts without native x402 signing.
+- Added OS-keyring wallet storage; headless environment injection remains optional.
+- Added manual one-call approval as default and fully gated capped automatic mode.
+- Pinned network, asset, seller, scheme, exact resource and approved amount before local signing.
+- Added local SQLite approval/spend/outcome ledger without keys or signatures.
+- Added UNKNOWN fingerprint lockout, per-call/UTC-day buyer caps and strict MCP schemas.
+- Added no-payment bridge smoke, unit tests and complete buyer/client documentation.
+- Pinned the Linux keyring backend dependencies for cross-platform hash-locked installs.
+- Remote production payment logic, public prices, PayAI, seller and Base Mainnet remain unchanged.
+
 ## 0.4.0 — 2026-07-28
 
 - Added safety-first `onecent doctor` and explicitly gated buyer CLI plus pinned Python/Node examples.

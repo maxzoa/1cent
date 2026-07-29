@@ -28,12 +28,19 @@ jobs:
           grep -q '^pywin32==312 ; sys_platform == "win32"' requirements.lock
           grep -q '^uvloop==0.22.1 ; implementation_name == "cpython" and sys_platform != "win32"' requirements-dev.lock
           grep -q '^uvloop==0.22.1 ; implementation_name == "cpython" and sys_platform != "win32"' requirements.lock
+          grep -q '^keyring==25.7.0' requirements-buyer.lock
+          grep -q '^jeepney==0.9.0' requirements-buyer.lock
+          grep -q '^secretstorage==3.5.0' requirements-buyer.lock
+          grep -q '^uvloop==0.22.1' requirements-buyer.lock
           python -m pip install --require-hashes -r requirements-dev.lock
+          python -m pip install --require-hashes -r requirements-buyer.lock
           python -m pip install --no-deps -e .
       - name: Dependency consistency
         run: python -m pip check
       - name: Python dependency audit
-        run: pip-audit --no-deps -r requirements.lock --progress-spinner off
+        run: |
+          pip-audit --no-deps -r requirements.lock --progress-spinner off
+          pip-audit --no-deps -r requirements-buyer.lock --progress-spinner off
       - name: Generate CycloneDX SBOM
         run: pip-audit --no-deps -r requirements.lock --format cyclonedx-json --output sbom.cdx.json --progress-spinner off
       - uses: actions/upload-artifact@v4
@@ -48,6 +55,8 @@ jobs:
         # Module invocation keeps the repository root on sys.path, including
         # the tracked scripts package used by operational unit tests.
         run: python -m pytest -q
+      - name: Buyer bridge MCP smoke
+        run: python scripts/smoke_buyer_bridge.py
       - name: Release and MCP schema consistency
         run: python scripts/validate_release.py
       - name: Documentation consistency

@@ -16,7 +16,34 @@ Current network, asset, seller and facilitator: [CURRENT_PRODUCTION.md](CURRENT_
 Neither demo accepts a URL. The static demo performs no network request; the live demo uses the
 normal SSRF-safe fetch, cache and audit service against the fixed target.
 
-## 2. Run the buyer doctor (no payment)
+## 2. Fastest MCP path: local Buyer Bridge
+
+Many MCP clients can list and call remote tools but cannot create an x402 wallet signature. Use the
+local bridge when the client does not explicitly support x402 v2 payments:
+
+```bash
+pipx install "onecent[buyer] @ git+https://github.com/maxzoa/1cent.git"
+onecent wallet set
+onecent doctor
+```
+
+Add this stdio command to Claude Desktop, Cursor, VS Code or Codex:
+
+```bash
+onecent bridge --max-usdc-per-call 0.001 --daily-limit-usdc 0.01
+```
+
+Default behavior is quote-only. First paid call returns an approval ID and performs no payment.
+Approve exactly once, then repeat the same tool call once:
+
+```bash
+onecent approve <approval-id> --confirm-charge PAY-ONCE
+```
+
+Full client configuration, automatic-mode gates and UNKNOWN recovery:
+[BUYER_BRIDGE.md](BUYER_BRIDGE.md).
+
+## 3. Run the buyer doctor (no payment)
 
 ```bash
 onecent doctor
@@ -30,7 +57,7 @@ onecent doctor --buyer-address 0x... --rpc-url https://your-base-rpc.example
 
 The doctor checks health, info and a 402 requirement. It never signs or settles a payment.
 
-## 3. Inspect the live contract
+## 4. Inspect the live contract
 
 - Catalog: `https://1cent.maxzoa.ru/v1/catalog`
 - x402 manifest: `https://1cent.maxzoa.ru/.well-known/x402`
@@ -39,7 +66,7 @@ The doctor checks health, info and a 402 requirement. It never signs or settles 
 
 Never hard-code price, network, asset or payee. Validate every advertised payment requirement.
 
-## 4. Observe an unpaid challenge
+## 5. Observe an unpaid challenge
 
 ```bash
 curl -i -H 'Content-Type: application/json' \
@@ -49,7 +76,7 @@ curl -i -H 'Content-Type: application/json' \
 
 Expected: HTTP 402 and a machine-readable `PAYMENT-REQUIRED` header. A 402 is not a purchase.
 
-## 5. Use an official x402 buyer
+## 6. Use an official x402 buyer directly
 
 - Python example: `https://1cent.maxzoa.ru/examples/python-x402`
 - TypeScript example: `https://1cent.maxzoa.ru/examples/typescript-x402`
@@ -63,9 +90,15 @@ Buyer requirements:
 - x402 v2 `exact` EVM support;
 - explicit maximum-price and seller policy.
 
+Direct remote MCP configuration alone does not add a signer. Use Buyer Bridge unless the selected
+MCP client documents native x402 payment creation and local wallet policy.
+
 ## Key safety
 
 - A buyer private key stays only in the buyer process or secure signer.
+- Buyer Bridge stores the secret in the OS keyring; its SQLite state contains no keys/signatures.
+- Manual bridge mode requires one approval per exact tool/input/price quote.
+- Automatic bridge mode requires explicit network, asset, seller, per-call and daily caps.
 - Never paste a key into MCP server configuration, chat, logs or HTTP request JSON.
 - 1cent never asks for a seed phrase or buyer private key.
 - Do not retry an ambiguous settlement automatically.

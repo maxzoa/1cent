@@ -10,6 +10,7 @@ CURRENT_DOCS = (
     "API.md",
     "MCP.md",
     "BUYER_QUICKSTART.md",
+    "BUYER_BRIDGE.md",
     "SECURITY.md",
     "TRUST_AND_SCALING_READINESS.md",
     "CURRENT_PRODUCTION.md",
@@ -27,6 +28,7 @@ CURRENT_DOCS = (
 
 ARCHIVE_DOCS = (
     "BAZAAR_READINESS.md",
+    "BUYER_BRIDGE_IMPLEMENTATION_REPORT.md",
     "BUYER_COMPATIBILITY_AND_CONVERSION_REPORT.md",
     "DISCOVERY_TESTNET_REPORT.md",
     "IMPLEMENTATION_REPORT.md",
@@ -75,6 +77,17 @@ STALE_RUNTIME_PHRASES = (
 
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+\.md)(?:#[^)]+)?\)")
 
+BRIDGE_REFERENCE_DOCS = (
+    "README.md",
+    "API.md",
+    "MCP.md",
+    "BUYER_QUICKSTART.md",
+    "SECURITY.md",
+    "TRUST_AND_SCALING_READINESS.md",
+    "CURRENT_PRODUCTION.md",
+    "DOCS_INDEX.md",
+)
+
 
 def _read(name: str) -> str:
     path = ROOT / name
@@ -111,6 +124,20 @@ def validate() -> None:
 
     if "TESTNET-ONLY" not in _read("X402_TESTNET_SETUP.md"):
         raise AssertionError("X402_TESTNET_SETUP.md lacks testnet-only warning")
+
+    for name in BRIDGE_REFERENCE_DOCS:
+        if "BUYER_BRIDGE.md" not in _read(name):
+            raise AssertionError(f"buyer bridge documentation link missing: {name}")
+
+    buyer_lock = _read("requirements-buyer.lock")
+    for dependency in (
+        "keyring==25.7.0",
+        "jeepney==0.9.0",
+        "secretstorage==3.5.0",
+        "uvloop==0.22.1",
+    ):
+        if dependency not in buyer_lock:
+            raise AssertionError(f"buyer lock does not pin dependency: {dependency}")
 
 
 def main() -> int:

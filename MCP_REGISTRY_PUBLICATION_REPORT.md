@@ -16,6 +16,9 @@
 Publication used official `mcp-publisher 1.8.0`, official schema validation and DNS
 re-authentication with the existing Registry-only Ed25519 key. No x402 settlement was performed.
 
+Later buyer-side stdio Bridge work does not alter this remote publication. It must not be submitted
+as a second `ru.maxzoa/1cent` remote without a separately versioned and verified public endpoint.
+
 ## Version history
 
 | Version | Date | Result |

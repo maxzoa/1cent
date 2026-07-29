@@ -3,11 +3,14 @@ from __future__ import annotations
 import asyncio
 import json
 import subprocess
+import tempfile
 import tomllib
 from pathlib import Path
 from typing import cast
 
 from onecent import __version__
+from onecent.buyer_bridge import BridgePolicy, BuyerBridgeService, create_buyer_bridge
+from onecent.buyer_state import BuyerLedger
 from onecent.mcp_server import FREE_MCP_TOOL_NAMES, mcp
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +47,27 @@ async def _validate_mcp() -> None:
         assert tool.annotations.destructiveHint is False, tool.name
 
 
+async def _validate_buyer_bridge() -> None:
+    with tempfile.TemporaryDirectory(prefix="onecent-release-bridge-") as temporary:
+        ledger = BuyerLedger(Path(temporary) / "state.sqlite3")
+        bridge = create_buyer_bridge(
+            BuyerBridgeService(
+                BridgePolicy(max_per_call_atomic=1000, daily_limit_atomic=10_000),
+                ledger,
+            )
+        )
+        tools = await bridge.list_tools()
+    assert len(tools) == 36
+    assert [tool.name for tool in tools[:4]] == [
+        "buyer_bridge_status",
+        "catalog_search",
+        "demo_url_pulse",
+        "demo_live_url_pulse",
+    ]
+    for tool in tools:
+        assert tool.inputSchema.get("additionalProperties") is False, tool.name
+
+
 def main() -> None:
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     project = cast(dict[str, object], pyproject["project"])
@@ -71,8 +95,10 @@ def main() -> None:
         "NOTICE",
         "SECURITY.md",
         "BUYER_QUICKSTART.md",
+        "BUYER_BRIDGE.md",
         "CHANGELOG.md",
         "TRUST_AND_SCALING_READINESS.md",
+        "requirements-buyer.lock",
     ):
         assert (ROOT / required).is_file(), required
 
@@ -84,7 +110,11 @@ def main() -> None:
             assert not any(path.name.endswith(suffix) for suffix in forbidden), tracked
 
     asyncio.run(_validate_mcp())
-    print("release_validation=PASS; version=0.4.0; paid_tools=32; free_tools=3")
+    asyncio.run(_validate_buyer_bridge())
+    print(
+        "release_validation=PASS; version=0.4.0; paid_tools=32; "
+        "free_tools=3; buyer_bridge_tools=36"
+    )
 
 
 if __name__ == "__main__":
