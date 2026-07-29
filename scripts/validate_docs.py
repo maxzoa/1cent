@@ -163,15 +163,23 @@ def validate() -> None:
 
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     for marker in (
-        "glama.ai/mcp/servers/maxzoa/1cent/badges/score.svg",
-        "glama.ai/mcp/servers/maxzoa/1cent/badges/card.svg",
+        "img.shields.io/badge/Glama-Healthy%20connector-19c37d",
+        "glama.ai/mcp/connectors/ru.maxzoa/1cent",
         "smithery.ai/badge/maxzoa27/onecent",
-        "lobehub.com/badge/mcp/maxzoa-1cent",
+        "img.shields.io/badge/LobeHub-Listed-2f80ed",
+        "lobehub.com/mcp/maxzoa-1cent",
         "MCP_Registry-ru.maxzoa%2F1cent",
         "curl -sS https://1cent.maxzoa.ru/v1/demo/live-pulse",
     ):
         if marker not in readme:
             raise AssertionError(f"README marketplace marker missing: {marker}")
+    for stale_badge in (
+        "glama.ai/mcp/servers/maxzoa/1cent/badges/score.svg",
+        "glama.ai/mcp/servers/maxzoa/1cent/badges/card.svg",
+        "lobehub.com/badge/mcp/maxzoa-1cent",
+    ):
+        if stale_badge in readme:
+            raise AssertionError(f"README advertises stale marketplace score: {stale_badge}")
 
 
 def main() -> int:

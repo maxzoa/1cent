@@ -9,8 +9,8 @@ drift independently; dates below are part of the evidence.
 | PayAI Bazaar | 32/32 paid REST resources indexed | Full paginated read-only scan of 25,075 resources found all 32 exact 1cent URLs on 2026-07-29 |
 | Smithery | public, current, `96/100` | Fresh release succeeded in 8 seconds and discovered 35 tools, 1 prompt and 1 resource; only the optional paid developer-plan gate remains |
 | MCP.so | public; refresh pending | Public introspection sees current free tools, but copy still says 33; free correction issue `https://github.com/daodao97/chatmcp/issues/215` opened |
-| Glama connector | public and healthy | `https://glama.ai/mcp/connectors/ru.maxzoa/1cent`; 35/35 tools, tool-definition quality 4.4/5 and coherence 4/5 on 2026-07-29 |
-| Glama GitHub server profile | platform claim blocked | Current repository now has release, license, CI, `glama.json` and badges; GitHub OAuth Authorize remains disabled by Glama, so ownership/usage gates cannot be completed safely |
+| Glama connector | public, healthy, ownership verified | `https://glama.ai/mcp/connectors/ru.maxzoa/1cent`; 35/35 tools and current cached tool-definition grade A `4/5` on 2026-07-29 |
+| Glama GitHub server profile | repository fixed; refresh pending | Repository has release, Apache-2.0, CI, valid `glama.json` and current README; Glama must ingest those facts and run a new repository-profile scan |
 | LobeHub | `0.5.0` import submitted | Authenticated official CLI accepted the current GitHub repository; public listing may continue to show 0.2.0 until asynchronous import finishes |
 | Awesome MCP Servers | maintainer review blocked on Glama | PR `https://github.com/punkpeye/awesome-mcp-servers/pull/11089` checks PASS; maintainer requires claimed/evaluated Glama profile and score badge |
 | MCP.Directory | review pending | Free submission reports that this repository was already submitted and will be reviewed |
@@ -22,6 +22,13 @@ drift independently; dates below are part of the evidence.
 No catalog is marked current without dated evidence. A 402 challenge is not a visitor, purchase or
 settlement. Revenue is counted only from confirmed settlement evidence. Catalog work must not use
 artificial settlement, premium purchase, backend source, internal address or credentials.
+
+Glama's connector crawl is older than the latest production deploy and still renders blank
+parameter-description cells. Current MCP tests require description text on every property and
+examples on every required string field. A future Glama recrawl may change the grade; this document
+does not predict or fabricate that result. Glama's `Tool Count` and JavaScript/binary-content
+preferences are not product defects: 35 tools are intentionally distinct and JavaScript execution
+is excluded by the service's security model.
 
 Directory listings continue to point at the public remote MCP. Buyers whose MCP host cannot sign
 x402 should follow [BUYER_BRIDGE.md](BUYER_BRIDGE.md). The local bridge is not a duplicate public

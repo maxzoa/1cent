@@ -7,7 +7,7 @@ does not change production, prices, payment processing or tool behavior.
 
 | Surface | Current evidence | Buyer impact | Acceptance gate |
 |---|---|---|---|
-| Glama GitHub server | Repository metadata fixed; ownership claim blocked by disabled OAuth authorization control | Separate GitHub profile cannot become verified | Platform must restore its OAuth claim flow; no authentication bypass is acceptable |
+| Glama GitHub server | Repository metadata fixed; connector ownership now verified; repository profile refresh pending | Old repository-derived score can remain visible until Glama rescans | Glama ingests Apache-2.0, CI, `glama.json`, release and current README |
 | Smithery | 96/100, public, current 35-tool release | Only optional paid-plan points are missing | Complete for free publication; do not buy score |
 | MCP.so | Public tools current; marketing copy still says 33 | Tool count in prose is stale | Issue `daodao97/chatmcp#215` accepted/merged and public page refreshed |
 | PulseMCP | Waiting for documented Registry import cycle | No PulseMCP discovery traffic yet | Exact public result after daily/weekly ingestion |
@@ -21,8 +21,9 @@ does not change production, prices, payment processing or tool behavior.
 - Official MCP Registry: `ru.maxzoa/1cent` version 0.5.0, active/latest, remote
   `https://1cent.maxzoa.ru/mcp`.
 - PayAI Bazaar: all 32 paid REST resources indexed.
-- Glama remote connector: healthy remote endpoint and 35 tools; this does not replace the separate
-  GitHub server profile. Live tool-definition quality was 4.4/5 and coherence 4/5.
+- Glama remote connector: healthy, ownership verified, 35/35 tools and cached grade A `4/5`.
+  Current crawl predates the latest production deploy, so its blank parameter-description cells are
+  recorded as stale until Glama rescans. The repository profile remains a separate platform surface.
 - GitHub recognizes Apache-2.0 and has stable release `v0.5.0`.
 
 ## Repository corrections
@@ -30,8 +31,9 @@ does not change production, prices, payment processing or tool behavior.
 - Root `glama.json` declares GitHub maintainer `maxzoa` using Glama's official schema.
 - Python package metadata declares description, README, Apache-2.0, author, keywords, classifiers
   and public project URLs.
-- README shows CI, health, Glama, Smithery, MCP Registry and license badges and starts with a
-  no-payment live demo.
+- README shows CI, health, healthy Glama connector, Smithery, LobeHub, MCP Registry and license
+  badges and starts with a no-payment live demo. Stale score-card badges were removed so README does
+  not advertise obsolete repository-profile grades as current production quality.
 - GitHub homepage and discovery topics are populated.
 - CI validates marketplace metadata so this class of omission cannot silently recur.
 - Release 0.5.0 adds descriptions, constraints and examples to every MCP input property plus a

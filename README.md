@@ -2,10 +2,9 @@
 
 [![Quality](https://github.com/maxzoa/1cent/actions/workflows/quality.yml/badge.svg)](https://github.com/maxzoa/1cent/actions/workflows/quality.yml)
 [![External health](https://github.com/maxzoa/1cent/actions/workflows/external-health.yml/badge.svg)](https://github.com/maxzoa/1cent/actions/workflows/external-health.yml)
-[![1cent MCP server](https://glama.ai/mcp/servers/maxzoa/1cent/badges/card.svg)](https://glama.ai/mcp/servers/maxzoa/1cent)
-[![Glama score](https://glama.ai/mcp/servers/maxzoa/1cent/badges/score.svg)](https://glama.ai/mcp/servers/maxzoa/1cent)
+[![Glama connector](https://img.shields.io/badge/Glama-Healthy%20connector-19c37d)](https://glama.ai/mcp/connectors/ru.maxzoa/1cent)
 [![Smithery](https://smithery.ai/badge/maxzoa27/onecent)](https://smithery.ai/servers/maxzoa27/onecent)
-[![LobeHub](https://lobehub.com/badge/mcp/maxzoa-1cent)](https://lobehub.com/mcp/maxzoa-1cent)
+[![LobeHub](https://img.shields.io/badge/LobeHub-Listed-2f80ed)](https://lobehub.com/mcp/maxzoa-1cent)
 [![MCP Registry](https://img.shields.io/badge/MCP_Registry-ru.maxzoa%2F1cent-5c4ee5)](https://registry.modelcontextprotocol.io/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
