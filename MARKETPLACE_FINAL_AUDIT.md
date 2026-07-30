@@ -11,7 +11,7 @@ read-only production evidence. No paid placement or settlement was performed.
 | Remote MCP | Streamable HTTP; protocol `2025-11-25`; 35 tools, 1 prompt, 1 resource |
 | Agent discovery | x402, Bazaar, OpenAPI, llms, skill, agents, A2A, WebMCP and content negotiation PASS |
 | AgentGrade | `A+`, `100%`, 47/47 applicable checks |
-| Smithery | fresh release SUCCESS in 9 seconds; `100/100`; 35/1/1 |
+| Smithery | fresh release SUCCESS in 7 seconds; `100/100`; 35/1/1 |
 | Glama quality | profile 100%; coherence/tools/maintenance/license all A |
 | Official Registry | `ru.maxzoa/1cent` `0.6.2`, active/latest |
 | PayAI Bazaar | 32/32 exact paid resource URLs found read-only |
