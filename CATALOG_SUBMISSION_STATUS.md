@@ -11,7 +11,7 @@
 | AgentGrade | `A+`, `100%`, 47/47 applicable checks | https://agentgrade.com |
 | Glama connector/profile | author verified; coherence, tools, maintenance и license — `A`; tool quality 4.5/5 | https://glama.ai/mcp/servers/maxzoa/1cent/score |
 | Glama release | последняя Glama release `0.6.1` | Glama ещё видит GitHub head `8c628c7` и отклоняет новый `0dcd047` как not found; внешний sync pending |
-| LobeHub | `0.6.2`, published | https://lobehub.com/mcp/maxzoa-1cent |
+| LobeHub | owner CLI: `0.7.0`, `published`, score `A`; public HTML edge immediately after publish still cached `0.6.2` | https://lobehub.com/mcp/maxzoa-1cent; async CDN propagation pending |
 | MCP.so | public; 35 tools, repository, homepage, docs, endpoint и актуальное описание | https://mcp.so/servers/1cent |
 | MCPServers.org | public/searchable; refresh принят как `Запрошено` | https://mcpservers.org/ru/servers/maxzoa/1cent |
 | Awesome MCP Servers | PR open, validation PASS, mergeable | https://github.com/punkpeye/awesome-mcp-servers/pull/11089 |

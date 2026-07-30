@@ -67,6 +67,9 @@ container IDs and start times unchanged.
 - Final release: `v0.7.0`.
 - Official MCP Registry: `ru.maxzoa/1cent` version `0.7.0`, `active`, `latest=true`, published at
   `2026-07-30T12:19:34.384162Z`; exact description and MCP URL matched `server.json`.
+- LobeHub owner publication: `maxzoa-1cent` advanced from `0.6.2` to `0.7.0`; owner CLI reported
+  `published`, GitHub connected and score `A`. The public HTML edge still returned cached `0.6.2`
+  immediately after publication, so propagation remains an external asynchronous check.
 - Production start: `2026-07-30T11:55:36Z` (API); bot start: `2026-07-30T11:56:57Z`.
 - Fresh backup: `/volume1/docker/1cent/backups/onecent-20260730T114646Z.sql.gz`;
   restore drill PASS with 17 tables at migration `0007`.
