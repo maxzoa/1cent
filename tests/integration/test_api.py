@@ -105,6 +105,23 @@ def test_public_buyer_bridge_documentation(client: TestClient) -> None:
 
 
 def test_agent_discovery_documents_and_content_negotiation(client: TestClient) -> None:
+    root_markdown = client.get(
+        "/", headers={"Accept": "text/markdown, text/html, */*"}
+    )
+    assert root_markdown.status_code == 200
+    assert root_markdown.headers["content-type"].startswith("text/markdown")
+    assert root_markdown.headers["vary"] == "Accept"
+
+    root_json = client.get("/", headers={"Accept": "application/json"})
+    assert root_json.status_code == 200
+    assert root_json.headers["content-type"].startswith("application/json")
+    assert root_json.json()["name"] == "ru.maxzoa/1cent"
+
+    root_html = client.get("/", headers={"Accept": "text/html"})
+    assert root_html.status_code == 200
+    assert root_html.headers["content-type"].startswith("text/html")
+    assert root_html.headers["cache-control"] == "public, max-age=300"
+
     markdown = client.get(
         "/mcp", headers={"Accept": "text/markdown, text/html, */*"}
     )
@@ -173,6 +190,7 @@ def test_x402_well_known_manifest(client: TestClient) -> None:
     assert status["path"] == "/v1/url/status"
     assert status["extensions"]["bazaar"]["discoverable"] is True
     assert manifest["payTo"] == status["price"]["payTo"]
+    assert manifest["services"] == manifest["resources"]
 
     assert client.get("/.well-known/x402.json").json() == manifest
     assert client.get("/.well-known/agent.json").json()["x402"].endswith(

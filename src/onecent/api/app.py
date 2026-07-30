@@ -244,7 +244,18 @@ async def favicon() -> Response:
 
 
 @app.get("/", response_class=HTMLResponse, tags=["Service"], summary="Public landing")
-async def root() -> HTMLResponse:
+async def root(request: Request) -> Response:
+    accept = request.headers.get("accept", "")
+    selected = _accepted_presentation(accept)
+    if selected is None:
+        user_agent = request.headers.get("user-agent", "").lower()
+        if any(
+            marker in user_agent
+            for marker in ("agent", "bot", "claude", "cursor", "chatgpt", "codex")
+        ):
+            selected = "text/markdown"
+    if selected is not None and selected != "text/html":
+        return _mcp_presentation(selected)
     return _landing(
         "1cent Web Intelligence for AI Agents",
         "<p>Pay-per-call URL inspection through REST and MCP. No account or API key required.</p>"
@@ -379,6 +390,7 @@ async def _x402_manifest(session: AsyncSession) -> dict[str, object]:
         },
         "facilitator": settings.x402_facilitator_url,
         "promotion": promotion,
+        "services": resources,
         "resources": resources,
     }
 
@@ -448,6 +460,7 @@ def _landing(title: str, body: str) -> HTMLResponse:
         f"<title>{title} · 1cent</title>"
         "<meta name='description' content='Pay-per-call web intelligence for AI agents'>"
         "<meta name='theme-color' content='#111827'>"
+        "<meta name='twitter:card' content='summary'>"
         f"<meta property='og:image' content='{base_url}/favicon.svg'>"
         "<link rel='icon' type='image/svg+xml' href='/favicon.svg'>"
         "<link rel='shortcut icon' href='/favicon.ico'>"
@@ -465,7 +478,8 @@ def _landing(title: str, body: str) -> HTMLResponse:
     return HTMLResponse(
         head + nav + f"<h1>{title}</h1>{body}"
         "<footer><p>No tracking cookies. Public HTTP(S) only. "
-        "No JavaScript rendering.</p></footer></body></html>"
+        "No JavaScript rendering.</p></footer></body></html>",
+        headers={"Cache-Control": "public, max-age=300"},
     )
 
 
