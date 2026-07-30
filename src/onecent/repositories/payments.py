@@ -66,6 +66,7 @@ async def reserve_payment(
         source=traffic.source if traffic else "unknown",
         client_fingerprint=traffic.client_fingerprint if traffic else None,
         attribution=traffic.attribution if traffic else "unknown",
+        referral_source=traffic.referral_source if traffic else "unknown",
     )
     session.add(row)
     await session.commit()
@@ -92,6 +93,7 @@ async def record_attempt(
             normalized_user_agent=traffic.normalized_user_agent if traffic else "unknown",
             client_fingerprint=traffic.client_fingerprint if traffic else None,
             attribution=traffic.attribution if traffic else "unknown",
+            referral_source=traffic.referral_source if traffic else "unknown",
             created_at=datetime.now(UTC),
         )
     )
@@ -181,7 +183,6 @@ def daily_limit_allows(
 ) -> bool:
     settlement_ok = not settlement_limit_enabled or count < settlement_limit
     revenue_ok = (
-        not revenue_limit_enabled
-        or revenue_atomic + next_amount_atomic <= revenue_limit_atomic
+        not revenue_limit_enabled or revenue_atomic + next_amount_atomic <= revenue_limit_atomic
     )
     return settlement_ok and revenue_ok

@@ -61,6 +61,18 @@ jobs:
         run: python scripts/validate_release.py
       - name: Documentation consistency
         run: python scripts/validate_docs.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: packages/onecent-buyer/package-lock.json
+      - name: Node buyer package
+        working-directory: packages/onecent-buyer
+        run: |
+          npm ci
+          npm test
+          npm pack --dry-run
+          npm audit --omit=dev --audit-level=high
       - name: Shell syntax
         run: find scripts -name '*.sh' -print0 | xargs -0 -n1 sh -n
       - name: Container build

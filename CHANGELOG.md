@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.7.0 - 2026-07-30
+
+- Added one buyer-selected, SSRF-protected URL preview per client and UTC day at
+  `GET /v1/demo/preview`; the existing fixed demos remain available.
+- Added four outcome-oriented product packages without adding paid routes or MCP tools:
+  site health, SEO discovery, content for AI, and change monitoring.
+- Added the official x402 browser paywall entry at `/try` and paid result route at
+  `/try/result`; unpaid access remains HTTP 402 and URL work still starts only after payment.
+- Added safe referral attribution across request, payment, funnel and error audit records.
+- Added optional Ed25519 `did:web` signed x402 offer and receipt evidence with a separately
+  generated server key; no buyer or seller key is used.
+- Added `onecent install` for Claude Desktop, Cursor, VS Code and Codex, plus a finite,
+  capped `onecent watch` command that never retries an UNKNOWN payment outcome.
+- Added the publishable `onecent-buyer` Node package using the official x402 TypeScript SDK.
+- Public paid catalog remains exactly 32 resources and MCP discovery remains exactly 35 tools,
+  one prompt and one resource. Network, asset, seller, PayAI, prices and production safety gates
+  are unchanged. This release performs no payment.
+
 ## 0.6.2 - 2026-07-30
 
 - Added RFC-aware content negotiation at the canonical MCP URL without changing MCP POST/DELETE

@@ -1,12 +1,12 @@
 {
   "identifier": "maxzoa-1cent",
   "name": "1cent Web Intelligence for AI Agents",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "author": "maxzoa",
   "authorUrl": "https://github.com/maxzoa",
   "category": "developer",
   "cloudEndpoint": "https://1cent.maxzoa.ru/mcp",
-  "description": "Production remote MCP server with 35 safe web-intelligence tools: 32 paid x402 URL operations and 3 free discovery/demo tools.",
+  "description": "Production remote MCP server with 4 outcome packages and 35 safe web-intelligence tools: 32 paid x402 operations and 3 free discovery/demo tools.",
   "homepage": "https://github.com/maxzoa/1cent",
   "icon": "https://1cent.maxzoa.ru/favicon.ico",
   "tags": [

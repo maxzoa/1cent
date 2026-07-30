@@ -11,6 +11,7 @@ from onecent.schemas.operations import (
     ResultQuality,
     ToolRequest,
     ToolResponse,
+    TrialPreviewResponse,
     UrlRequest,
 )
 
@@ -27,5 +28,6 @@ __all__ = [
     "ResultQuality",
     "ToolRequest",
     "ToolResponse",
+    "TrialPreviewResponse",
     "UrlRequest",
 ]

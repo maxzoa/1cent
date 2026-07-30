@@ -43,11 +43,15 @@ chmod 600 .env
 9. Monitor mainnet PASS.
 10. Settlement count/sum до/после должны совпасть, если платеж отдельно не разрешён.
 
-Release 0.6.2 использует:
+Release 0.7.0 использует:
 
 ```sh
-CONFIRM_MARKETPLACE_062_DEPLOY=true sh scripts/deploy_marketplace_062.sh
+CONFIRM_BUYER_ACTIVATION_070_DEPLOY=true sh scripts/deploy_buyer_activation_070.sh
 ```
+
+Deploy-скрипт создаёт отдельный Ed25519 PKCS#8 ключ в
+`secrets/offer_receipt_ed25519.pem`, устанавливает mode `600` и монтирует его read-only только в
+API. Ключ не является seller/buyer ключом, не копируется в отчёт и не попадает в Git.
 
 Скрипт завершается только после public version/schema/prompt/resource checks и нулевого
 изменения count/sum успешных settlement.

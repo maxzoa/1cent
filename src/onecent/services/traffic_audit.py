@@ -4,6 +4,7 @@ import re
 import uuid
 from contextvars import ContextVar, Token
 from dataclasses import dataclass
+from urllib.parse import urlsplit
 
 from fastapi import Request
 
@@ -11,6 +12,7 @@ from onecent.config import Settings
 
 REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{7,63}$")
 FINGERPRINT_RE = re.compile(r"^[0-9a-f]{64}$")
+REFERRAL_RE = re.compile(r"[^a-z0-9_-]+")
 
 
 @dataclass
@@ -21,6 +23,7 @@ class TrafficContext:
     normalized_user_agent: str
     client_fingerprint: str
     attribution: str
+    referral_source: str = "direct"
     payment_id: str | None = None
     amount_atomic: int = 0
 
@@ -69,6 +72,36 @@ def _is_loopback(peer: str) -> bool:
     return peer in {"127.0.0.1", "::1", "testclient"}
 
 
+def normalize_referral(value: str) -> str:
+    normalized = REFERRAL_RE.sub("_", value.strip().lower()).strip("_")
+    return normalized[:40] or "direct"
+
+
+def _referral_source(request: Request) -> str:
+    explicit = request.query_params.get("ref") or request.headers.get("x-onecent-referral", "")
+    if explicit:
+        return normalize_referral(explicit)
+    referer = request.headers.get("referer", "")
+    try:
+        hostname = (urlsplit(referer).hostname or "").lower()
+    except ValueError:
+        hostname = ""
+    known = (
+        ("smithery.ai", "smithery"),
+        ("glama.ai", "glama"),
+        ("mcp.so", "mcp_so"),
+        ("lobehub.com", "lobehub"),
+        ("mcpservers.org", "mcpservers"),
+        ("github.com", "github"),
+        ("modelcontextprotocol.io", "mcp_registry"),
+        ("x402.org", "x402"),
+    )
+    for domain, label in known:
+        if hostname == domain or hostname.endswith(f".{domain}"):
+            return label
+    return "other_referrer" if hostname else "direct"
+
+
 def build_traffic_context(request: Request, settings: Settings) -> TrafficContext:
     peer = request.client.host if request.client else ""
     trusted_internal = _is_loopback(peer)
@@ -85,9 +118,10 @@ def build_traffic_context(request: Request, settings: Settings) -> TrafficContex
     if FINGERPRINT_RE.fullmatch(claimed_fingerprint):
         fingerprint = claimed_fingerprint
     else:
-        forwarded = request.headers.get("cf-connecting-ip") or request.headers.get(
-            "x-forwarded-for", ""
-        ).split(",", 1)[0]
+        forwarded = (
+            request.headers.get("cf-connecting-ip")
+            or request.headers.get("x-forwarded-for", "").split(",", 1)[0]
+        )
         client_hint = forwarded.strip() or peer or "unknown"
         salt = settings.audit_hash_salt or settings.internal_api_token
         fingerprint = safe_client_fingerprint(salt, client_hint, normalized_ua)
@@ -111,6 +145,7 @@ def build_traffic_context(request: Request, settings: Settings) -> TrafficContex
         normalized_user_agent=normalized_ua,
         client_fingerprint=fingerprint,
         attribution=attribution,
+        referral_source=_referral_source(request),
     )
 
 

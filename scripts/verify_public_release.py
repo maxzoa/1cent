@@ -50,7 +50,7 @@ async def run(base_url: str) -> None:
     openapi_data = cast(dict[str, Any], openapi.json())
     card_data = cast(dict[str, Any], card.json())
 
-    assert info.status_code == 200 and info_data["version"] == "0.6.2"
+    assert info.status_code == 200 and info_data["version"] == "0.7.0"
     assert info_data["network"] == NETWORK
     assert info_data["facilitator"] == "https://facilitator.payai.network"
     assert status.status_code == 200 and status_data["status"] == "ok"
@@ -70,7 +70,7 @@ async def run(base_url: str) -> None:
 
     server_info = cast(dict[str, Any], card_data["serverInfo"])
     tools = cast(list[dict[str, Any]], card_data["tools"])
-    assert card.status_code == 200 and server_info["version"] == "0.6.2"
+    assert card.status_code == 200 and server_info["version"] == "0.7.0"
     assert len(tools) == 35
     assert [tool["name"] for tool in tools[:2]] == [
         "catalog.tools.search",
@@ -100,7 +100,7 @@ async def run(base_url: str) -> None:
     assert accepted["payTo"].lower() == PAY_TO.lower()
     assert bad_origin.status_code == 403
 
-    print("public_release=PASS; version=0.6.2; paid_tools=32; free_tools=3")
+    print("public_release=PASS; version=0.7.0; paid_tools=32; free_tools=3")
     print("rest_402=PASS; amount=1000; network=eip155:8453; origin_guard=PASS")
     print("demo=PASS; network_request=false; settlement_performed=false")
 

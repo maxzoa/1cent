@@ -84,6 +84,8 @@ def test_root_and_info(client: TestClient) -> None:
         item["mcp_tool"] == "web." + item["tool"].replace("_", ".", 1)
         for item in catalog
     )
+    assert len(client.get("/v1/products").json()) == 4
+    assert client.get("/try").status_code == 200
 
 
 def test_public_buyer_bridge_documentation(client: TestClient) -> None:
@@ -159,7 +161,7 @@ def test_agent_discovery_documents_and_content_negotiation(client: TestClient) -
     assert skill.headers["content-type"].startswith("text/markdown")
     assert skill.text.startswith("---\nname: onecent-web-intelligence\n")
     assert client.get("/agents.txt").status_code == 200
-    assert client.get("/.well-known/webmcp.json").json()["version"] == "0.6.2"
+    assert client.get("/.well-known/webmcp.json").json()["version"] == "0.7.0"
 
 
 def test_mcp_cors_preflight(client: TestClient) -> None:
@@ -204,7 +206,7 @@ def test_mcp_well_known_manifest(client: TestClient) -> None:
     assert manifest.headers["content-type"].startswith("application/json")
     body = manifest.json()
     assert body["name"] == "ru.maxzoa/1cent"
-    assert body["version"] == "0.6.2"
+    assert body["version"] == "0.7.0"
     assert body["websiteUrl"] == "https://1cent.maxzoa.ru"
     assert body["remotes"] == [
         {
@@ -243,7 +245,7 @@ def test_free_demo_status_security_and_server_card(
 
     status = client.get("/status.json")
     assert status.status_code == 200
-    assert status.json()["version"] == "0.6.2"
+    assert status.json()["version"] == "0.7.0"
     assert status.json()["paid_tools"] == 32
     assert status.json()["free_mcp_tools"] == [
         "catalog.tools.search",
@@ -369,6 +371,15 @@ def test_all_paid_endpoints_fail_closed_without_payment(client: TestClient) -> N
             assert bazaar["schema"]["properties"]["input"]
     finally:
         app.dependency_overrides.clear()
+
+
+def test_browser_purchase_is_paid_but_not_an_extra_bazaar_resource(client: TestClient) -> None:
+    response = client.get("/try/result", params={"url": "https://example.com/"})
+    assert response.status_code == 402
+    assert "payment-required" in response.headers
+    required = decode_payment_required_header(response.headers["payment-required"])
+    assert required.accepts[0].network == "eip155:84532"
+    assert len(client.get("/.well-known/x402").json()["resources"]) == 32
 
 
 def test_public_hostname_cannot_use_development_bypass(client: TestClient) -> None:

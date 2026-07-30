@@ -23,7 +23,7 @@ sh scripts/monitor_mainnet_health.sh
 Ожидается:
 
 - API, bot, DB: `healthy`;
-- version: `0.6.2`;
+- version: `0.7.0`;
 - payments: `x402-v2-mainnet`;
 - network: `eip155:8453`;
 - service enabled;
@@ -71,12 +71,15 @@ Capability drift = deploy/paid-action stop; не проверять реальн
 8. Сравнить count/sum успешных settlement до/после. Они не должны измениться без
    отдельно разрешённого платежа.
 
-Для release 0.6.2 эти действия автоматизированы
-`scripts/deploy_marketplace_062.sh` и требуют
-`CONFIRM_MARKETPLACE_062_DEPLOY=true`. Скрипт делает backup/restore drill, candidate checks,
+Для release 0.7.0 эти действия автоматизированы
+`scripts/deploy_buyer_activation_070.sh` и требуют
+`CONFIRM_BUYER_ACTIVATION_070_DEPLOY=true`. Скрипт делает backup/restore drill, candidate checks,
 unpaid smoke, monitor check, settlement-count invariant и rollback только API/bot этого Compose project.
 Он сохраняет `.env` с mode `600` и безопасно меняет только `MAINNET_BACKUP_PATH` на канонический
 latest-файл, не печатая содержимое `.env`.
+
+Deploy также проверяет отдельный offer/receipt Ed25519 key, публичный DID document, подписанный
+unpaid 402, четыре product labels и browser paywall. Он не отправляет signed payment payload.
 Финальный release validator запускается внутри API container с locked dependencies; NAS host Python
 для acceptance не используется.
 

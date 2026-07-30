@@ -30,7 +30,7 @@ BASE_URL = "https://1cent.maxzoa.ru"
 BASE_MAINNET = "eip155:8453"
 BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 SELLER = "0x4798e8401ba3b1566685257c82d06303AB90EA35"
-BRIDGE_VERSION = "0.1.0"
+BRIDGE_VERSION = "0.7.0"
 
 
 class BuyerBridgeError(RuntimeError):
@@ -175,9 +175,7 @@ def _resource_guard(quote: PaymentQuote) -> Callable[[PaymentCreationContext], A
 
 
 def _payment_header(response: httpx.Response) -> str:
-    header = response.headers.get("PAYMENT-REQUIRED") or response.headers.get(
-        "X-PAYMENT-REQUIRED"
-    )
+    header = response.headers.get("PAYMENT-REQUIRED") or response.headers.get("X-PAYMENT-REQUIRED")
     if not header:
         raise BuyerBridgeError("402 response has no PAYMENT-REQUIRED header")
     return str(header)

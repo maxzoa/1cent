@@ -7,7 +7,7 @@
 
 | Параметр | Текущее значение |
 |---|---|
-| Release | `0.6.2` |
+| Release | `0.7.0` |
 | REST | `https://1cent.maxzoa.ru` |
 | MCP | `https://1cent.maxzoa.ru/mcp` |
 | MCP protocol | `2025-11-25` |
@@ -28,10 +28,20 @@
 
 ## Buyer activation surface
 
-- Release `0.6.2` adds complete passive agent discovery and keeps balanced three-level MCP names;
-  REST/MCP payment logic is unchanged.
-- Repository includes optional local `1cent Buyer Bridge` version `0.1.0` for MCP clients without
-  native x402 signing.
+- Release `0.7.0` keeps the 32 paid REST/MCP contracts and the 35-tool MCP discovery contract
+  unchanged.
+- One buyer-selected preview per safe client fingerprint and UTC day is available at
+  `/v1/demo/preview`; it uses the normal SSRF, fetch, cache and audit service.
+- `/try` provides a browser-first path; `/try/result` is protected by the official x402 paywall
+  and never runs URL work before successful payment.
+- Four outcome labels map to the existing pulse, passport, extract and changed operations.
+- Repository includes the optional local `1cent Buyer Bridge` version `0.7.0` and Node buyer
+  package version `0.7.0` for clients without native x402 signing.
+- `onecent install` creates secret-free client configuration; `onecent watch` is finite,
+  spend-capped and stops on UNKNOWN without retry.
+- Safe referral labels are recorded across challenge, payment, operation and error evidence.
+- Signed offer/receipt evidence uses a dedicated Ed25519 `did:web` key when enabled. Buyer and
+  seller keys are never reused for evidence signing.
 - Bridge transport: local stdio MCP; it maps paid tools to the existing public REST resources.
 - Default: one live quote, then one explicit user approval per exact call.
 - Optional auto-pay is bounded by mandatory buyer-side per-call/daily limits plus exact
@@ -82,29 +92,33 @@
   `PUBLIC_MAINNET_ACTIVE=true`.
 - Backup directory mode: `711`; dump mode: `600`; retention: 14 days; readiness использует
   атомарный `/backups/onecent-latest.sql.gz`.
-- Current DB migration: `0007`.
-- Последняя полная production-приёмка: `MARKETPLACE_QUALITY_062_REPORT.md`.
+- Current DB migration: `0008`.
+- Последняя полная production-приёмка: `BUYER_ACTIVATION_070_REPORT.md`.
 
 ### Marketplace and agent discovery acceptance
 
-Production rollout `2026-07-30` is accepted with these exact operational results:
+Production rollout started at `2026-07-30T11:55:36Z` and is accepted with these exact
+operational results:
 
-- public version: `0.6.2`; GitHub release source: `0dcd047`;
-- fresh backup: `/volume1/docker/1cent/backups/onecent-20260730T083652Z.sql.gz`;
-- restore drill: `PASS`, 17 tables, migration `0007`;
+- public version: `0.7.0`; tested source commit: `238f5f5df5dc7adfc0593647a3b8783ea7829999`;
+- fresh backup: `/volume1/docker/1cent/backups/onecent-20260730T114646Z.sql.gz`;
+- restore drill: `PASS`, 17 tables at pre-deploy migration `0007`; live migration is `0008`;
 - API, bot and DB: healthy; `mainnet_health=PASS`;
 - public root, Swagger, `llms.txt`, `llms-full.txt`, `skill.md`, `agents.txt`, A2A and WebMCP
   discovery: HTTP `200`;
 - CSP, HSTS, `X-Frame-Options`, `X-Content-Type-Options`, referrer and permissions
   headers: present;
 - MCP: protocol `2025-11-25`, initialize, tools/list, schemas and unpaid x402: `PASS`;
-- unpaid challenge load: 25 requests, concurrency 5, average `4183.3 ms`, p95 `5347.2 ms`;
+- buyer activation: public DID, signed 402 offer, four product packages, browser 402 and free
+  buyer-selected preview: `PASS`;
+- unpaid challenge load: 25 requests, concurrency 5, average `2942.2 ms`, p95 `4192.2 ms`;
 - confirmed settlements/revenue stayed `41 / 228000 atomic`; no settlement was made.
 
-AgentGrade independently rescanned the public service at `2026-07-30T08:54:15Z`: `A+`, `100%`,
-`47/47` applicable checks. Smithery independently published a fresh successful scan with `100/100`,
-35 tools, one resource and one prompt. Optional zero-weight identity/payment protocols are not
-implemented merely to inflate a score.
+The latest independent marketplace baseline before this runtime update was AgentGrade `A+`,
+`100%`, `47/47` applicable checks and Smithery `100/100`, 35 tools, one resource and one prompt.
+Those scores are not relabelled as 0.7.0 results until each external service rescans the live
+release. Optional zero-weight identity/payment protocols are not implemented merely to inflate a
+score.
 
 ## Live sources of truth
 
@@ -114,7 +128,8 @@ implemented merely to inflate a score.
 - Catalog/prices: `https://1cent.maxzoa.ru/v1/catalog`.
 - x402 manifest: `https://1cent.maxzoa.ru/.well-known/x402`.
 - OpenAPI: `https://1cent.maxzoa.ru/openapi.json`.
-- Official MCP Registry: `ru.maxzoa/1cent`, version `0.6.2`, active/latest at publication.
+- Official MCP Registry: `ru.maxzoa/1cent`; verify the current active/latest version through the
+  Registry API after each production release.
 
 При расхождении документа и live endpoint: остановить платные действия, считать состояние
 неподтверждённым и выполнить read-only диагностику. Не исправлять расхождение реальным платежом.

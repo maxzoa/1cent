@@ -18,12 +18,20 @@ Try the real safe fetch path in one command — fixed `example.com`, no payment:
 curl -sS https://1cent.maxzoa.ru/v1/demo/live-pulse
 ```
 
+Or preview one URL of your choice without payment, limited to one preview per client and UTC day:
+
+```bash
+curl -sS "https://1cent.maxzoa.ru/v1/demo/preview?url=https%3A%2F%2Fexample.com%2F"
+```
+
 - MCP: `https://1cent.maxzoa.ru/mcp`
 - Free product demo: `https://1cent.maxzoa.ru/v1/demo/pulse`
 - Free live demo: `https://1cent.maxzoa.ru/v1/demo/live-pulse`
 - Live catalog/prices: `https://1cent.maxzoa.ru/v1/catalog`
 - Public trust status: `https://1cent.maxzoa.ru/status.json`
 - Buyer guide: `https://1cent.maxzoa.ru/docs/getting-started`
+- Browser purchase entry: `https://1cent.maxzoa.ru/try`
+- Outcome packages: `https://1cent.maxzoa.ru/v1/products`
 
 Production exposes 32 paid REST/MCP operations plus three free MCP tools:
 
@@ -62,6 +70,15 @@ Buyer setup starts with a no-payment diagnostic:
 onecent doctor
 ```
 
+Generate or install a secret-free MCP client configuration:
+
+```bash
+onecent install --client claude
+onecent install --client cursor --apply
+onecent install --client vscode --apply
+onecent install --client codex
+```
+
 For MCP clients without native x402 signing, install the local Buyer Bridge:
 
 ```bash
@@ -78,6 +95,18 @@ The direct CLI also refuses a paid call unless the buyer explicitly supplies a m
 confirms Base Mainnet and types the one-call confirmation. See `examples/buyer-python` and
 `examples/buyer-node`.
 
+Node buyers can use the release package in `packages/onecent-buyer`:
+
+```bash
+cd packages/onecent-buyer
+npm ci
+npm exec -- onecent-buyer doctor
+```
+
+`onecent watch` provides finite, capped change monitoring. It is disabled by default, requires
+explicit Base network/asset/seller confirmations and stops on UNKNOWN without creating a new
+payment attempt.
+
 PostgreSQL is the runtime source for tool availability and atomic Base USDC prices. Config
 values are clean-install fallbacks. Paid URL work begins only after successful payment checks.
 
@@ -90,6 +119,8 @@ values are clean-install fallbacks. Paid URL work begins only after successful p
 - UNKNOWN settlement never retried automatically;
 - no seller private key, buyer key, Docker socket or JavaScript execution on the server;
 - Streamable HTTP host/origin protection enabled for remote MCP.
+- optional signed x402 offers and settlement receipts use a dedicated Ed25519 `did:web` key;
+  they never expose or reuse a buyer or seller private key.
 
 ## Local quality checks
 

@@ -81,6 +81,11 @@ class Settings(BaseSettings):
     fetch_user_agent: str = "1cent/0.1 (+https://1cent.maxzoa.ru/info)"
     demo_live_target_url: Literal["https://example.com/"] = "https://example.com/"
     demo_live_rate_per_hour: int = 3
+    trial_preview_rate_per_day: int = 1
+    offer_receipt_enabled: bool = False
+    offer_receipt_signing_key_path: str = "/run/secrets/offer_receipt_ed25519.pem"
+    offer_receipt_kid: str = "did:web:1cent.maxzoa.ru#offer-receipt-key-1"
+    offer_receipt_include_transaction: bool = False
 
     @property
     def admin_ids(self) -> frozenset[int]:
@@ -106,6 +111,10 @@ class Settings(BaseSettings):
     def validate_safety(self) -> "Settings":
         if not 1 <= self.demo_live_rate_per_hour <= 20:
             raise ValueError("DEMO_LIVE_RATE_PER_HOUR must be between 1 and 20")
+        if not 1 <= self.trial_preview_rate_per_day <= 5:
+            raise ValueError("TRIAL_PREVIEW_RATE_PER_DAY must be between 1 and 5")
+        if self.offer_receipt_enabled and not self.offer_receipt_kid.startswith("did:web:"):
+            raise ValueError("OFFER_RECEIPT_KID must use did:web")
         if self.app_env == "production" and self.development_bypass_enabled:
             raise ValueError("development bypass is forbidden in production")
         if not self.x402_pay_to.startswith("0x") or len(self.x402_pay_to) != 42:

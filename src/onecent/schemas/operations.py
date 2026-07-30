@@ -186,3 +186,28 @@ class LiveDemoPulseResponse(StrictModel):
     payment_required: bool = False
     rate_limit_per_hour: int
     result: PulseResponse
+
+
+class TrialPreviewResponse(StrictModel):
+    """Bounded free preview for one buyer-selected public URL."""
+
+    demo: bool = True
+    payment_required: bool = False
+    preview_only: bool = True
+    rate_limit_per_day: int
+    request_id: str
+    url_requested: str
+    url_final: str
+    reachable: bool
+    status_code: int
+    response_time_ms: int
+    content_type: str
+    title: str | None
+    from_cache: bool
+    checked_at: datetime
+    recommended_product: str = "site_health_audit"
+    full_result_path: str = "/v1/url/pulse"
+    next_action: str = (
+        "Request the full site health audit through REST or MCP; the live 402 challenge "
+        "contains the current price and payment terms."
+    )

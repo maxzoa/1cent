@@ -3,9 +3,12 @@ import asyncio
 import getpass
 import json
 import os
+import shutil
 import sys
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 from eth_account import Account
@@ -234,6 +237,132 @@ def wallet_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _bridge_config(args: argparse.Namespace) -> dict[str, object]:
+    return {
+        "mcpServers": {
+            "1cent-buyer": {
+                "command": "onecent",
+                "args": [
+                    "bridge",
+                    "--max-usdc-per-call",
+                    args.max_usdc_per_call,
+                    "--daily-limit-usdc",
+                    args.daily_limit_usdc,
+                ],
+            }
+        }
+    }
+
+
+def install_client(args: argparse.Namespace) -> int:
+    config = _bridge_config(args)
+    if args.client == "codex":
+        print(
+            "codex mcp add 1cent-buyer -- onecent bridge "
+            f"--max-usdc-per-call {args.max_usdc_per_call} "
+            f"--daily-limit-usdc {args.daily_limit_usdc}"
+        )
+        return 0
+    targets = {
+        "claude": Path(os.getenv("APPDATA", Path.home())) / "Claude" / "claude_desktop_config.json",
+        "cursor": Path.home() / ".cursor" / "mcp.json",
+        "vscode": Path.cwd() / ".vscode" / "mcp.json",
+    }
+    target = targets[args.client]
+    output = {
+        "client": args.client,
+        "target": str(target),
+        "config": config,
+        "applied": False,
+        "contains_secret": False,
+    }
+    if args.apply:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        existing: dict[str, object] = {}
+        if target.exists():
+            backup = target.with_suffix(target.suffix + ".onecent-backup")
+            shutil.copy2(target, backup)
+            try:
+                raw = json.loads(target.read_text(encoding="utf-8"))
+                if isinstance(raw, dict):
+                    existing = raw
+            except (OSError, json.JSONDecodeError):
+                raise BuyerSafetyError("existing MCP config is not valid JSON") from None
+        servers = existing.setdefault("mcpServers", {})
+        if not isinstance(servers, dict):
+            raise BuyerSafetyError("existing mcpServers value is not an object")
+        configured_servers = config["mcpServers"]
+        if not isinstance(configured_servers, dict):
+            raise BuyerSafetyError("generated mcpServers value is not an object")
+        servers.update(configured_servers)
+        target.write_text(
+            json.dumps(existing, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        output["applied"] = True
+    print(json.dumps(output, ensure_ascii=False, indent=2))
+    return 0
+
+
+async def watch(args: argparse.Namespace) -> int:
+    if not args.execute or args.confirm_charge != "ALLOW-CAPPED-WATCH":
+        raise BuyerSafetyError(
+            "watch is disabled; add --execute and --confirm-charge ALLOW-CAPPED-WATCH"
+        )
+    if args.interval_seconds < 300:
+        raise BuyerSafetyError("watch interval must be at least 300 seconds")
+    if not 1 <= args.max_runs <= 1000:
+        raise BuyerSafetyError("watch max-runs must be between 1 and 1000")
+    approval_mode = validate_auto_mode(
+        enabled=True,
+        confirm_network=args.confirm_network,
+        confirm_asset=args.confirm_asset,
+        confirm_seller=args.confirm_seller,
+        confirm_charge="ALLOW-CAPPED-PAYMENTS",
+    )
+    webhook = args.webhook
+    if webhook:
+        parsed = urlsplit(webhook)
+        if parsed.scheme != "https" or not parsed.hostname or parsed.port not in {None, 443}:
+            raise BuyerSafetyError("webhook must be an HTTPS URL on port 443")
+    policy = BridgePolicy(
+        max_per_call_atomic=atomic_from_usdc(args.max_usdc_per_call),
+        daily_limit_atomic=atomic_from_usdc(args.daily_limit_usdc),
+        approval_mode=approval_mode,
+        base_url=args.base_url,
+        timeout_seconds=args.timeout,
+    )
+    service = BuyerBridgeService(policy, BuyerLedger(args.state_path))
+    for run_number in range(1, args.max_runs + 1):
+        try:
+            result = await service.paid_call("url_changed", {"url": args.url, "fresh": True})
+        except Exception as exc:
+            print(
+                json.dumps(
+                    {
+                        "run": run_number,
+                        "status": "UNKNOWN" if "UNKNOWN" in str(exc) else "BLOCKED",
+                        "automatic_retry": False,
+                        "error": type(exc).__name__,
+                    }
+                )
+            )
+            return 2
+        delivered = result.get("result")
+        changed_value = delivered.get("changed") if isinstance(delivered, dict) else None
+        print(json.dumps({"run": run_number, "status": "SUCCESS", "changed": changed_value}))
+        if webhook and changed_value is True:
+            async with httpx.AsyncClient(timeout=10, follow_redirects=False) as client:
+                response = await client.post(
+                    webhook,
+                    json={"service": "1cent", "url": args.url, "changed": True},
+                )
+                response.raise_for_status()
+        if run_number < args.max_runs:
+            await asyncio.sleep(args.interval_seconds)
+    return 0
+
+
 def run_bridge(args: argparse.Namespace) -> None:
     approval_mode = validate_auto_mode(
         enabled=args.auto_pay,
@@ -349,6 +478,34 @@ def _parser() -> argparse.ArgumentParser:
     )
     wallet_parser.add_argument("wallet_action", choices=("set", "status", "delete"))
     wallet_parser.add_argument("--confirm-delete")
+    install_parser = subparsers.add_parser(
+        "install", help="show or safely install a local MCP buyer configuration"
+    )
+    install_parser.add_argument(
+        "--client",
+        choices=("claude", "cursor", "vscode", "codex"),
+        required=True,
+    )
+    install_parser.add_argument("--max-usdc-per-call", default="0.01")
+    install_parser.add_argument("--daily-limit-usdc", default="0.10")
+    install_parser.add_argument("--apply", action="store_true")
+    watch_parser = subparsers.add_parser(
+        "watch", help="run a finite, capped url_changed schedule; disabled by default"
+    )
+    watch_parser.add_argument("--url", required=True)
+    watch_parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
+    watch_parser.add_argument("--state-path", default=str(default_state_path()))
+    watch_parser.add_argument("--max-usdc-per-call", required=True)
+    watch_parser.add_argument("--daily-limit-usdc", required=True)
+    watch_parser.add_argument("--interval-seconds", type=int, default=3600)
+    watch_parser.add_argument("--max-runs", type=int, default=24)
+    watch_parser.add_argument("--timeout", type=float, default=30.0)
+    watch_parser.add_argument("--webhook")
+    watch_parser.add_argument("--execute", action="store_true")
+    watch_parser.add_argument("--confirm-network")
+    watch_parser.add_argument("--confirm-asset")
+    watch_parser.add_argument("--confirm-seller")
+    watch_parser.add_argument("--confirm-charge")
     return parser
 
 
@@ -362,6 +519,10 @@ async def _async_main(argv: list[str] | None = None) -> int:
         return bridge_state(args)
     if args.command == "wallet":
         return wallet_command(args)
+    if args.command == "install":
+        return install_client(args)
+    if args.command == "watch":
+        return await watch(args)
     if args.command == "bridge":
         raise BuyerBridgeError("bridge must be started by the synchronous CLI entrypoint")
     return await paid_call(args)

@@ -43,7 +43,11 @@ from onecent.repositories.data import (
     set_service_enabled,
     today_stats,
 )
-from onecent.repositories.funnel import payment_funnel_reasons, payment_funnel_stats
+from onecent.repositories.funnel import (
+    payment_funnel_reasons,
+    payment_funnel_referrals,
+    payment_funnel_stats,
+)
 from onecent.repositories.payments import (
     mainnet_revenue_by_day,
     operation_price,
@@ -258,8 +262,9 @@ async def funnel(message: Message) -> None:
     async with Session() as session:
         values = await payment_funnel_stats(session)
         reasons = await payment_funnel_reasons(session)
+        referrals = await payment_funnel_referrals(session)
     await message.answer(
-        payment_funnel_text(values, reasons), reply_markup=section_keyboard("funnel")
+        payment_funnel_text(values, reasons, referrals), reply_markup=section_keyboard("funnel")
     )
     await log_command(message, "funnel", "ok")
 
@@ -503,8 +508,7 @@ async def show_settings_category(callback: CallbackQuery) -> None:
             body = (
                 "Коммерческие квоты отключены.\n"
                 "1cent принимает все корректно оплаченные запросы.\n"
-                "От перегрузки защищают технические rate limits и очередь.\n\n"
-                + body
+                "От перегрузки защищают технические rate limits и очередь.\n\n" + body
             )
     await callback.message.answer(body[:3500])
     await callback.answer()

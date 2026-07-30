@@ -12,6 +12,7 @@ CURRENT_DOCS = (
     "MCP.md",
     "BUYER_QUICKSTART.md",
     "BUYER_BRIDGE.md",
+    "BUYER_ACTIVATION_070_REPORT.md",
     "SECURITY.md",
     "TRUST_AND_SCALING_READINESS.md",
     "CURRENT_PRODUCTION.md",
@@ -60,7 +61,7 @@ ARCHIVE_DOCS = (
 )
 
 RUNTIME_FACTS = (
-    "0.6.2",
+    "0.7.0",
     "eip155:8453",
     "https://facilitator.payai.network",
     "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
@@ -171,9 +172,20 @@ def validate() -> None:
         "lobehub.com/mcp/maxzoa-1cent",
         "MCP_Registry-ru.maxzoa%2F1cent",
         "curl -sS https://1cent.maxzoa.ru/v1/demo/live-pulse",
+        "/v1/demo/preview?url=",
+        "onecent install --client claude",
+        "onecent watch",
+        "packages/onecent-buyer",
     ):
         if marker not in readme:
             raise AssertionError(f"README marketplace marker missing: {marker}")
+    if "npx onecent-buyer" in readme:
+        raise AssertionError("README must not imply unverified public npm publication")
+
+    api = _read("API.md")
+    for marker in ("/try/result", "/v1/products", "offer-receipt", "/.well-known/did.json"):
+        if marker not in api:
+            raise AssertionError(f"API buyer activation marker missing: {marker}")
     for stale_badge in (
         "glama.ai/mcp/servers/maxzoa/1cent/badges/score.svg",
         "glama.ai/mcp/servers/maxzoa/1cent/badges/card.svg",
