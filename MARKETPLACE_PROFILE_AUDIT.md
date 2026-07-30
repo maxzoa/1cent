@@ -1,51 +1,36 @@
 # Marketplace profile audit
 
-Audit date: 2026-07-29. This document tracks discoverability and buyer-facing listing quality. It
-does not change production, prices, payment processing or tool behavior.
+Audit date: `2026-07-30`. Current release: `0.6.2`.
 
-## Confirmed gaps
+## Complete profiles
 
-| Surface | Current evidence | Buyer impact | Acceptance gate |
-|---|---|---|---|
-| Glama GitHub server | Repository metadata fixed; connector ownership now verified; repository profile refresh pending | Old repository-derived score can remain visible until Glama rescans | Glama ingests Apache-2.0, CI, `glama.json`, release and current README |
-| Smithery | 96/100, public, current 35-tool release | Only optional paid-plan points are missing | Complete for free publication; do not buy score |
-| MCP.so | Public tools current; marketing copy still says 33 | Tool count in prose is stale | Issue `daodao97/chatmcp#215` accepted/merged and public page refreshed |
-| PulseMCP | Waiting for documented Registry import cycle | No PulseMCP discovery traffic yet | Exact public result after daily/weekly ingestion |
-| LobeHub | Authenticated 0.5.0 import submitted; public page can remain 0.2.0 asynchronously | Stale page until import completes | Public listing reflects 0.5.0 metadata |
-| MCP.Directory | Existing free submission is in review | No public result until review | Exact public searchable listing URL |
-| MCPfinder | Malformed OAuth redirect with undefined callback | Submission unavailable | Platform repairs OAuth and accepts normal login |
-| MCPServers.org | Free submission accepted and in review | No public result until review | Exact public searchable listing URL |
-| modelcontext-protocol.com | Automatic Registry mirror lists exact remote but stale `0.1.0` metadata | Buyers see old version/description | Mirror completes its stated daily refresh |
-| AgentGrade | Historical `D` scan predates deployed security headers; new public scan path returned HTTP 502 / client blocking | Stale security grade can discourage buyers | Fresh passive scan completes and reflects current HTTPS/CSP/HSTS/frame/content-type headers |
+- Smithery: 100/100, current fresh release, typed output, 35 tools, one prompt, one resource.
+- Glama: profile completion 100%; server coherence A; tool-definition quality A across 35/35;
+  maintenance A; Apache-2.0 A; README, glama.json, author verification and active usage present.
+- LobeHub: authenticated owner publication at 0.6.2.
+- MCP.so: public current description and 35 live tools after refresh.
+- MCPServers.org: public Russian listing; refresh request accepted.
+- Official Registry: 0.6.2 active/latest with exact remote URL.
+- AgentGrade: A+/100%, 47/47 applicable checks.
 
-## Already healthy
+## External pending items
 
-- Official MCP Registry: `ru.maxzoa/1cent` version 0.5.0, active/latest, remote
-  `https://1cent.maxzoa.ru/mcp`.
-- PayAI Bazaar: all 32 paid REST resources indexed.
-- Glama remote connector: healthy, ownership verified, 35/35 tools and cached grade A `4/5`.
-  Current crawl predates the latest production deploy, so its blank parameter-description cells are
-  recorded as stale until Glama rescans. The repository profile remains a separate platform surface.
-- GitHub recognizes Apache-2.0 and has stable release `v0.5.0`.
-- Public root and MCP redirect expose CSP, HSTS, frame, content-type, referrer and permissions
-  protections. Free connection/discovery remains intentionally unauthenticated; paid results remain
-  behind x402 verification and settlement.
+| Surface | Exact pending condition |
+|---|---|
+| Glama release | UI still reports release 0.6.1 and repository head `8c628c7`; commit `0dcd047` is not yet visible to Glama |
+| Awesome list | Maintainer review of passing PR #11089 |
+| MCP.Directory | Free review queue |
+| MCPfinder | Free review queue |
+| PulseMCP | Registry import cycle |
+| modelcontext-protocol.com | Mirror still renders version 0.1.0 despite Official Registry 0.6.2 |
 
-## Repository corrections
+These are platform-owned delays, not hidden product failures. No duplicate submission, paid upgrade,
+fake usage, fake settlement or weakened security control is allowed to clear them.
 
-- Root `glama.json` declares GitHub maintainer `maxzoa` using Glama's official schema.
-- Python package metadata declares description, README, Apache-2.0, author, keywords, classifiers
-  and public project URLs.
-- README shows CI, health, healthy Glama connector, Smithery, LobeHub, MCP Registry and license
-  badges and starts with a no-payment live demo. Stale score-card badges were removed so README does
-  not advertise obsolete repository-profile grades as current production quality.
-- GitHub homepage and discovery topics are populated.
-- CI validates marketplace metadata so this class of omission cannot silently recur.
-- Release 0.5.0 adds descriptions, constraints and examples to every MCP input property plus a
-  buyer prompt and static buyer guide resource.
+## Buyer-facing guarantees
 
-## Runtime safety
-
-Marketplace corrections must never create a payment or weaken production controls. Directory QA
-may call only free tools or unpaid discovery. Paid tools must remain behind x402. Internal catalog
-checks are not buyers and must not be reported as sales.
+- descriptions state what each tool does, when to use it and that JavaScript is not executed;
+- every non-empty input schema is strict and described; output schemas and annotations are present;
+- three free tools let a buyer discover and inspect behavior without payment;
+- 32 paid operations expose live atomic price and Base Mainnet payment requirements;
+- SSRF protection, bounded fetches, cache, audit, idempotency and UNKNOWN no-retry remain active.

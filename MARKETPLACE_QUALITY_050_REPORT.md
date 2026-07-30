@@ -1,5 +1,7 @@
 # Marketplace quality 0.5.0 report
 
+> **ARCHIVE / HISTORICAL SNAPSHOT.** Текущий статус: [MARKETPLACE_QUALITY_062_REPORT.md](MARKETPLACE_QUALITY_062_REPORT.md).
+
 Audit date: 2026-07-29. Scope: public discovery and buyer-facing metadata only. Payment logic,
 Base Mainnet, PayAI, seller, prices and security controls are unchanged. No settlement is required
 or permitted for this rollout.

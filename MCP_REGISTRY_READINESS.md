@@ -4,7 +4,7 @@
 
 - Registry: `https://registry.modelcontextprotocol.io`.
 - Name: `ru.maxzoa/1cent`.
-- Version: `0.5.0`.
+- Version: `0.6.2`.
 - Status at publication: `active`.
 - Latest at publication: `true`.
 - Remote: `https://1cent.maxzoa.ru/mcp`.

@@ -4,10 +4,10 @@
 
 - Registry: `https://registry.modelcontextprotocol.io`.
 - Name: `ru.maxzoa/1cent`.
-- Version: `0.5.0`.
+- Version: `0.6.2`.
 - Status at verification: `active`.
 - Latest at verification: `true`.
-- Published: `2026-07-29T14:07:31.751232Z`.
+- Published: `2026-07-30T08:55:14.359481Z`.
 - Remote: `https://1cent.maxzoa.ru/mcp`.
 - Transport: Streamable HTTP.
 - MCP protocol: `2025-11-25`.
@@ -28,6 +28,9 @@ as a second `ru.maxzoa/1cent` remote without a separately versioned and verified
 | `0.3.0` | 2026-07-28 | Quality and conversion metadata |
 | `0.4.0` | 2026-07-28 | Buyer-conversion release |
 | `0.5.0` | 2026-07-29 | Current marketplace-quality release; active/latest at verification |
+| `0.6.0` | 2026-07-30 | Canonical dot-notation MCP names |
+| `0.6.1` | 2026-07-30 | Balanced three-level public MCP names |
+| `0.6.2` | 2026-07-30 | Current agent-discovery release; active/latest at verification |
 
 ## Authentication and secret hygiene
 

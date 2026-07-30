@@ -9,6 +9,9 @@
   top-level `payTo` and explicit discoverability.
 - Enabled public no-cookie CORS for MCP clients and exposed only protocol/payment/request headers.
 - Added JSON-LD, LLM discovery links and reusable read-only PayAI Bazaar verification.
+- Published matching metadata to the Official MCP Registry and LobeHub, refreshed Smithery,
+  MCP.so and MCPServers.org, and created GitHub release `v0.6.2`.
+- Achieved AgentGrade `A+`/`100%` and Smithery `100/100` without paid placement or settlement.
 - Payment verification, settlement, prices, Base Mainnet, PayAI and seller are unchanged; no
   settlement is executed by this release.
 
@@ -31,12 +34,12 @@
 - Payment verification, settlement, prices, Base Mainnet, PayAI, seller and production safety
   controls are unchanged; the release does not execute a payment.
 
-## Unreleased - Glama release compatibility
+## 0.6.1 supplemental - Glama release compatibility
 
 - Added a Glama-compatible local stdio entry point for release verification, reusing the canonical
   MCP tool registry without adding a payment bypass or changing production runtime behavior.
 
-## Unreleased — Marketplace trust hardening
+## 0.5.0 supplemental — Marketplace trust hardening
 
 - Corrected the public `/mcp` slash redirect to preserve HTTPS explicitly behind the reverse proxy.
 - Added CSP, HSTS, clickjacking, MIME-sniffing, referrer and browser-permission headers.
@@ -69,7 +72,7 @@
   schemas fail release validation.
 - Payment logic, network, facilitator, seller, prices and production safety controls are unchanged.
 
-## Unreleased — Buyer activation
+## 0.5.0 supplemental — Buyer activation
 
 - Added Glama ownership metadata, complete Python package discovery metadata and marketplace badges.
 - Added a dated cross-directory profile audit and corrected optimistic catalog status claims.
