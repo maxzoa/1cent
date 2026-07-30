@@ -4,9 +4,14 @@ set -eu
 cd "$(dirname "$0")/.."
 test -f .env
 DOCKER=${DOCKER:-/usr/local/bin/docker}
-BASE_URL=${BASE_URL:-http://127.0.0.1:8013}
 EXPECTED_X402_NETWORK=${EXPECTED_X402_NETWORK:-eip155:84532}
 test -x "$DOCKER" || DOCKER=docker
+
+if [ -z "${BASE_URL:-}" ]; then
+  published=$($DOCKER compose port onecent-api 8013 | tail -n 1)
+  test -n "$published"
+  BASE_URL="http://127.0.0.1:${published##*:}"
+fi
 
 "$DOCKER" compose ps --status running
 "$DOCKER" compose exec -T onecent-api alembic current
