@@ -59,6 +59,8 @@ jobs:
         run: python scripts/smoke_buyer_bridge.py
       - name: Release and MCP schema consistency
         run: python scripts/validate_release.py
+      - name: Official MCP Registry schema
+        run: sh scripts/validate_mcp_registry.sh
       - name: Documentation consistency
         run: python scripts/validate_docs.py
       - uses: actions/setup-node@v4

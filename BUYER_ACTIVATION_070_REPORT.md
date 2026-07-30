@@ -64,6 +64,9 @@ container IDs and start times unchanged.
 - GitHub quality CI: PASS, including dependency audit, SBOM, Node buyer, Docker build and Trivy
   HIGH/CRITICAL scan.
 - Test release: `v0.7.0-rc.1`.
+- Final release: `v0.7.0`.
+- Official MCP Registry: `ru.maxzoa/1cent` version `0.7.0`, `active`, `latest=true`, published at
+  `2026-07-30T12:19:34.384162Z`; exact description and MCP URL matched `server.json`.
 - Production start: `2026-07-30T11:55:36Z` (API); bot start: `2026-07-30T11:56:57Z`.
 - Fresh backup: `/volume1/docker/1cent/backups/onecent-20260730T114646Z.sql.gz`;
   restore drill PASS with 17 tables at migration `0007`.

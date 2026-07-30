@@ -18,4 +18,4 @@ else
   schema_path=/schema/server.schema.json
 fi
 $PYTHON -c 'import json,jsonschema,sys; schema=json.load(open(sys.argv[1],encoding="utf-8")); document=json.load(open("server.json",encoding="utf-8")); jsonschema.validate(document,schema); print("server.json schema=PASS")' "$schema_path"
-$PYTHON -c 'import json; d=json.load(open("server.json",encoding="utf-8")); assert d["name"]=="ru.maxzoa/1cent"; assert d["version"]=="0.6.1"; assert d["remotes"]==[{"type":"streamable-http","url":"https://1cent.maxzoa.ru/mcp"}]; print("remote metadata=PASS; version=0.6.1")'
+$PYTHON -c 'import json; d=json.load(open("server.json",encoding="utf-8")); assert d["name"]=="ru.maxzoa/1cent"; assert d["version"]=="0.7.0"; assert d["remotes"]==[{"type":"streamable-http","url":"https://1cent.maxzoa.ru/mcp"}]; print("remote metadata=PASS; version=0.7.0")'
