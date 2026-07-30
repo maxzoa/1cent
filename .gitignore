@@ -23,6 +23,7 @@ htmlcov/
 .secrets/
 .tools/
 .work/
+dist/
 backups/
 logs/
 *.tar
