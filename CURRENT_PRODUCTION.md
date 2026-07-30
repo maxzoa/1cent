@@ -1,14 +1,13 @@
 # Current production state
 
-Актуально на `2026-07-29`. Это главный документ о текущем публичном runtime 1cent.
+Актуально на `2026-07-30`. Это главный документ о текущем публичном runtime 1cent.
 Исторические отчёты не заменяют этот файл.
 
 ## Public service
 
 | Параметр | Текущее значение |
 |---|---|
-| Release | `0.6.1` |
-| Validated release candidate | `0.6.2` (not public until controlled deployment passes) |
+| Release | `0.6.2` |
 | REST | `https://1cent.maxzoa.ru` |
 | MCP | `https://1cent.maxzoa.ru/mcp` |
 | MCP protocol | `2025-11-25` |
@@ -29,7 +28,8 @@
 
 ## Buyer activation surface
 
-- Release `0.6.1` publishes balanced three-level MCP names; REST/MCP payment logic is unchanged.
+- Release `0.6.2` adds complete passive agent discovery and keeps balanced three-level MCP names;
+  REST/MCP payment logic is unchanged.
 - Repository includes optional local `1cent Buyer Bridge` version `0.1.0` for MCP clients without
   native x402 signing.
 - Bridge transport: local stdio MCP; it maps paid tools to the existing public REST resources.
@@ -83,29 +83,28 @@
 - Backup directory mode: `711`; dump mode: `600`; retention: 14 days; readiness использует
   атомарный `/backups/onecent-latest.sql.gz`.
 - Current DB migration: `0007`.
-- Последняя полная Stage 13 приёмка: `STAGE_13_BUYER_CONVERSION_REPORT.md`.
+- Последняя полная production-приёмка: `MARKETPLACE_QUALITY_062_REPORT.md`.
 
-### Marketplace trust hardening acceptance
+### Marketplace and agent discovery acceptance
 
-Production rollout `2026-07-29` is accepted with these exact operational results:
+Production rollout `2026-07-30` is accepted with these exact operational results:
 
-- source revision: `19a82ae`;
-- fresh backup: `/volume1/docker/1cent/backups/onecent-20260729T155909Z.sql.gz`;
+- public version: `0.6.2`; GitHub release source: `0dcd047`;
+- fresh backup: `/volume1/docker/1cent/backups/onecent-20260730T083652Z.sql.gz`;
 - restore drill: `PASS`, 17 tables, migration `0007`;
 - API, bot and DB: healthy; `mainnet_health=PASS`;
-- `/mcp` returns absolute HTTPS `308` to `https://1cent.maxzoa.ru/mcp/`;
-- public root, favicon and Swagger: HTTP `200`;
+- public root, Swagger, `llms.txt`, `llms-full.txt`, `skill.md`, `agents.txt`, A2A and WebMCP
+  discovery: HTTP `200`;
 - CSP, HSTS, `X-Frame-Options`, `X-Content-Type-Options`, referrer and permissions
   headers: present;
 - MCP: protocol `2025-11-25`, initialize, tools/list, schemas and unpaid x402: `PASS`;
-- unpaid challenge load: 25 requests, concurrency 5, average `2640.0 ms`, p95
-  `3873.5 ms` after one warm-up request;
+- unpaid challenge load: 25 requests, concurrency 5, average `4183.3 ms`, p95 `5347.2 ms`;
 - confirmed settlements/revenue stayed `41 / 228000 atomic`; no settlement was made.
 
-The first rollout attempt stopped on a 15-second unpaid-load timeout and automatically restored
-the previous healthy images. Root cause was repeated dynamic-price DB reads under a cold concurrent
-burst. Revision `19a82ae` adds a one-second in-process price cache with concurrent-load collapse and
-keeps the paid-payload price precheck on the same value. The second controlled rollout passed.
+AgentGrade independently rescanned the public service at `2026-07-30T08:54:15Z`: `A+`, `100%`,
+`47/47` applicable checks. Smithery independently published a fresh successful scan with `100/100`,
+35 tools, one resource and one prompt. Optional zero-weight identity/payment protocols are not
+implemented merely to inflate a score.
 
 ## Live sources of truth
 
@@ -115,7 +114,7 @@ keeps the paid-payload price precheck on the same value. The second controlled r
 - Catalog/prices: `https://1cent.maxzoa.ru/v1/catalog`.
 - x402 manifest: `https://1cent.maxzoa.ru/.well-known/x402`.
 - OpenAPI: `https://1cent.maxzoa.ru/openapi.json`.
-- Official MCP Registry: `ru.maxzoa/1cent`, version `0.6.1`, active/latest at publication.
+- Official MCP Registry: `ru.maxzoa/1cent`, version `0.6.2`, active/latest at publication.
 
 При расхождении документа и live endpoint: остановить платные действия, считать состояние
 неподтверждённым и выполнить read-only диагностику. Не исправлять расхождение реальным платежом.

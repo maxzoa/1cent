@@ -22,7 +22,8 @@
 | [MCP_REGISTRY_PUBLICATION_REPORT.md](MCP_REGISTRY_PUBLICATION_REPORT.md) | История официальных Registry versions и текущий latest |
 | [CATALOG_SUBMISSION_STATUS.md](CATALOG_SUBMISSION_STATUS.md) | Статус внешних каталогов |
 | [MARKETPLACE_PROFILE_AUDIT.md](MARKETPLACE_PROFILE_AUDIT.md) | Проверяемые качество и видимость buyer-facing профилей |
-| [MARKETPLACE_QUALITY_050_REPORT.md](MARKETPLACE_QUALITY_050_REPORT.md) | Release 0.5.0 и повторная приёмка всех витрин |
+| [MARKETPLACE_QUALITY_062_REPORT.md](MARKETPLACE_QUALITY_062_REPORT.md) | Release 0.6.2, agent discovery и текущая приёмка всех витрин |
+| [MARKETPLACE_QUALITY_050_REPORT.md](MARKETPLACE_QUALITY_050_REPORT.md) | Историческая приёмка release 0.5.0 |
 | [MARKETPLACE_FINAL_AUDIT.md](MARKETPLACE_FINAL_AUDIT.md) | Финальные маркеты, quality gates и честные внешние блокеры |
 | [PRICE_PROMO_7_DAY_REPORT.md](PRICE_PROMO_7_DAY_REPORT.md) | Действующее до 2026-08-04 промо |
 | [TRUST_AND_SCALING_READINESS.md](TRUST_AND_SCALING_READINESS.md) | Условия следующих trust/scaling изменений |

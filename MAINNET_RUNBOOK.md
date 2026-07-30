@@ -23,7 +23,7 @@ sh scripts/monitor_mainnet_health.sh
 Ожидается:
 
 - API, bot, DB: `healthy`;
-- version: `0.5.0`;
+- version: `0.6.2`;
 - payments: `x402-v2-mainnet`;
 - network: `eip155:8453`;
 - service enabled;
@@ -71,9 +71,9 @@ Capability drift = deploy/paid-action stop; не проверять реальн
 8. Сравнить count/sum успешных settlement до/после. Они не должны измениться без
    отдельно разрешённого платежа.
 
-Для release 0.5.0 эти действия автоматизированы
-`scripts/deploy_marketplace_050.sh` и требуют
-`CONFIRM_MARKETPLACE_050_DEPLOY=true`. Скрипт делает backup/restore drill, candidate checks,
+Для release 0.6.2 эти действия автоматизированы
+`scripts/deploy_marketplace_062.sh` и требуют
+`CONFIRM_MARKETPLACE_062_DEPLOY=true`. Скрипт делает backup/restore drill, candidate checks,
 unpaid smoke, monitor check, settlement-count invariant и rollback только API/bot этого Compose project.
 Он сохраняет `.env` с mode `600` и безопасно меняет только `MAINNET_BACKUP_PATH` на канонический
 latest-файл, не печатая содержимое `.env`.

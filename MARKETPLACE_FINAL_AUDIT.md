@@ -1,75 +1,47 @@
 # Final marketplace audit
 
-Audit date: `2026-07-29`. Scope: public, read-only discovery and profile quality. No payment,
-settlement, network/facilitator/seller/price change or paid directory placement was performed.
+Audit date: `2026-07-30`. Scope: release `0.6.2`, public discovery, marketplace cards and
+read-only production evidence. No paid placement or settlement was performed.
 
 ## Product-controlled gates
 
 | Gate | Result |
 |---|---|
-| Public remote MCP | 35 tools, 1 prompt, 1 resource; Streamable HTTP |
-| Tool quality | strict schemas, property descriptions/examples and output schemas for all tools |
-| Official Registry | `ru.maxzoa/1cent` `0.5.0`, active/latest, exact public remote |
-| Repository | public, Apache-2.0, CI, current `v0.5.0`, homepage, topics and `glama.json` |
-| Buyer safety | x402 remains before URL execution; SSRF, idempotency and UNKNOWN no-retry unchanged |
-| Public trust hardening | canonical HTTPS MCP redirect, security headers and first-party favicon covered by tests |
-| Challenge latency | concurrent dynamic-price reads collapse for one second; deploy requires warm-up plus bounded load smoke |
+| Public runtime | `0.6.2`, Base Mainnet, PayAI; health PASS |
+| Remote MCP | Streamable HTTP; protocol `2025-11-25`; 35 tools, 1 prompt, 1 resource |
+| Agent discovery | x402, Bazaar, OpenAPI, llms, skill, agents, A2A, WebMCP and content negotiation PASS |
+| AgentGrade | `A+`, `100%`, 47/47 applicable checks |
+| Smithery | fresh release SUCCESS in 9 seconds; `100/100`; 35/1/1 |
+| Glama quality | profile 100%; coherence/tools/maintenance/license all A |
+| Official Registry | `ru.maxzoa/1cent` `0.6.2`, active/latest |
+| PayAI Bazaar | 32/32 exact paid resource URLs found read-only |
+| Repository | public Apache-2.0, CI PASS, GitHub release `v0.6.2` |
+| Payment safety | x402 before URL work; SSRF/idempotency/UNKNOWN no-retry unchanged |
 
-## Directory results
+## Directory acceptance
 
-| Directory | Result | Remaining gate owned by |
-|---|---|---|
-| Official MCP Registry | Complete and current | none |
-| PayAI Bazaar | 32/32 paid REST resources indexed | none |
-| Smithery | Public, current, 96/100; 35 tools, 1 prompt, 1 resource | optional paid plan only |
-| Glama remote connector | Healthy, ownership verified, 35/35; current crawl rates tool quality A 4/5 | crawler refresh after the production schema update |
-| Glama GitHub profile | Repo metadata repaired; public connector ownership verified | platform refresh of repository-derived score |
-| MCP.so | Public and introspectable; issue `daodao97/chatmcp#215` requests current copy | maintainer refresh |
-| LobeHub | Authenticated `0.5.0` import accepted | asynchronous importer |
-| MCP.Directory | Existing free submission confirmed | reviewer queue |
-| MCPServers.org | Free submission accepted | reviewer queue |
-| PulseMCP | Eligible through Official Registry | documented daily/weekly importer |
-| modelcontext-protocol.com | Exact remote present; metadata remains `0.1.0` | its daily Registry mirror refresh |
-| AgentGrade | Historical `D` predates security hardening | platform restores its public passive-rescan path |
-| MCPfinder | Cannot submit safely | broken platform OAuth redirect |
-| Awesome MCP Servers | PR `#11089` includes current Glama badge and 35-tool copy | maintainer review/Glama claim |
-
-## Honest 100% rule
-
-`100%` means every gate controlled by this repository and deployment passes. It does not mean buying
-optional directory points, inventing usage, bypassing OAuth, fabricating A2A support, or calling an
-asynchronous review complete. Platform-owned pending items stay pending until public evidence changes.
-
-## Payment invariant
-
-Marketplace checks use metadata, free tools and unpaid challenges only. A 402 is not a purchase.
-Confirmed settlement count and revenue must remain unchanged across this rollout.
-
-## Production acceptance
-
-| Check | Result |
+| Directory | Result |
 |---|---|
-| Controlled deploy | `PASS` on revision `19a82ae` |
-| Fresh backup and restore drill | `onecent-20260729T155909Z.sql.gz`; 17 tables; migration `0007` |
-| Containers | API, bot and DB healthy |
-| Mainnet monitor | `mainnet_health=PASS` |
-| Public trust surface | HTTPS-only MCP redirect, root/favicon/Swagger and all security headers `PASS` |
-| MCP | protocol `2025-11-25`; initialize/tools/list/schemas/unpaid `PASS` |
-| Unpaid challenge load | 25 requests, concurrency 5, p95 `3873.5 ms` |
-| Payment invariant | settlements/revenue unchanged at `41 / 228000 atomic` |
+| Smithery | complete/current, 100/100 |
+| Glama | quality complete at 100%/A; 0.6.2 release waits for Glama GitHub sync |
+| LobeHub | 0.6.2 published |
+| MCP.so | public/current, 35 tools |
+| MCPServers.org | public/current; refresh requested |
+| Awesome MCP Servers | PR #11089 open; validation PASS |
+| MCP.Directory / MCPfinder | free review queues; no duplicates |
+| PulseMCP | automatic Registry import pending |
+| modelcontext-protocol.com | external mirror stale at 0.1.0; issue filed |
+| MCP Market | intentionally skipped because publication is paid |
 
-The first deploy attempt failed closed on an unpaid-load timeout and restored the previous healthy
-API and bot images. The measured cause was duplicated dynamic-price DB work during a cold concurrent
-burst. Revision `19a82ae` collapsed concurrent reads behind the same one-second cache used by
-challenge and paid-payload price validation. The second controlled deploy passed every gate.
+## Production evidence
 
-Glama's public connector was last tested at `2026-07-29 00:32`, before this production rollout. Its
-cached page therefore still renders blank parameter-description cells. Current source and MCP schema
-tests require descriptions and examples for every non-empty input schema. This is recorded as a
-crawler refresh, not claimed as a completed rescoring event.
+- backup: `/volume1/docker/1cent/backups/onecent-20260730T083652Z.sql.gz`;
+- restore drill: 17 tables, migration `0007`;
+- `onecent-api`, `onecent-bot`, `onecent-db`: healthy;
+- monitor: `mainnet_health=PASS`, exit 0;
+- public status: version `0.6.2`, network `eip155:8453`, 32 paid + 3 free tools;
+- settlement invariant: `41 / 228000 atomic` before and after marketplace work;
+- no new settlement and no directory payment.
 
-AgentGrade still exposes a cached `D` from before CSP/HSTS/frame/content-type/referrer/permissions
-headers were deployed. A fresh read-only scan attempt was blocked by AgentGrade's HTTP 502 and
-client-side blocking. The current public headers are proven directly above; a new grade remains
-external evidence and is not guessed. Public discovery remains unauthenticated by design, while
-paid results remain gated by x402 verify/settle.
+`100%` applies only to repository-controlled applicable checks. Optional zero-weight protocols and
+external review/sync queues remain honest pending items; they are not fabricated or purchased.

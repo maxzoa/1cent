@@ -46,13 +46,14 @@ descriptions so agents can choose and call tools correctly on the first attempt.
 - Smithery: `https://smithery.ai/servers/maxzoa27/onecent`;
 - MCP.so: `https://mcp.so/servers/1cent`;
 - LobeHub: `https://lobehub.com/mcp/maxzoa-1cent`.
+- MCPServers.org: `https://mcpservers.org/ru/servers/maxzoa/1cent`.
 
 Glama release verification uses the repository's `onecent-glama` stdio entry point. It loads the
 same MCP tool registry as production for schema inspection; it does not provide a payment bypass
 or a second implementation of paid URL operations.
 
 Directory status is checked with dated evidence in
-[Marketplace quality report](MARKETPLACE_QUALITY_050_REPORT.md). A page returning HTTP 200 alone is
+[Marketplace quality report](MARKETPLACE_QUALITY_062_REPORT.md). A page returning HTTP 200 alone is
 not counted as a successful listing: it must be searchable, current and installable.
 
 Buyer setup starts with a no-payment diagnostic:
@@ -129,7 +130,7 @@ a fresh PostgreSQL backup, production preflight, development bypass disabled and
 - [Local MCP Buyer Bridge](BUYER_BRIDGE.md)
 - [Security policy](SECURITY.md)
 - [Release history](CHANGELOG.md)
-- [Marketplace quality report](MARKETPLACE_QUALITY_050_REPORT.md)
+- [Marketplace quality report](MARKETPLACE_QUALITY_062_REPORT.md)
 - [Scaling and trust gates](TRUST_AND_SCALING_READINESS.md)
 - [Production operations](MAINNET_RUNBOOK.md)
 - [Incident response](INCIDENT_RESPONSE.md)
