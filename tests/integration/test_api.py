@@ -80,7 +80,10 @@ def test_root_and_info(client: TestClient) -> None:
     assert {"url_pulse", "url_status", "site_openapi"} <= set(info["operations"])
     catalog = client.get("/v1/catalog").json()
     assert len(catalog) == 32
-    assert all(item["mcp_tool"] == item["tool"].replace("_", ".", 1) for item in catalog)
+    assert all(
+        item["mcp_tool"] == "web." + item["tool"].replace("_", ".", 1)
+        for item in catalog
+    )
 
 
 def test_public_buyer_bridge_documentation(client: TestClient) -> None:
@@ -124,7 +127,7 @@ def test_mcp_well_known_manifest(client: TestClient) -> None:
     assert manifest.headers["content-type"].startswith("application/json")
     body = manifest.json()
     assert body["name"] == "ru.maxzoa/1cent"
-    assert body["version"] == "0.6.0"
+    assert body["version"] == "0.6.1"
     assert body["websiteUrl"] == "https://1cent.maxzoa.ru"
     assert body["remotes"] == [
         {
@@ -163,12 +166,12 @@ def test_free_demo_status_security_and_server_card(
 
     status = client.get("/status.json")
     assert status.status_code == 200
-    assert status.json()["version"] == "0.6.0"
+    assert status.json()["version"] == "0.6.1"
     assert status.json()["paid_tools"] == 32
     assert status.json()["free_mcp_tools"] == [
-        "catalog.search",
-        "demo.url_pulse",
-        "demo.live_url_pulse",
+        "catalog.tools.search",
+        "demo.url.pulse",
+        "demo.live.pulse",
     ]
     assert "seller" not in status.text.lower()
 
@@ -182,9 +185,9 @@ def test_free_demo_status_security_and_server_card(
     assert [item["uri"] for item in card["resources"]] == ["onecent://buyer-guide"]
     assert len(card["tools"]) == 35
     assert [tool["name"] for tool in card["tools"][:3]] == [
-        "catalog.search",
-        "demo.url_pulse",
-        "demo.live_url_pulse",
+        "catalog.tools.search",
+        "demo.url.pulse",
+        "demo.live.pulse",
     ]
     assert all(tool["outputSchema"] for tool in card["tools"])
     assert all(tool["annotations"]["destructiveHint"] is False for tool in card["tools"])

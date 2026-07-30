@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.1 — 2026-07-30
+
+- Promoted public MCP discovery names to a balanced three-level tree such as
+  `web.url.pulse`, `web.site.openapi` and `catalog.tools.search`.
+- Retained both 0.6.0 one-dot names and legacy underscore names as hidden callable aliases.
+- Synchronized public cards, catalog metadata, buyer documentation and release checks.
+- Payment verification, settlement, prices, Base Mainnet, PayAI and seller are unchanged; no
+  settlement is executed by this release.
+
 ## 0.6.0 — 2026-07-30
 
 - Published MCP tools under navigable dot-notation namespaces (`url.*`, `site.*`, `catalog.*`

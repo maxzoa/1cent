@@ -89,7 +89,7 @@ def main() -> None:
         str(catalog_registry["version"]),
         str(tool_catalog["version"]),
     }
-    assert versions == {"0.6.0"}, versions
+    assert versions == {"0.6.1"}, versions
     assert registry["name"] == catalog_registry["name"] == "ru.maxzoa/1cent"
     assert glama == {
         "$schema": "https://glama.ai/mcp/schemas/server.json",
@@ -102,7 +102,8 @@ def main() -> None:
     catalog_tools = cast(list[dict[str, object]], tool_catalog["tools"])
     assert len(catalog_tools) == 32
     assert all(
-        item["mcp_tool"] == str(item["tool"]).replace("_", ".", 1)
+        item["mcp_tool"]
+        == "web." + str(item["tool"]).replace("_", ".", 1)
         for item in catalog_tools
     )
 
@@ -128,7 +129,7 @@ def main() -> None:
     asyncio.run(_validate_mcp())
     asyncio.run(_validate_buyer_bridge())
     print(
-        "release_validation=PASS; version=0.6.0; paid_tools=32; "
+        "release_validation=PASS; version=0.6.1; paid_tools=32; "
         "free_tools=3; prompts=1; resources=1; buyer_bridge_tools=36"
     )
 

@@ -7,9 +7,9 @@ Current network, asset, seller and facilitator: [CURRENT_PRODUCTION.md](CURRENT_
 
 ## 1. Preview without payment
 
-- MCP: call `catalog.search` to choose a tool and read its current price.
-- MCP: call `demo.url_pulse` to inspect a fixed precomputed response.
-- MCP: call `demo.live_url_pulse` for a rate-limited real check of fixed `example.com`.
+- MCP: call `catalog.tools.search` to choose a tool and read its current price.
+- MCP: call `demo.url.pulse` to inspect a fixed precomputed response.
+- MCP: call `demo.live.pulse` for a rate-limited real check of fixed `example.com`.
 - REST: `GET https://1cent.maxzoa.ru/v1/demo/pulse`.
 - REST live demo: `GET https://1cent.maxzoa.ru/v1/demo/live-pulse`.
 
@@ -108,9 +108,9 @@ MCP client documents native x402 payment creation and local wallet policy.
 
 ## Main paid bundles
 
-- `url.pulse` — broad fast check;
+- `web.url.pulse` — broad fast check;
 - `url_passport` — site identity and discovery;
 - `url_extract` — clean content extraction;
 - `url_changed` — snapshot comparison.
 
-Use `catalog.search` when a smaller, cheaper projection is sufficient.
+Use `catalog.tools.search` when a smaller, cheaper projection is sufficient.

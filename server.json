@@ -3,7 +3,7 @@
   "name": "ru.maxzoa/1cent",
   "title": "1cent Web Intelligence for AI Agents",
   "description": "SSRF-safe web intelligence: 32 paid x402 tools, 3 free tools, buyer prompt and guide.",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "websiteUrl": "https://1cent.maxzoa.ru",
   "remotes": [
     {

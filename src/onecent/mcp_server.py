@@ -48,7 +48,21 @@ mcp_settings = get_settings()
 
 
 def public_mcp_tool_name(legacy_name: str) -> str:
-    """Return the stable public dot-notation name used by MCP discovery."""
+    """Return the stable three-level public name used by MCP discovery."""
+    if legacy_name == "catalog_search":
+        return "catalog.tools.search"
+    if legacy_name == "demo_url_pulse":
+        return "demo.url.pulse"
+    if legacy_name == "demo_live_url_pulse":
+        return "demo.live.pulse"
+    namespace, separator, operation = legacy_name.partition("_")
+    if not separator:
+        return legacy_name
+    return f"web.{namespace}.{operation}"
+
+
+def previous_public_mcp_tool_name(legacy_name: str) -> str:
+    """Return the one-dot 0.6.0 alias retained for compatible callers."""
     namespace, separator, operation = legacy_name.partition("_")
     if not separator:
         return legacy_name
@@ -60,7 +74,9 @@ MCP_TOOL_PUBLIC_NAMES = {
     for legacy_name in LEGACY_FREE_MCP_TOOL_NAMES + tuple(item.key for item in TOOLS)
 }
 MCP_TOOL_LEGACY_NAMES = {
-    public_name: legacy_name for legacy_name, public_name in MCP_TOOL_PUBLIC_NAMES.items()
+    alias: legacy_name
+    for legacy_name, public_name in MCP_TOOL_PUBLIC_NAMES.items()
+    for alias in (public_name, previous_public_mcp_tool_name(legacy_name))
 }
 FREE_MCP_TOOL_NAMES = tuple(
     MCP_TOOL_PUBLIC_NAMES[legacy_name] for legacy_name in LEGACY_FREE_MCP_TOOL_NAMES
@@ -68,7 +84,7 @@ FREE_MCP_TOOL_NAMES = tuple(
 
 
 class OnecentFastMCP(FastMCP):
-    """Publish navigable names while accepting pre-0.6 underscore aliases."""
+    """Publish a navigable tree while accepting 0.6 and underscore aliases."""
 
     async def list_tools(self) -> list[Tool]:
         tools = await super().list_tools()
@@ -293,7 +309,7 @@ def choose_url_tool(
     goal: PromptGoal, target_url: PromptTargetUrl = "https://example.com"
 ) -> str:
     return (
-        "Use catalog.search first with this goal: "
+        "Use catalog.tools.search first with this goal: "
         f"{goal!r}. Target URL: {target_url!r}. Choose the narrowest matching tool. "
         "Do not call a paid tool until the client has accepted the returned x402 requirement. "
         "Never send credentials, private URLs or payment secrets to the target website."
@@ -313,8 +329,8 @@ def buyer_guide_resource() -> str:
     return (
         "# 1cent buyer guide\n\n"
         "Endpoint: `https://1cent.maxzoa.ru/mcp` (Streamable HTTP).\n\n"
-        "1. Call `catalog.search` to find the narrowest tool and current atomic USDC price.\n"
-        "2. Use `demo.url_pulse` or `demo.live_url_pulse` for a free integration check.\n"
+        "1. Call `catalog.tools.search` to find the narrowest tool and current atomic USDC price.\n"
+        "2. Use `demo.url.pulse` or `demo.live.pulse` for a free integration check.\n"
         "3. Paid calls return an x402 requirement for Base Mainnet USDC. Sign only client-side.\n"
         "4. Reuse the same payment identifier after a definitive response; never retry UNKNOWN.\n"
         "5. Only public HTTP(S) targets are accepted and SSRF-sensitive destinations fail closed.\n"

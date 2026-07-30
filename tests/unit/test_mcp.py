@@ -20,21 +20,20 @@ async def test_mcp_tools_have_strict_schemas_and_descriptions() -> None:
     tools = await mcp.list_tools()
     assert {tool.name for tool in tools} == EXPECTED
     assert [tool.name for tool in tools[:3]] == list(PUBLIC_FREE_NAMES)
-    assert all(tool.name.count(".") == 1 for tool in tools)
+    assert all(tool.name.count(".") == 2 for tool in tools)
     assert {tool.name.split(".", 1)[0] for tool in tools} == {
         "catalog",
         "demo",
-        "site",
-        "url",
+        "web",
     }
     for tool in tools:
         assert tool.description and len(tool.description) > 100
         assert tool.inputSchema["additionalProperties"] is False
-        if tool.name in {"demo.url_pulse", "demo.live_url_pulse"}:
+        if tool.name in {"demo.url.pulse", "demo.live.pulse"}:
             assert tool.inputSchema.get("required", []) == []
             assert tool.inputSchema.get("properties", {}) == {}
         else:
-            field = "query" if tool.name == "catalog.search" else "url"
+            field = "query" if tool.name == "catalog.tools.search" else "url"
             assert field in tool.inputSchema["required"]
             assert tool.inputSchema["properties"][field]["type"] == "string"
             assert tool.inputSchema["properties"][field]["description"]
@@ -70,7 +69,7 @@ async def test_free_tools_are_local_and_need_no_payment() -> None:
         "catalog_search", {"query": "redirect chain"}
     )
     assert search.isError is False
-    assert "url.redirects" in str(search.structuredContent)
+    assert "web.url.redirects" in str(search.structuredContent)
 
     demo = await mcp._tool_manager.call_tool(  # type: ignore[attr-defined]
         "demo_url_pulse", {}
@@ -83,9 +82,10 @@ async def test_free_tools_are_local_and_need_no_payment() -> None:
 
 @pytest.mark.asyncio
 async def test_public_dot_names_and_legacy_aliases_call_same_tool() -> None:
-    public_result = await mcp.call_tool("catalog.search", {"query": "redirect chain"})
+    public_result = await mcp.call_tool("catalog.tools.search", {"query": "redirect chain"})
+    previous_result = await mcp.call_tool("catalog.search", {"query": "redirect chain"})
     legacy_result = await mcp.call_tool("catalog_search", {"query": "redirect chain"})
-    assert public_result == legacy_result
+    assert public_result == previous_result == legacy_result
 
 
 @pytest.mark.asyncio
@@ -101,7 +101,7 @@ def test_registry_remote_metadata() -> None:
     document = json.loads((Path(__file__).parents[2] / "server.json").read_text("utf-8"))
     assert MCP_PROTOCOL_VERSION == "2025-11-25"
     assert document["name"] == "ru.maxzoa/1cent"
-    assert document["version"] == "0.6.0"
+    assert document["version"] == "0.6.1"
     assert document["remotes"] == [
         {"type": "streamable-http", "url": "https://1cent.maxzoa.ru/mcp"}
     ]

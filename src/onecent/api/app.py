@@ -350,8 +350,8 @@ async def tools_page() -> HTMLResponse:
     return _landing(
         "Web intelligence tools",
         "<p>32 paid REST/MCP tools plus three free MCP tools: "
-        "<code>catalog.search</code>, <code>demo.url_pulse</code> and "
-        "<code>demo.live_url_pulse</code>.</p>"
+        "<code>catalog.tools.search</code>, <code>demo.url.pulse</code> and "
+        "<code>demo.live.pulse</code>.</p>"
         "<p><a href='/v1/demo/live-pulse'>Try the rate-limited live demo</a> · "
         "<a href='/v1/catalog'>Machine-readable catalog</a></p>",
     )
@@ -370,9 +370,9 @@ async def pricing_page() -> HTMLResponse:
 async def getting_started() -> HTMLResponse:
     return _landing(
         "Pay for a 1cent request",
-        "<p><strong>Start free:</strong> call MCP <code>catalog.search</code> or "
-        "<code>demo.url_pulse</code>. For a real fixed-target fetch without payment, use "
-        "<code>demo.live_url_pulse</code> or <a href='/v1/demo/live-pulse'>REST live demo</a>. "
+        "<p><strong>Start free:</strong> call MCP <code>catalog.tools.search</code> or "
+        "<code>demo.url.pulse</code>. For a real fixed-target fetch without payment, use "
+        "<code>demo.live.pulse</code> or <a href='/v1/demo/live-pulse'>REST live demo</a>. "
         "The live demo is rate-limited and never accepts a caller-provided URL.</p>"
         "<p><strong>Fastest MCP path:</strong> install the local "
         "<a href='/docs/buyer-bridge'>1cent Buyer Bridge</a>. It adds local x402 signing to "

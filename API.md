@@ -30,8 +30,8 @@ prices and public limits. Every paid route accepts strict JSON with `url` and op
 unknown fields are rejected. Unpaid calls return x402 v2 requirements for Base Mainnet USDC.
 
 Categories: bundle, micro, metadata, content, discovery and security. Three free MCP tools precede
-the paid catalog: `catalog.search` performs a bounded local lookup; `demo.url_pulse` returns a
-fixed precomputed sample; `demo.live_url_pulse` runs the normal safe service only for fixed
+the paid catalog: `catalog.tools.search` performs a bounded local lookup; `demo.url.pulse` returns a
+fixed precomputed sample; `demo.live.pulse` runs the normal safe service only for fixed
 `example.com`. Neither demo accepts a caller-supplied URL.
 
 ## Pulse
