@@ -49,14 +49,31 @@ Base USDC, seller, цены, 32 платных ресурса и 35 MCP tools.
 | dependency audit | PASS, Python runtime/buyer and Node: no known vulnerabilities |
 | Docker Compose config/build | PASS on NAS candidate images |
 | isolated candidate | PASS; application key readable only by UID/GID 10001; runtime unchanged |
-| local/public/MCP unpaid smoke | pending |
-| monitor | pending |
-| settlement count/sum invariant | PASS for candidate: `41 / 228000 atomic` unchanged |
+| local/public/MCP unpaid smoke | PASS; protocol 2025-11-25, 35 tools, amount 1000, no payment |
+| monitor | PASS: `mainnet_health=PASS` |
+| settlement count/sum invariant | PASS before/after deploy: `41 / 228000 atomic` unchanged |
 
 Candidate gate caught two deployment-only defects before production: the initial self-check inherited
 the live backup gate, and the generated mode-600 signing key had the wrong file owner for the
 non-root application process. Both were corrected; the successful repeat kept all production
 container IDs and start times unchanged.
+
+## Production acceptance
+
+- Release-candidate commit: `238f5f5df5dc7adfc0593647a3b8783ea7829999`.
+- GitHub quality CI: PASS, including dependency audit, SBOM, Node buyer, Docker build and Trivy
+  HIGH/CRITICAL scan.
+- Test release: `v0.7.0-rc.1`.
+- Production start: `2026-07-30T11:55:36Z` (API); bot start: `2026-07-30T11:56:57Z`.
+- Fresh backup: `/volume1/docker/1cent/backups/onecent-20260730T114646Z.sql.gz`;
+  restore drill PASS with 17 tables at migration `0007`.
+- Live migration: `0008`; API, bot and DB healthy; Compose config PASS.
+- Signing key: mode `600`, owner `10001:10001`, read-only API mount. No key material was printed.
+- Public checks: local/public REST smoke, MCP initialize/tools/list/schemas/unpaid, public release
+  contract, DID document, signed offer, four products, browser 402 and one free preview all PASS.
+- Unpaid load: 25 requests, concurrency 5, average `2942.2 ms`, p95 `4192.2 ms`.
+- Monitor: `mainnet_health=PASS`; maintenance marker cleared; service enabled.
+- Successful settlement count and sum remained `41 / 228000 atomic`. No payment was executed.
 
 ## Payment safety
 

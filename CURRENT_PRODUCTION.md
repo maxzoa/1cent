@@ -93,28 +93,32 @@
 - Backup directory mode: `711`; dump mode: `600`; retention: 14 days; readiness использует
   атомарный `/backups/onecent-latest.sql.gz`.
 - Current DB migration: `0008`.
-- Последняя полная production-приёмка: `MARKETPLACE_QUALITY_062_REPORT.md`.
+- Последняя полная production-приёмка: `BUYER_ACTIVATION_070_REPORT.md`.
 
 ### Marketplace and agent discovery acceptance
 
-Production rollout `2026-07-30` is accepted with these exact operational results:
+Production rollout started at `2026-07-30T11:55:36Z` and is accepted with these exact
+operational results:
 
-- public version: `0.7.0`; release source is recorded in the buyer-activation report;
-- fresh backup: `/volume1/docker/1cent/backups/onecent-20260730T083652Z.sql.gz`;
-- restore drill: `PASS`, 17 tables, migration `0007`;
+- public version: `0.7.0`; tested source commit: `238f5f5df5dc7adfc0593647a3b8783ea7829999`;
+- fresh backup: `/volume1/docker/1cent/backups/onecent-20260730T114646Z.sql.gz`;
+- restore drill: `PASS`, 17 tables at pre-deploy migration `0007`; live migration is `0008`;
 - API, bot and DB: healthy; `mainnet_health=PASS`;
 - public root, Swagger, `llms.txt`, `llms-full.txt`, `skill.md`, `agents.txt`, A2A and WebMCP
   discovery: HTTP `200`;
 - CSP, HSTS, `X-Frame-Options`, `X-Content-Type-Options`, referrer and permissions
   headers: present;
 - MCP: protocol `2025-11-25`, initialize, tools/list, schemas and unpaid x402: `PASS`;
-- unpaid challenge load: 25 requests, concurrency 5, average `4183.3 ms`, p95 `5347.2 ms`;
+- buyer activation: public DID, signed 402 offer, four product packages, browser 402 and free
+  buyer-selected preview: `PASS`;
+- unpaid challenge load: 25 requests, concurrency 5, average `2942.2 ms`, p95 `4192.2 ms`;
 - confirmed settlements/revenue stayed `41 / 228000 atomic`; no settlement was made.
 
-AgentGrade independently rescanned the public service at `2026-07-30T08:54:15Z`: `A+`, `100%`,
-`47/47` applicable checks. Smithery independently published a fresh successful scan with `100/100`,
-35 tools, one resource and one prompt. Optional zero-weight identity/payment protocols are not
-implemented merely to inflate a score.
+The latest independent marketplace baseline before this runtime update was AgentGrade `A+`,
+`100%`, `47/47` applicable checks and Smithery `100/100`, 35 tools, one resource and one prompt.
+Those scores are not relabelled as 0.7.0 results until each external service rescans the live
+release. Optional zero-weight identity/payment protocols are not implemented merely to inflate a
+score.
 
 ## Live sources of truth
 
