@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.2 - 2026-07-30
+
+- Added RFC-aware content negotiation at the canonical MCP URL without changing MCP POST/DELETE
+  behavior or Streamable HTTP transport.
+- Added public `llms-full.txt`, `skill.md`, `agents.txt` and WebMCP discovery documents.
+- Completed x402 manifest fields required by passive Bazaar scanners: exact resource paths,
+  top-level `payTo` and explicit discoverability.
+- Enabled public no-cookie CORS for MCP clients and exposed only protocol/payment/request headers.
+- Added JSON-LD, LLM discovery links and reusable read-only PayAI Bazaar verification.
+- Payment verification, settlement, prices, Base Mainnet, PayAI and seller are unchanged; no
+  settlement is executed by this release.
+
 ## 0.6.1 — 2026-07-30
 
 - Promoted public MCP discovery names to a balanced three-level tree such as

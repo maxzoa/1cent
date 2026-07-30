@@ -1,0 +1,1089 @@
+{
+  "identifier": "maxzoa-1cent",
+  "name": "1cent Web Intelligence for AI Agents",
+  "version": "0.6.2",
+  "author": "maxzoa",
+  "authorUrl": "https://github.com/maxzoa",
+  "category": "developer",
+  "cloudEndpoint": "https://1cent.maxzoa.ru/mcp",
+  "description": "Production remote MCP server with 35 safe web-intelligence tools: 32 paid x402 URL operations and 3 free discovery/demo tools.",
+  "homepage": "https://github.com/maxzoa/1cent",
+  "icon": "https://1cent.maxzoa.ru/favicon.ico",
+  "tags": [
+    "web intelligence",
+    "url analysis",
+    "x402",
+    "base",
+    "usdc",
+    "ssrf protection"
+  ],
+  "tools": [
+    {
+      "name": "catalog.tools.search",
+      "description": "Start here before choosing a paid operation. Search the local 1cent catalog without fetching a URL or requiring payment. Returns up to five matching tools with purpose, current atomic Base USDC price and REST path.",
+      "inputSchema": {
+        "properties": {
+          "query": {
+            "description": "Short capability phrase such as 'redirect chain', 'security headers' or 'extract article text'.",
+            "examples": [
+              "security headers"
+            ],
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "catalog_searchArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "demo.url.pulse",
+      "description": "Return a precomputed example of 1cent URL Pulse output without payment, database access or any network request. This fixed demonstration never accepts a URL and never fetches an external resource.",
+      "inputSchema": {
+        "properties": {},
+        "title": "demo_url_pulseArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "demo.live.pulse",
+      "description": "Run the real SSRF-protected URL Pulse service against the fixed https://example.com/ target without payment. The tool accepts no URL, is rate-limited per client and preserves normal cache and audit behavior.",
+      "inputSchema": {
+        "properties": {},
+        "title": "demo_live_url_pulseArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.pulse",
+      "description": "Check a public HTTP or HTTPS URL before expensive browsing or AI processing. Returns availability, redirects, content type, page metadata, language, cache state, content hash, robots policy, and access restrictions. Does not execute JavaScript. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to reuse cache; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_pulseArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.passport",
+      "description": "Inspect a public HTTP or HTTPS URL and return a structured site passport. Includes pulse fields, registrable domain, robots and sitemap discovery, feeds, OpenAPI hints, and page metadata. Uses at most eight external HTTP requests and does not execute JavaScript. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to reuse cache; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_passportArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.extract",
+      "description": "Extract normalized main text and optional links from a public HTTP or HTTPS document. Returns title, author, publication time, language, content hash, truncation and cache state. Output size and fetch time are bounded; JavaScript is not executed. Pass url as an absolute public HTTP(S) URL. Set include_links=true only when normalized links are needed. Keep fresh=false to reuse cache.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          },
+          "include_links": {
+            "default": false,
+            "description": "Set true to include bounded normalized links in extraction output; false returns the main document text without the optional link list.",
+            "title": "Include Links",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_extractArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.changed",
+      "description": "Compare a public HTTP or HTTPS URL with its previously stored normalized content hash. Creates a baseline on first use, then reports whether content changed and returns current and previous hashes with timestamps. JavaScript is not executed. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to reuse cache; set fresh=true only for a new fetch.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_changedArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.status",
+      "description": "Check HTTP reachability, status and final URL. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_statusArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.redirects",
+      "description": "Return the safely validated redirect chain. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_redirectsArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.headers",
+      "description": "Return allowlisted response headers only. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_headersArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.timing",
+      "description": "Return measured end-to-end fetch timing. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_timingArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.content_type",
+      "description": "Classify MIME type, charset and bounded content length. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_content_typeArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.canonical",
+      "description": "Resolve requested, final and declared canonical URLs with evidence. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_canonicalArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.language",
+      "description": "Report declared and heuristically detected document language. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_languageArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.hash",
+      "description": "Compute a versioned SHA-256 of normalized content. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_hashArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.metadata",
+      "description": "Extract title, description, author, dates and canonical metadata. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_metadataArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.social_cards",
+      "description": "Extract bounded Open Graph and Twitter Card fields. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_social_cardsArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.jsonld",
+      "description": "Extract bounded JSON-LD blocks without executing scripts. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_jsonldArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.headings",
+      "description": "Return the bounded heading hierarchy from h1 through h6. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_headingsArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.word_stats",
+      "description": "Estimate words, characters, sentences and reading time. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_word_statsArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.links",
+      "description": "Extract up to 200 normalized safe links. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_linksArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.images",
+      "description": "List up to 100 image references without downloading images. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_imagesArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.text",
+      "description": "Return bounded normalized readable text. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_textArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.markdown",
+      "description": "Convert readable HTML content to bounded Markdown. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_markdownArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.rag_chunks",
+      "description": "Split readable text into deterministic bounded RAG chunks. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_rag_chunksArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.diff",
+      "description": "Return a bounded normalized diff against the previous snapshot. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_diffArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.site.robots",
+      "description": "Fetch and parse the origin robots.txt policy. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "site_robotsArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.site.sitemaps",
+      "description": "Discover up to five bounded sitemap resources. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "site_sitemapsArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.site.feeds",
+      "description": "Discover declared RSS and Atom feeds. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "site_feedsArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.site.llms_txt",
+      "description": "Return bounded llms.txt text when publicly available. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "site_llms_txtArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.site.security_txt",
+      "description": "Parse public security.txt fields without following contacts. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "site_security_txtArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.site.openapi",
+      "description": "Discover and summarize bounded public OpenAPI documents. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "site_openapiArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.security_headers",
+      "description": "Assess common response security headers as static evidence. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_security_headersArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.tls",
+      "description": "Inspect the public HTTPS certificate on port 443. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_tlsArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "web.url.access_flags",
+      "description": "Report heuristic authentication, paywall and JavaScript access flags. Use only for public HTTP(S) resources; it does not execute JavaScript or bypass access controls. Pass url as an absolute public HTTP(S) URL. Keep fresh=false to allow cache reuse; set fresh=true only when a new upstream fetch is required.",
+      "inputSchema": {
+        "properties": {
+          "url": {
+            "description": "Absolute public HTTP or HTTPS URL to inspect. Private, loopback, link-local, metadata-service and otherwise SSRF-sensitive destinations are rejected.",
+            "examples": [
+              "https://example.com/article"
+            ],
+            "maxLength": 2048,
+            "minLength": 1,
+            "pattern": "^https?://",
+            "title": "Url",
+            "type": "string"
+          },
+          "fresh": {
+            "default": false,
+            "description": "Set true only when a new upstream fetch is required; false allows the bounded cached result and is cheaper for the origin.",
+            "title": "Fresh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "url_access_flagsArguments",
+        "type": "object",
+        "additionalProperties": false
+      }
+    }
+  ],
+  "prompts": [
+    {
+      "name": "choose_url_tool",
+      "description": "Build a concise plan that starts with free catalog discovery, selects one bounded URL-analysis tool, and explains the x402 payment boundary before any paid call.",
+      "arguments": [
+        {
+          "name": "goal",
+          "description": "Short description of the URL-inspection result the buyer needs.",
+          "required": true
+        },
+        {
+          "name": "target_url",
+          "description": "Absolute public HTTP or HTTPS URL that the selected tool should inspect; private and SSRF-sensitive destinations are rejected.",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "name": "1cent buyer guide",
+      "uri": "onecent://buyer-guide",
+      "mimeType": "text/markdown"
+    }
+  ]
+}

@@ -99,9 +99,64 @@ def test_public_buyer_bridge_documentation(client: TestClient) -> None:
 
     sitemap = client.get("/sitemap.xml")
     assert "/docs/buyer-bridge" in sitemap.text
-    assert "Buyer Bridge: https://1cent.maxzoa.ru/docs/buyer-bridge" in client.get(
+    assert "[Buyer Bridge](https://1cent.maxzoa.ru/docs/buyer-bridge)" in client.get(
         "/llms.txt"
     ).text
+
+
+def test_agent_discovery_documents_and_content_negotiation(client: TestClient) -> None:
+    markdown = client.get(
+        "/mcp", headers={"Accept": "text/markdown, text/html, */*"}
+    )
+    assert markdown.status_code == 200
+    assert markdown.headers["content-type"].startswith("text/markdown")
+    assert markdown.headers["vary"] == "Accept"
+
+    html = client.get("/mcp", headers={"Accept": "text/html, text/markdown, */*"})
+    assert html.status_code == 200
+    assert html.headers["content-type"].startswith("text/html")
+
+    preferred_html = client.get(
+        "/mcp", headers={"Accept": "text/markdown;q=0.5, text/html;q=1.0"}
+    )
+    assert preferred_html.headers["content-type"].startswith("text/html")
+
+    machine = client.get(
+        "/mcp", headers={"Accept": "application/json, text/html, */*"}
+    )
+    assert machine.status_code == 200
+    assert machine.headers["content-type"].startswith("application/json")
+    assert machine.json()["name"] == "ru.maxzoa/1cent"
+
+    plain = client.get("/mcp", headers={"Accept": "text/plain"})
+    assert plain.status_code == 200
+    assert plain.headers["content-type"].startswith("text/plain")
+
+    llms = client.get("/llms.txt")
+    assert "## Endpoints" in llms.text
+    assert "https://1cent.maxzoa.ru/openapi.json" in llms.text
+    assert "https://1cent.maxzoa.ru/.well-known/agent.json" in llms.text
+    assert client.get("/llms-full.txt").status_code == 200
+
+    skill = client.get("/skill.md")
+    assert skill.headers["content-type"].startswith("text/markdown")
+    assert skill.text.startswith("---\nname: onecent-web-intelligence\n")
+    assert client.get("/agents.txt").status_code == 200
+    assert client.get("/.well-known/webmcp.json").json()["version"] == "0.6.2"
+
+
+def test_mcp_cors_preflight(client: TestClient) -> None:
+    response = client.options(
+        "/mcp",
+        headers={
+            "Origin": "https://agentgrade.com",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type,payment-signature",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "*"
+    assert "POST" in response.headers["access-control-allow-methods"]
 
 
 def test_x402_well_known_manifest(client: TestClient) -> None:
@@ -114,6 +169,10 @@ def test_x402_well_known_manifest(client: TestClient) -> None:
     assert status["price"]["scheme"] == "exact"
     assert status["price"]["amount"] == "2000"
     assert status["inputSchema"]["additionalProperties"] is False
+    assert status["method"] == "POST"
+    assert status["path"] == "/v1/url/status"
+    assert status["extensions"]["bazaar"]["discoverable"] is True
+    assert manifest["payTo"] == status["price"]["payTo"]
 
     assert client.get("/.well-known/x402.json").json() == manifest
     assert client.get("/.well-known/agent.json").json()["x402"].endswith(
@@ -127,7 +186,7 @@ def test_mcp_well_known_manifest(client: TestClient) -> None:
     assert manifest.headers["content-type"].startswith("application/json")
     body = manifest.json()
     assert body["name"] == "ru.maxzoa/1cent"
-    assert body["version"] == "0.6.1"
+    assert body["version"] == "0.6.2"
     assert body["websiteUrl"] == "https://1cent.maxzoa.ru"
     assert body["remotes"] == [
         {
@@ -166,7 +225,7 @@ def test_free_demo_status_security_and_server_card(
 
     status = client.get("/status.json")
     assert status.status_code == 200
-    assert status.json()["version"] == "0.6.1"
+    assert status.json()["version"] == "0.6.2"
     assert status.json()["paid_tools"] == 32
     assert status.json()["free_mcp_tools"] == [
         "catalog.tools.search",

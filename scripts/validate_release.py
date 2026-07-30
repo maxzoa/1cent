@@ -81,6 +81,7 @@ def main() -> None:
     glama = _json("glama.json")
     catalog_registry = _json("catalog/server.json")
     tool_catalog = _json("catalog/tool-catalog.json")
+    lobehub = _json("lhm.plugin.json")
 
     versions = {
         __version__,
@@ -89,7 +90,7 @@ def main() -> None:
         str(catalog_registry["version"]),
         str(tool_catalog["version"]),
     }
-    assert versions == {"0.6.1"}, versions
+    assert versions == {"0.6.2"}, versions
     assert registry["name"] == catalog_registry["name"] == "ru.maxzoa/1cent"
     assert glama == {
         "$schema": "https://glama.ai/mcp/schemas/server.json",
@@ -99,6 +100,12 @@ def main() -> None:
         {"type": "streamable-http", "url": "https://1cent.maxzoa.ru/mcp"}
     ]
     assert catalog_registry["remotes"] == registry["remotes"]
+    assert lobehub["identifier"] == "maxzoa-1cent"
+    assert lobehub["version"] == "0.6.2"
+    assert lobehub["cloudEndpoint"] == "https://1cent.maxzoa.ru/mcp"
+    assert len(cast(list[dict[str, object]], lobehub["tools"])) == 35
+    assert len(cast(list[dict[str, object]], lobehub["prompts"])) == 1
+    assert len(cast(list[dict[str, object]], lobehub["resources"])) == 1
     catalog_tools = cast(list[dict[str, object]], tool_catalog["tools"])
     assert len(catalog_tools) == 32
     assert all(
@@ -115,6 +122,8 @@ def main() -> None:
         "BUYER_BRIDGE.md",
         "CHANGELOG.md",
         "TRUST_AND_SCALING_READINESS.md",
+        "skill.md",
+        "lhm.plugin.json",
         "requirements-buyer.lock",
     ):
         assert (ROOT / required).is_file(), required
@@ -129,7 +138,7 @@ def main() -> None:
     asyncio.run(_validate_mcp())
     asyncio.run(_validate_buyer_bridge())
     print(
-        "release_validation=PASS; version=0.6.1; paid_tools=32; "
+        "release_validation=PASS; version=0.6.2; paid_tools=32; "
         "free_tools=3; prompts=1; resources=1; buyer_bridge_tools=36"
     )
 

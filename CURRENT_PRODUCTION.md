@@ -7,8 +7,8 @@
 
 | Параметр | Текущее значение |
 |---|---|
-| Release | `0.6.0` |
-| Validated release candidate | `0.6.1` (not public until controlled deployment passes) |
+| Release | `0.6.1` |
+| Validated release candidate | `0.6.2` (not public until controlled deployment passes) |
 | REST | `https://1cent.maxzoa.ru` |
 | MCP | `https://1cent.maxzoa.ru/mcp` |
 | MCP protocol | `2025-11-25` |
@@ -29,7 +29,7 @@
 
 ## Buyer activation surface
 
-- Release `0.6.0` publishes navigable MCP aliases; REST/MCP payment logic is unchanged.
+- Release `0.6.1` publishes balanced three-level MCP names; REST/MCP payment logic is unchanged.
 - Repository includes optional local `1cent Buyer Bridge` version `0.1.0` for MCP clients without
   native x402 signing.
 - Bridge transport: local stdio MCP; it maps paid tools to the existing public REST resources.
@@ -115,7 +115,7 @@ keeps the paid-payload price precheck on the same value. The second controlled r
 - Catalog/prices: `https://1cent.maxzoa.ru/v1/catalog`.
 - x402 manifest: `https://1cent.maxzoa.ru/.well-known/x402`.
 - OpenAPI: `https://1cent.maxzoa.ru/openapi.json`.
-- Official MCP Registry: `ru.maxzoa/1cent`, version `0.6.0`, active/latest at publication.
+- Official MCP Registry: `ru.maxzoa/1cent`, version `0.6.1`, active/latest at publication.
 
 При расхождении документа и live endpoint: остановить платные действия, считать состояние
 неподтверждённым и выполнить read-only диагностику. Не исправлять расхождение реальным платежом.
