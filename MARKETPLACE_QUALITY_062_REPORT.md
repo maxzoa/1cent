@@ -14,7 +14,7 @@ Date: `2026-07-30`. Result: repository-controlled marketplace and agent-discover
 | Surface | Evidence |
 |---|---|
 | AgentGrade | A+, 100%, 47/47 applicable checks; scan `2026-07-30T08:54:15Z` |
-| Smithery | new SUCCESS release, 9 seconds, 100/100, 35 tools, 1 prompt, 1 resource |
+| Smithery | new SUCCESS release, 7 seconds, 100/100, 35 tools, 1 prompt, 1 resource |
 | Glama | profile 100%; coherence A; 35/35 tool quality A; maintenance A; license A |
 | LobeHub | official CLI publication 0.6.2; status published |
 | MCP.so | live refresh completed; 35 tools and current product copy |
