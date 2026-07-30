@@ -13,6 +13,9 @@ Public endpoint: `https://1cent.maxzoa.ru/mcp`
 
 Production publishes 35 MCP tools: 32 paid URL/site operations and three free tools.
 
+Release 0.7.0 adds no aliases to `tools/list`, so marketplace schema and count contracts remain
+stable.
+
 `demo.live.pulse` performs a real, rate-limited check only for fixed `example.com`; it accepts
 no URL and reuses the normal SSRF-safe fetch, cache and audit service.
 
@@ -73,3 +76,14 @@ demos and `buyer_bridge_status`, validates the live REST 402 challenge and signs
 buyer process. Manual one-call approval is default; capped automatic mode requires explicit gates.
 See `scripts/smoke_buyer_bridge.py`, `scripts/test_mcp_client.py` and
 [BUYER_QUICKSTART.md](BUYER_QUICKSTART.md).
+
+## Buyer activation helpers
+
+Use `onecent install --client claude|cursor|vscode|codex` to generate a local Buyer Bridge
+configuration without placing a key in MCP configuration. Use `--apply` only for Claude, Cursor or
+VS Code; the installer creates a backup before modifying an existing JSON file. `onecent watch`
+is a finite, spend-capped wrapper around the existing `url_changed` path and stops on UNKNOWN.
+
+Four product labels in `/v1/products` point to existing paid tools; they are not new MCP tools.
+Browser paywall and buyer-selected preview are REST acquisition surfaces and do not alter MCP
+initialize, `tools/list`, schemas, prompt or resource counts.

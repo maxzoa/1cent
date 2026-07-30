@@ -152,6 +152,7 @@ def test_payment_funnel_explains_observed_drop_without_guessing() -> None:
             delivery_p95_ms=1400,
         ),
         [("invalid_payment_payload", 1)],
+        [("smithery", 12, 3), ("direct", 4, 2)],
     )
     assert "Получили цену 402: <b>1200</b>" in output
     assert "Уникальных клиентов: <b>7</b>" in output
@@ -160,3 +161,4 @@ def test_payment_funnel_explains_observed_drop_without_guessing() -> None:
     assert "PayAI: среднее 410 мс" in output
     assert "95% не дольше 1400 мс" in output
     assert "IP" not in output
+    assert "Smithery: 12" in output

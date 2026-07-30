@@ -7,7 +7,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from onecent.models import ServiceSetting, SettingsChangeLog, ToolCatalog
-from onecent.services.tool_catalog import TOOL_BY_KEY
+from onecent.services.tool_catalog import PRODUCTS, TOOL_BY_KEY
 
 UTC = timezone.utc
 PROMO_ACTIVE_KEY = "price_promo_active"
@@ -224,6 +224,7 @@ async def public_catalog_rows(session: AsyncSession) -> list[dict[str, object]]:
             "price_usdc": f"{row.price_atomic / 1_000_000:.6f}",
             "rest_path": row.rest_path,
             "mcp": row.enabled_mcp,
+            "product": PRODUCTS.get(row.tool_key),
             "limits": {
                 "max_external_requests": row.max_external_requests,
                 "cache_ttl_seconds": row.cache_ttl_seconds,

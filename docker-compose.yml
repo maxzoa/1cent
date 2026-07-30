@@ -18,7 +18,9 @@ services:
     env_file: [.env]
     command: ["sh", "-c", "alembic upgrade head && uvicorn onecent.api.app:app --host 0.0.0.0 --port 8013 --workers 1"]
     ports: ["${ONECENT_HOST_PORT:-8013}:8013"]
-    volumes: ["./backups:/backups:ro"]
+    volumes:
+      - "./backups:/backups:ro"
+      - "./secrets/offer_receipt_ed25519.pem:/run/secrets/offer_receipt_ed25519.pem:ro"
     depends_on:
       onecent-db: {condition: service_healthy}
     read_only: true

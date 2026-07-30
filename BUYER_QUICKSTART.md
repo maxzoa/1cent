@@ -16,6 +16,15 @@ Current network, asset, seller and facilitator: [CURRENT_PRODUCTION.md](CURRENT_
 Neither demo accepts a URL. The static demo performs no network request; the live demo uses the
 normal SSRF-safe fetch, cache and audit service against the fixed target.
 
+One buyer-selected preview is also available per safe client fingerprint and UTC day:
+
+```bash
+curl -sS "https://1cent.maxzoa.ru/v1/demo/preview?url=https%3A%2F%2Fexample.com%2F"
+```
+
+For a browser-first purchase, open `https://1cent.maxzoa.ru/try`. The selected URL is not fetched
+until the x402 paywall confirms payment.
+
 ## 2. Fastest MCP path: local Buyer Bridge
 
 Many MCP clients can list and call remote tools but cannot create an x402 wallet signature. Use the
@@ -25,6 +34,7 @@ local bridge when the client does not explicitly support x402 v2 payments:
 pipx install "onecent[buyer] @ git+https://github.com/maxzoa/1cent.git"
 onecent wallet set
 onecent doctor
+onecent install --client claude
 ```
 
 Add this stdio command to Claude Desktop, Cursor, VS Code or Codex:
@@ -93,6 +103,10 @@ Buyer requirements:
 Direct remote MCP configuration alone does not add a signer. Use Buyer Bridge unless the selected
 MCP client documents native x402 payment creation and local wallet policy.
 
+Node users can run `npm ci` and then `npm exec -- onecent-buyer doctor` from
+`packages/onecent-buyer`. A paid call still requires explicit network, asset, seller, amount and
+one-call confirmation flags. No public npm publication is implied by this repository command.
+
 ## Key safety
 
 - A buyer private key stays only in the buyer process or secure signer.
@@ -114,3 +128,11 @@ MCP client documents native x402 payment creation and local wallet policy.
 - `url_changed` — snapshot comparison.
 
 Use `catalog.tools.search` when a smaller, cheaper projection is sufficient.
+
+Outcome-oriented choices map to the existing paid tools: site health -> `web.url.pulse`, SEO
+discovery -> `web.url.passport`, content for AI -> `web.url.extract`, and change monitoring ->
+`web.url.changed`.
+
+For recurring change checks, `onecent watch` requires explicit execution, exact Base Mainnet
+network/asset/seller confirmations, per-call and UTC-day caps, a minimum five-minute interval and a
+finite run count. It never retries UNKNOWN.

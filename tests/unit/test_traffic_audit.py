@@ -89,6 +89,20 @@ def test_rest_and_mcp_sources_are_distinct() -> None:
     assert mcp.request_id == "trace-12345678"
 
 
+def test_safe_referral_attribution_has_no_raw_url_or_ip() -> None:
+    settings = Settings(_env_file=None, audit_hash_salt="test-salt")
+    traffic = build_traffic_context(
+        request_for(
+            peer="198.51.100.10",
+            user_agent="Mozilla/5.0",
+            headers={"referer": "https://smithery.ai/servers/maxzoa27/onecent?secret=x"},
+        ),
+        settings,
+    )
+    assert traffic.referral_source == "smithery"
+    assert "198.51.100.10" not in traffic.client_fingerprint
+
+
 async def test_request_id_links_full_audit_chain() -> None:
     session = CaptureSession()
     traffic = TrafficContext(

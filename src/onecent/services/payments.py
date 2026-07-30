@@ -28,6 +28,7 @@ from x402.http import (
     decode_payment_signature_header,
 )
 from x402.http.middleware.fastapi import payment_middleware
+from x402.http.paywall import create_paywall, evm_paywall
 from x402.http.types import HTTPRequestContext, RouteConfig
 from x402.mechanisms.evm.exact import ExactEvmServerScheme
 from x402.schemas import SupportedKind, SupportedResponse
@@ -48,6 +49,7 @@ from onecent.repositories.payments import (
     reserve_payment,
 )
 from onecent.services.discovery import ENDPOINT_DESCRIPTIONS, discovery_extension
+from onecent.services.offer_receipt import OfferReceiptSigner
 from onecent.services.settings_registry import settings_service
 from onecent.services.tool_catalog import TOOL_BY_KEY, TOOL_BY_PATH
 from onecent.services.traffic_audit import (
@@ -60,6 +62,11 @@ from onecent.services.traffic_audit import (
 
 UTC = timezone.utc
 PAID_PATHS = {path: definition.key for path, definition in TOOL_BY_PATH.items()}
+BROWSER_PAID_PATHS = {"/try/result": "url_pulse"}
+PAID_ROUTES = {
+    **{("POST", path): operation for path, operation in PAID_PATHS.items()},
+    **{("GET", path): operation for path, operation in BROWSER_PAID_PATHS.items()},
+}
 
 
 class _EffectivePriceCache:
@@ -103,7 +110,10 @@ class TestnetFacilitatorClient(HTTPFacilitatorClient):
 
 
 def _fingerprint(request: Request, body: bytes) -> str:
-    source = b"\0".join((request.method.encode(), request.url.path.encode(), body))
+    target = request.url.path
+    if request.method == "GET" and request.url.query:
+        target = f"{target}?{request.url.query}"
+    source = b"\0".join((request.method.encode(), target.encode(), body))
     return hashlib.sha256(source).hexdigest()
 
 
@@ -293,12 +303,21 @@ def build_x402_middleware(
     server.register(settings.x402_network, ExactEvmServerScheme())  # type: ignore[no-untyped-call]
     server.register_extension(bazaar_resource_server_extension)  # type: ignore[arg-type]
     server.initialize()
+    offer_receipt_signer = (
+        OfferReceiptSigner.load(
+            settings.offer_receipt_signing_key_path,
+            settings.offer_receipt_kid,
+            include_transaction=settings.offer_receipt_include_transaction,
+        )
+        if settings.offer_receipt_enabled
+        else None
+    )
     price_cache = _EffectivePriceCache(
         lambda active, operation: _effective_price_atomic(active, operation)
     )
 
     async def dynamic_price(context: HTTPRequestContext) -> str:
-        operation = PAID_PATHS[context.path]
+        operation = PAID_PATHS.get(context.path) or BROWSER_PAID_PATHS[context.path]
         atomic = await price_cache.get(settings, operation)
         return f"${Decimal(atomic) / Decimal(1_000_000):.6f}"
 
@@ -317,18 +336,72 @@ def build_x402_middleware(
             tags=["url", "web", "metadata", operation],
             extensions={
                 PAYMENT_IDENTIFIER: declare_payment_identifier_extension(required=False),
+                **(
+                    {
+                        "offer-receipt": {
+                            "includeTxHash": settings.offer_receipt_include_transaction,
+                            "offerValiditySeconds": 300,
+                        }
+                    }
+                    if offer_receipt_signer
+                    else {}
+                ),
                 **discovery_extension(operation),
             },
         )
         for path, operation in PAID_PATHS.items()
     }
-    sdk_middleware = payment_middleware(routes, server, sync_facilitator_on_start=False)
+    for path, operation in BROWSER_PAID_PATHS.items():
+        routes[f"GET {path}"] = RouteConfig(
+            accepts=PaymentOption(
+                scheme="exact",
+                pay_to=settings.x402_pay_to,
+                price=dynamic_price,
+                network=settings.x402_network,
+            ),
+            description="Buy one site health audit in a browser.",
+            resource=f"{settings.public_base_url.rstrip('/')}{path}",
+            mime_type="application/json",
+            service_name="1cent Site Health Audit",
+            tags=["url", "browser", "site-health", operation],
+            extensions={
+                PAYMENT_IDENTIFIER: declare_payment_identifier_extension(required=False),
+                **(
+                    {
+                        "offer-receipt": {
+                            "includeTxHash": settings.offer_receipt_include_transaction,
+                            "offerValiditySeconds": 300,
+                        }
+                    }
+                    if offer_receipt_signer
+                    else {}
+                ),
+            },
+        )
+    paywall_provider = (
+        create_paywall()
+        .with_network(evm_paywall)
+        .with_config(
+            app_name="1cent Web Intelligence",
+            app_logo=f"{settings.public_base_url.rstrip('/')}/favicon.svg",
+            testnet=settings.x402_environment == "testnet",
+        )
+        .build()
+    )
+    sdk_middleware = payment_middleware(
+        routes,
+        server,
+        paywall_provider=paywall_provider,
+        sync_facilitator_on_start=False,
+    )
 
     async def gateway_impl(
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
-        if request.url.path not in PAID_PATHS or _local_bypass(request, settings):
+        route_key = (request.method, request.url.path)
+        operation = PAID_ROUTES.get(route_key)
+        if operation is None or _local_bypass(request, settings):
             return await call_next(request)
 
         declared_length = request.headers.get("content-length")
@@ -401,7 +474,7 @@ def build_x402_middleware(
                 amount_atomic=int(accepted.amount),
                 facilitator=facilitator_name,
             )
-            expected_amount = await price_cache.get(settings, PAID_PATHS[request.url.path])
+            expected_amount = await price_cache.get(settings, operation)
             precheck_reason = _payload_precheck_reason(payload, settings, expected_amount)
             await _record_funnel(
                 "payload_precheck",
@@ -581,6 +654,29 @@ def build_x402_middleware(
             async for chunk in body_iterator:
                 response_body += chunk
         headers = dict(response.headers)
+        if offer_receipt_signer is not None:
+            required_header = headers.get("payment-required")
+            settlement_header = headers.get("payment-response")
+            try:
+                if response.status_code == 402 and not signature and required_header:
+                    headers["payment-required"] = offer_receipt_signer.enrich_required_header(
+                        required_header
+                    )
+                elif response.status_code == 200 and signature and settlement_header:
+                    resource_url = f"{settings.public_base_url.rstrip('/')}{request.url.path}"
+                    headers["payment-response"] = offer_receipt_signer.enrich_response_header(
+                        settlement_header,
+                        resource_url,
+                    )
+            except Exception:
+                await _record_funnel(
+                    "offer_receipt_signing",
+                    "failure",
+                    reason_code="signing_error",
+                    request_fingerprint=fingerprint,
+                    payment_id=payment_id,
+                    facilitator=facilitator_label(settings.x402_facilitator_url),
+                )
         roundtrip_ms = int((monotonic() - roundtrip_started) * 1000)
         if signature:
             roundtrip_outcome = (

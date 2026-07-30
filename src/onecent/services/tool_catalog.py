@@ -1,5 +1,28 @@
 from dataclasses import dataclass
 
+PRODUCTS: dict[str, dict[str, str]] = {
+    "url_pulse": {
+        "slug": "site_health_audit",
+        "title": "Site health audit",
+        "outcome": "Know whether a public page is reachable and safe to process.",
+    },
+    "url_passport": {
+        "slug": "seo_discovery_audit",
+        "title": "SEO discovery audit",
+        "outcome": "Get metadata and discovery signals for indexing or research.",
+    },
+    "url_extract": {
+        "slug": "content_for_ai",
+        "title": "Content for AI",
+        "outcome": "Receive bounded clean text and optional links for an AI workflow.",
+    },
+    "url_changed": {
+        "slug": "change_monitor",
+        "title": "Change monitor",
+        "outcome": "Know whether normalized content changed since the prior snapshot.",
+    },
+}
+
 
 @dataclass(frozen=True)
 class ToolDefinition:
@@ -303,6 +326,7 @@ def public_catalog() -> list[dict[str, object]]:
             "price_usdc": f"{item.price_atomic / 1_000_000:.6f}",
             "rest_path": item.path,
             "mcp": True,
+            "product": PRODUCTS.get(item.key),
             "limits": {
                 "max_external_requests": item.max_requests,
                 "cache_ttl_seconds": item.cache_ttl,

@@ -93,6 +93,7 @@ async def record_request(
             source=traffic.source if traffic else "unknown",
             client_fingerprint=traffic.client_fingerprint if traffic else None,
             attribution=traffic.attribution if traffic else "unknown",
+            referral_source=traffic.referral_source if traffic else "unknown",
             created_at=datetime.now(UTC),
         )
     )
@@ -279,9 +280,7 @@ async def record_error(
     traffic = current_traffic_context()
     now = datetime.now(UTC)
     request_id = traffic.request_id if traffic else "no-request"
-    fingerprint = hashlib.sha256(
-        f"{component}\0{error_type}\0{request_id}".encode()
-    ).hexdigest()
+    fingerprint = hashlib.sha256(f"{component}\0{error_type}\0{request_id}".encode()).hexdigest()
     session.add(
         ErrorEvent(
             component=component[:40],
@@ -295,6 +294,7 @@ async def record_error(
             source=traffic.source if traffic else "unknown",
             client_fingerprint=traffic.client_fingerprint if traffic else None,
             attribution=traffic.attribution if traffic else "unknown",
+            referral_source=traffic.referral_source if traffic else "unknown",
         )
     )
     await session.commit()

@@ -174,7 +174,7 @@ async def pulse_with_audit(
     )
     await record_request(
         session,
-        "pulse",
+        audit_endpoint,
         url,
         normalized,
         registrable_domain(normalized),
@@ -423,9 +423,7 @@ async def changed(url: str, settings: Settings, session: AsyncSession) -> Change
             external_requests=1,
             truncated=current.truncated,
             completeness=0.9 if current.truncated else 1.0,
-            warnings=(
-                ["content_truncated"] if current.truncated else []
-            )
+            warnings=(["content_truncated"] if current.truncated else [])
             + (["baseline_created"] if previous is None else []),
         ),
     )

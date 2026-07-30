@@ -94,7 +94,11 @@ def today_summary_text(today: dict[str, int]) -> str:
     )
 
 
-def payment_funnel_text(stats: FunnelStats, reasons: list[tuple[str, int]]) -> str:
+def payment_funnel_text(
+    stats: FunnelStats,
+    reasons: list[tuple[str, int]],
+    referrals: list[tuple[str, int, int]] | None = None,
+) -> str:
     if stats.started_at is None:
         return (
             "🔎 <b>Почему не платят</b>\n\n"
@@ -131,8 +135,7 @@ def payment_funnel_text(stats: FunnelStats, reasons: list[tuple[str, int]]) -> s
         f"Вероятно внешних 402: <b>{stats.probable_external_challenges}</b>",
         f"Наших/owner 402: <b>{stats.internal_challenges + stats.owner_challenges}</b>",
         f"Источник неясен: <b>{stats.unknown_challenges}</b>",
-        f"Вернулись с подписью: <b>{stats.signed_payloads}</b> "
-        f"({stats.signed_clients} клиентов)",
+        f"Вернулись с подписью: <b>{stats.signed_payloads}</b> ({stats.signed_clients} клиентов)",
         f"Payload прочитан: <b>{stats.decoded_payloads}</b>",
         f"Ответ оплаты HTTP 200: <b>{stats.facilitator_successes}</b>",
         f"Settlement подтверждён: <b>{stats.settlements}</b>",
@@ -140,8 +143,7 @@ def payment_funnel_text(stats: FunnelStats, reasons: list[tuple[str, int]]) -> s
         f"Конверсия 402 → оплата: <b>{conversion:.2f}%</b>",
         "",
         "<b>Где остановились:</b>",
-        f"Не вернулись с подписью за 15 минут: "
-        f"<b>{stats.no_signed_retry_clients}</b> клиентов",
+        f"Не вернулись с подписью за 15 минут: <b>{stats.no_signed_retry_clients}</b> клиентов",
         f"Неверный payload: <b>{stats.invalid_payloads}</b>",
         f"Не совпали сеть/токен/сумма/получатель: <b>{stats.precheck_failures}</b>",
         f"Оплата отклонена: <b>{stats.facilitator_failures}</b>",
@@ -162,8 +164,25 @@ def payment_funnel_text(stats: FunnelStats, reasons: list[tuple[str, int]]) -> s
     ]
     if reasons:
         lines.append("<b>Безопасные причины:</b>")
+        lines.extend(f"• {reason_names.get(code, code)}: {count}" for code, count in reasons)
+    if referrals:
+        referral_names = {
+            "direct": "прямые запросы",
+            "smithery": "Smithery",
+            "glama": "Glama",
+            "mcp_so": "MCP.so",
+            "lobehub": "LobeHub",
+            "mcpservers": "MCPServers.org",
+            "mcp_registry": "официальный MCP Registry",
+            "github": "GitHub",
+            "x402": "x402",
+            "other_referrer": "другие сайты",
+            "unknown_historical": "старая история без источника",
+        }
+        lines.extend(["", "<b>Откуда пришли за ценой:</b>"])
         lines.extend(
-            f"• {reason_names.get(code, code)}: {count}" for code, count in reasons
+            f"• {referral_names.get(source, source)}: {challenges} запросов, {clients} клиентов"
+            for source, challenges, clients in referrals
         )
     lines.extend(
         [

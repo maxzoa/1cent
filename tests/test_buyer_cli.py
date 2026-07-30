@@ -8,8 +8,10 @@ from onecent.buyer_cli import (
     SELLER,
     BuyerSafetyError,
     atomic_from_usdc,
+    install_client,
     validate_paid_confirmation,
     validate_requirement,
+    watch,
 )
 
 
@@ -64,3 +66,23 @@ def test_paid_call_returns_atomic_cap_after_all_gates() -> None:
         max_usdc="0.001",
     )
     assert validate_paid_confirmation(args) == 1_000
+
+
+def test_installer_preview_contains_no_secret(capsys: pytest.CaptureFixture[str]) -> None:
+    args = Namespace(
+        client="cursor",
+        max_usdc_per_call="0.01",
+        daily_limit_usdc="0.10",
+        apply=False,
+    )
+    assert install_client(args) == 0
+    output = capsys.readouterr().out
+    assert '"contains_secret": false' in output
+    assert "ONECENT_BUYER_PRIVATE_KEY" not in output
+
+
+@pytest.mark.asyncio
+async def test_watch_is_disabled_without_explicit_capped_confirmation() -> None:
+    args = Namespace(execute=False, confirm_charge="", interval_seconds=3600, max_runs=24)
+    with pytest.raises(BuyerSafetyError, match="watch is disabled"):
+        await watch(args)

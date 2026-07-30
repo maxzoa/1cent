@@ -12,6 +12,12 @@ Free static demo: `GET https://1cent.maxzoa.ru/v1/demo/pulse`
 
 Free live fixed-target demo: `GET https://1cent.maxzoa.ru/v1/demo/live-pulse`
 
+Buyer-selected preview: `GET https://1cent.maxzoa.ru/v1/demo/preview?url=<encoded-url>`
+
+Browser purchase entry: `GET https://1cent.maxzoa.ru/try`
+
+Outcome products: `GET https://1cent.maxzoa.ru/v1/products`
+
 Public trust status: `GET https://1cent.maxzoa.ru/status.json`
 
 All paid routes use x402 v2, `exact`, Base Mainnet `eip155:8453`, Base USDC. Send JSON with `Content-Type: application/json`. An unpaid request returns HTTP 402 and `PAYMENT-REQUIRED`. A valid paid request returns JSON and `PAYMENT-RESPONSE`.
@@ -33,6 +39,28 @@ Categories: bundle, micro, metadata, content, discovery and security. Three free
 the paid catalog: `catalog.tools.search` performs a bounded local lookup; `demo.url.pulse` returns a
 fixed precomputed sample; `demo.live.pulse` runs the normal safe service only for fixed
 `example.com`. Neither demo accepts a caller-supplied URL.
+
+`GET /v1/demo/preview` accepts one public HTTP/HTTPS URL and runs the same SSRF-protected,
+bounded and audited pulse service. It is limited to one accepted preview per safe client
+fingerprint and UTC day. It does not bypass payment on any paid REST or MCP route.
+
+## Browser purchase
+
+`GET /try` is a no-payment form. `GET /try/pay?url=<encoded-url>` redirects to
+`GET /try/result?url=<encoded-url>`, which is protected by the official x402 browser paywall.
+An unpaid request receives HTTP 402; the selected URL is not fetched until payment succeeds.
+This browser route is not a Bazaar resource and does not change the 32-resource paid catalog.
+
+## Outcome products
+
+`GET /v1/products` groups four existing operations by buyer outcome:
+
+- `site_health_audit` -> `url_pulse`;
+- `seo_discovery_audit` -> `url_passport`;
+- `content_for_ai` -> `url_extract`;
+- `change_monitor` -> `url_changed`.
+
+These are product labels only. They do not duplicate business logic, paid resources or MCP tools.
 
 ## Pulse
 
@@ -75,6 +103,11 @@ Returns normalized main text, metadata, optional links, hash, truncation and cac
 Creates a baseline on first use; later calls compare normalized content hashes.
 
 ## Limits and safety
+
+When signed evidence is enabled, the HTTP 402 `PAYMENT-REQUIRED` header contains an x402
+`offer-receipt` JWS offer. A successful `PAYMENT-RESPONSE` contains a signed receipt. The public
+Ed25519 key is published at `/.well-known/did.json`; the private key is a dedicated server secret.
+Receipt signing never causes a payment retry.
 
 - Public HTTP/HTTPS URLs only; SSRF-sensitive ranges and credentials are rejected.
 - JavaScript is not executed.

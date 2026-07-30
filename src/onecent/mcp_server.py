@@ -98,6 +98,7 @@ class OnecentFastMCP(FastMCP):
         legacy_name = MCP_TOOL_LEGACY_NAMES.get(name, name)
         return await super().call_tool(legacy_name, arguments)
 
+
 PublicHttpUrl = Annotated[
     str,
     Field(
@@ -305,9 +306,7 @@ async def demo_live_url_pulse() -> CallToolResult:
         "URL-analysis tool, and explains the x402 payment boundary before any paid call."
     ),
 )
-def choose_url_tool(
-    goal: PromptGoal, target_url: PromptTargetUrl = "https://example.com"
-) -> str:
+def choose_url_tool(goal: PromptGoal, target_url: PromptTargetUrl = "https://example.com") -> str:
     return (
         "Use catalog.tools.search first with this goal: "
         f"{goal!r}. Target URL: {target_url!r}. Choose the narrowest matching tool. "
@@ -504,8 +503,7 @@ for _definition in TOOLS:
         description=(
             _definition.description_en
             + " Use only for public HTTP(S) resources; it does not execute JavaScript "
-            "or bypass access controls."
-            + COMMON_PARAMETER_GUIDANCE
+            "or bypass access controls." + COMMON_PARAMETER_GUIDANCE
         ),
         annotations=_tool_annotations(changes_snapshot=_definition.key == "url_diff"),
     )(_make_projection_tool(_definition.key))

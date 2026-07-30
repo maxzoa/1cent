@@ -12,6 +12,7 @@
 | [MCP.md](MCP.md) | Remote MCP, tools, schemas и payment metadata |
 | [BUYER_QUICKSTART.md](BUYER_QUICKSTART.md) | Безопасный старт покупателя |
 | [BUYER_BRIDGE.md](BUYER_BRIDGE.md) | Локальная MCP-оплата, OS keyring, approval и spend caps |
+| [BUYER_ACTIVATION_070_REPORT.md](BUYER_ACTIVATION_070_REPORT.md) | 7 buyer-activation улучшений, тесты, deploy и отсутствие платежей |
 | [SECURITY.md](SECURITY.md) | Security policy и гарантии |
 | [MAINNET_RUNBOOK.md](MAINNET_RUNBOOK.md) | Обслуживание работающего Base Mainnet production |
 | [MAINNET_ROLLBACK.md](MAINNET_ROLLBACK.md) | Аварийный возврат на сохранённый testnet |
@@ -22,7 +23,7 @@
 | [MCP_REGISTRY_PUBLICATION_REPORT.md](MCP_REGISTRY_PUBLICATION_REPORT.md) | История официальных Registry versions и текущий latest |
 | [CATALOG_SUBMISSION_STATUS.md](CATALOG_SUBMISSION_STATUS.md) | Статус внешних каталогов |
 | [MARKETPLACE_PROFILE_AUDIT.md](MARKETPLACE_PROFILE_AUDIT.md) | Проверяемые качество и видимость buyer-facing профилей |
-| [MARKETPLACE_QUALITY_062_REPORT.md](MARKETPLACE_QUALITY_062_REPORT.md) | Release 0.6.2, agent discovery и текущая приёмка всех витрин |
+| [MARKETPLACE_QUALITY_062_REPORT.md](MARKETPLACE_QUALITY_062_REPORT.md) | Предыдущая приёмка release 0.6.2 и витрин |
 | [MARKETPLACE_QUALITY_050_REPORT.md](MARKETPLACE_QUALITY_050_REPORT.md) | Историческая приёмка release 0.5.0 |
 | [MARKETPLACE_FINAL_AUDIT.md](MARKETPLACE_FINAL_AUDIT.md) | Финальные маркеты, quality gates и честные внешние блокеры |
 | [PRICE_PROMO_7_DAY_REPORT.md](PRICE_PROMO_7_DAY_REPORT.md) | Действующее до 2026-08-04 промо |

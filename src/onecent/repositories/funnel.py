@@ -95,11 +95,10 @@ async def record_funnel_event(
             payment_id=payment_id or (traffic.payment_id if traffic else None),
             endpoint=traffic.endpoint if traffic else None,
             source=traffic.source if traffic else "unknown",
-            normalized_user_agent=(
-                traffic.normalized_user_agent if traffic else "unknown"
-            ),
+            normalized_user_agent=(traffic.normalized_user_agent if traffic else "unknown"),
             client_fingerprint=traffic.client_fingerprint if traffic else None,
             attribution=traffic.attribution if traffic else "unknown",
+            referral_source=traffic.referral_source if traffic else "unknown",
             network=network,
             asset=asset,
             pay_to=pay_to,
@@ -225,13 +224,9 @@ async def payment_funnel_stats(
         p95_index = max(0, min(len(clean) - 1, ((len(clean) * 95 + 99) // 100) - 1))
         return average, clean[p95_index]
 
-    facilitator_average_ms, facilitator_p95_ms = await latency_summary(
-        "facilitator_roundtrip"
-    )
+    facilitator_average_ms, facilitator_p95_ms = await latency_summary("facilitator_roundtrip")
     delivery_average_ms, delivery_p95_ms = await latency_summary("operation_delivered")
-    unknown_results = total("facilitator_roundtrip", "unknown") + total(
-        "settlement", "unknown"
-    )
+    unknown_results = total("facilitator_roundtrip", "unknown") + total("settlement", "unknown")
     return FunnelStats(
         window_hours=window_hours,
         started_at=started_at,
@@ -255,13 +250,9 @@ async def payment_funnel_stats(
         probable_external_challenges=total(
             "challenge_issued", "success", attribution="probable_external"
         ),
-        internal_challenges=total(
-            "challenge_issued", "success", attribution="internal"
-        ),
+        internal_challenges=total("challenge_issued", "success", attribution="internal"),
         owner_challenges=total("challenge_issued", "success", attribution="owner"),
-        unknown_challenges=total(
-            "challenge_issued", "success", attribution="unknown"
-        )
+        unknown_challenges=total("challenge_issued", "success", attribution="unknown")
         + total("challenge_issued", "success", attribution="unknown_historical"),
         facilitator_average_ms=facilitator_average_ms,
         facilitator_p95_ms=facilitator_p95_ms,
@@ -286,3 +277,29 @@ async def payment_funnel_reasons(
         .limit(limit)
     )
     return [(str(reason), int(count)) for reason, count in rows]
+
+
+async def payment_funnel_referrals(
+    session: AsyncSession, *, window_hours: int = 24, limit: int = 8
+) -> list[tuple[str, int, int]]:
+    """Return safe challenge and unique-client counts by normalized referral label."""
+    start = datetime.now(UTC) - timedelta(hours=window_hours)
+    rows = await session.execute(
+        select(
+            PaymentFunnelEvent.referral_source,
+            func.count(PaymentFunnelEvent.id),
+            func.count(func.distinct(PaymentFunnelEvent.client_fingerprint)),
+        )
+        .where(
+            PaymentFunnelEvent.created_at >= start,
+            PaymentFunnelEvent.stage == "challenge_issued",
+            PaymentFunnelEvent.outcome == "success",
+        )
+        .group_by(PaymentFunnelEvent.referral_source)
+        .order_by(func.count(PaymentFunnelEvent.id).desc())
+        .limit(limit)
+    )
+    return [
+        (str(source), int(challenges), int(clients))
+        for source, challenges, clients in rows
+    ]

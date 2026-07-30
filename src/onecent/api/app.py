@@ -5,7 +5,7 @@ from html import escape
 from time import monotonic
 from typing import Annotated, cast
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
     HTMLResponse,
@@ -23,6 +23,7 @@ from onecent.db import Session, engine
 from onecent.mcp_server import FREE_MCP_TOOL_NAMES, mcp, public_mcp_tool_name
 from onecent.repositories.catalog import price_promo_status, public_catalog_rows, tool_enabled
 from onecent.repositories.data import record_error, service_enabled
+from onecent.repositories.funnel import record_funnel_event
 from onecent.schemas import (
     ChangedResponse,
     DemoPulseResponse,
@@ -33,14 +34,16 @@ from onecent.schemas import (
     PulseResponse,
     ToolRequest,
     ToolResponse,
+    TrialPreviewResponse,
     UrlRequest,
 )
 from onecent.services.demo import demo_pulse_result
 from onecent.services.discovery import ENDPOINT_DESCRIPTIONS
 from onecent.services.live_demo import LiveDemoRateLimited, live_demo_pulse
+from onecent.services.offer_receipt import OfferReceiptSigner, did_document
 from onecent.services.operations import changed, extract, passport, pulse
 from onecent.services.payments import build_x402_middleware
-from onecent.services.tool_catalog import TOOLS, public_catalog
+from onecent.services.tool_catalog import PRODUCTS, TOOLS, public_catalog
 from onecent.services.tool_operations import run_projection
 from onecent.services.traffic_audit import (
     build_traffic_context,
@@ -48,6 +51,7 @@ from onecent.services.traffic_audit import (
     reset_traffic_context,
     set_traffic_context,
 )
+from onecent.services.trial_preview import TrialPreviewRateLimited, trial_preview
 from onecent.services.url_guard import UnsafeUrl
 
 started = monotonic()
@@ -122,19 +126,43 @@ async def request_trace_middleware(request: Request, call_next):  # type: ignore
     try:
         response = await call_next(request)
         response.headers["X-Request-ID"] = traffic.request_id
+        connect_policy = (
+            "connect-src 'self' https: wss:; frame-src https:; "
+            if request.url.path == "/try/result"
+            else "connect-src 'self'; frame-src 'none'; "
+        )
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
             "style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
-            "img-src 'self' data: https://fastapi.tiangolo.com; connect-src 'self'; "
-            "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+            "img-src 'self' data: https://fastapi.tiangolo.com; "
+            + connect_policy
+            + "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
         )
-        response.headers["Strict-Transport-Security"] = (
-            "max-age=31536000; includeSubDomains"
-        )
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        stage = None
+        if request.method == "GET" and request.url.path == "/":
+            stage = "landing_view"
+        elif request.method == "GET" and request.url.path == "/try":
+            stage = "trial_landing_view"
+        elif request.method == "GET" and request.url.path == "/v1/demo/preview":
+            stage = "trial_preview"
+        elif request.url.path in {"/mcp", "/mcp/"}:
+            stage = "mcp_request"
+        if stage is not None:
+            try:
+                async with Session() as session:
+                    await record_funnel_event(
+                        session,
+                        stage,
+                        "success" if response.status_code < 400 else "failure",
+                        http_status=response.status_code,
+                    )
+            except Exception:
+                pass
         return response
     except Exception as exc:
         try:
@@ -258,9 +286,10 @@ async def root(request: Request) -> Response:
         return _mcp_presentation(selected)
     return _landing(
         "1cent Web Intelligence for AI Agents",
-        "<p>Pay-per-call URL inspection through REST and MCP. No account or API key required.</p>"
+        "<p>Safe URL answers for AI agents. Preview your own public URL free, then pay "
+        "per result with Base USDC. No account or API key required.</p>"
         "<p><code>https://1cent.maxzoa.ru/mcp/</code></p><p><a href='/tools'>Browse tools</a> · "
-        "<a href='/v1/demo/live-pulse'>Free live demo</a> · "
+        "<a href='/try'>Try your URL free</a> · "
         "<a href='/docs'>OpenAPI</a> · <a href='/docs/getting-started'>Pay with x402</a> · "
         "<a href='https://smithery.ai/servers/maxzoa27/onecent' rel='me'>Smithery</a> · "
         "<a href='/marketplaces'>Verified listings</a></p>",
@@ -301,8 +330,25 @@ async def catalog(
         selected = rows or public_catalog()
     except Exception:
         selected = public_catalog()
+    return [{**row, "mcp_tool": public_mcp_tool_name(str(row["tool"]))} for row in selected]
+
+
+@app.get("/v1/products", tags=["Service"], summary="Outcome-oriented product packages")
+async def products(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> list[dict[str, object]]:
+    rows = {str(row["tool"]): row for row in await catalog(session)}
     return [
-        {**row, "mcp_tool": public_mcp_tool_name(str(row["tool"]))} for row in selected
+        {
+            **product,
+            "tool": tool_key,
+            "rest_path": rows.get(tool_key, {}).get("rest_path"),
+            "mcp_tool": rows.get(tool_key, {}).get("mcp_tool"),
+            "price_atomic": rows.get(tool_key, {}).get("price_atomic"),
+            "network": settings.x402_network,
+            "asset": settings.x402_asset,
+        }
+        for tool_key, product in PRODUCTS.items()
     ]
 
 
@@ -327,10 +373,7 @@ async def mcp_server_card() -> dict[str, object]:
 async def mcp_well_known() -> dict[str, object]:
     base_url = settings.public_base_url.rstrip("/")
     return {
-        "$schema": (
-            "https://static.modelcontextprotocol.io/schemas/2025-12-11/"
-            "server.schema.json"
-        ),
+        "$schema": ("https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json"),
         "name": "ru.maxzoa/1cent",
         "title": "1cent Web Intelligence for AI Agents",
         "description": (
@@ -401,6 +444,22 @@ async def glama_claim() -> dict[str, object]:
         "$schema": "https://glama.ai/mcp/schemas/connector.json",
         "maintainers": [{"email": "maxzoa27@gmail.com"}],
     }
+
+
+@app.get("/.well-known/did.json", include_in_schema=False)
+async def did_web_document() -> Response:
+    if not settings.offer_receipt_enabled:
+        raise HTTPException(status_code=404, detail="signed receipts are not enabled")
+    signer = OfferReceiptSigner.load(
+        settings.offer_receipt_signing_key_path,
+        settings.offer_receipt_kid,
+        include_transaction=settings.offer_receipt_include_transaction,
+    )
+    return JSONResponse(
+        did_document(signer),
+        media_type="application/did+json",
+        headers={"Cache-Control": "public, max-age=300"},
+    )
 
 
 @app.get("/.well-known/x402", include_in_schema=False)
@@ -486,12 +545,48 @@ def _landing(title: str, body: str) -> HTMLResponse:
 @app.get("/tools", response_class=HTMLResponse, include_in_schema=False)
 async def tools_page() -> HTMLResponse:
     return _landing(
-        "Web intelligence tools",
-        "<p>32 paid REST/MCP tools plus three free MCP tools: "
+        "Choose an outcome",
+        "<ul><li><strong>Site health audit</strong> — reachability, redirects "
+        "and page signals.</li>"
+        "<li><strong>SEO discovery audit</strong> — metadata, robots, sitemaps and feeds.</li>"
+        "<li><strong>Content for AI</strong> — clean text and links for RAG or summaries.</li>"
+        "<li><strong>Change monitor</strong> — compare a page with its prior snapshot.</li></ul>"
+        "<p>These packages use the stable url_pulse, url_passport, url_extract and url_changed "
+        "contracts. The full catalog contains 32 paid REST/MCP tools plus three free MCP tools: "
         "<code>catalog.tools.search</code>, <code>demo.url.pulse</code> and "
         "<code>demo.live.pulse</code>.</p>"
-        "<p><a href='/v1/demo/live-pulse'>Try the rate-limited live demo</a> · "
+        "<p><a href='/try'>Preview your own URL free</a> · "
         "<a href='/v1/catalog'>Machine-readable catalog</a></p>",
+    )
+
+
+@app.get("/try", response_class=HTMLResponse, include_in_schema=False)
+async def try_page() -> HTMLResponse:
+    return _landing(
+        "Try 1cent on your website",
+        "<p>One safe, limited preview per client per UTC day. Public HTTP(S) URLs only. "
+        "No wallet is needed for the preview.</p>"
+        "<form method='get' action='/v1/demo/preview'>"
+        "<label for='url'>Website URL</label><br>"
+        "<input id='url' name='url' type='url' required placeholder='https://example.com/' "
+        "style='width:100%;padding:.7rem;margin:.5rem 0'>"
+        "<button type='submit' style='padding:.7rem 1rem'>Run free preview</button></form>"
+        "<p>Need the full result? <a href='/try/pay'>Open browser payment</a> or connect "
+        "the MCP buyer.</p>",
+    )
+
+
+@app.get("/try/pay", response_class=HTMLResponse, include_in_schema=False)
+async def try_pay_page() -> HTMLResponse:
+    return _landing(
+        "Buy one site health audit",
+        "<p>The next screen shows the live x402 price and wallet payment request before any "
+        "URL operation runs.</p><form method='get' action='/try/result'>"
+        "<label for='url'>Website URL</label><br>"
+        "<input id='url' name='url' type='url' required placeholder='https://example.com/' "
+        "style='width:100%;padding:.7rem;margin:.5rem 0'>"
+        "<button type='submit' style='padding:.7rem 1rem'>Continue to secure payment</button>"
+        "</form>",
     )
 
 
@@ -550,7 +645,7 @@ async def buyer_bridge_guide() -> HTMLResponse:
 
 @app.get("/examples/python-x402", response_class=PlainTextResponse, include_in_schema=False)
 async def python_x402_example() -> str:
-    return '''# pip install "x402[httpx,evm]"
+    return """# pip install "x402[httpx,evm]"
 import asyncio
 import os
 from eth_account import Account
@@ -575,14 +670,12 @@ async def main():
         print(decoder.get_payment_settle_response(response.headers.get))
 
 asyncio.run(main())
-'''
+"""
 
 
-@app.get(
-    "/examples/typescript-x402", response_class=PlainTextResponse, include_in_schema=False
-)
+@app.get("/examples/typescript-x402", response_class=PlainTextResponse, include_in_schema=False)
 async def typescript_x402_example() -> str:
-    return '''// npm install @x402/fetch @x402/evm viem
+    return """// npm install @x402/fetch @x402/evm viem
 import { wrapFetchWithPayment } from "@x402/fetch";
 import { x402Client } from "@x402/core/client";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
@@ -599,7 +692,7 @@ const response = await paidFetch("https://1cent.maxzoa.ru/v1/url/status", {
 });
 console.log(await response.json());
 console.log(response.headers.get("PAYMENT-RESPONSE"));
-'''
+"""
 
 
 @app.get("/privacy", response_class=HTMLResponse, include_in_schema=False)
@@ -895,6 +988,47 @@ async def demo_live_pulse(
             detail="Free live demo limit reached; retry next UTC hour.",
             headers={"Retry-After": "3600"},
         ) from exc
+
+
+@app.get(
+    "/v1/demo/preview",
+    response_model=TrialPreviewResponse,
+    tags=["Free demo"],
+    summary="Preview one buyer-selected public URL",
+    description=(
+        "One bounded preview per client per UTC day. It uses the normal SSRF guard, "
+        "fetch limits, cache and audit path, but returns fewer fields than the paid product."
+    ),
+)
+async def demo_trial_preview(
+    url: Annotated[str, Query(min_length=10, max_length=2048)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> TrialPreviewResponse:
+    try:
+        return await trial_preview(url, settings, session)
+    except TrialPreviewRateLimited as exc:
+        raise HTTPException(
+            status_code=429,
+            detail="Free preview limit reached; retry after the next UTC day starts.",
+            headers={"Retry-After": "86400"},
+        ) from exc
+
+
+@app.get(
+    "/try/result",
+    response_model=PulseResponse,
+    tags=["URL intelligence"],
+    summary="Buy one browser-based site health audit",
+    description="Browser x402 entry for the existing url_pulse product.",
+    responses={402: {"description": "x402 v2 browser payment required"}},
+)
+async def browser_paid_pulse(
+    request: Request,
+    url: Annotated[str, Query(min_length=10, max_length=2048)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> PulseResponse:
+    await gate(request, session, settings)
+    return await pulse(url, False, settings, session)
 
 
 async def gate(request: Request, session: AsyncSession, cfg: Settings) -> None:

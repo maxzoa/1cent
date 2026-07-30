@@ -30,6 +30,18 @@ onecent wallet status
 onecent doctor
 ```
 
+Generate a client configuration without secrets:
+
+```bash
+onecent install --client claude
+onecent install --client cursor --apply
+onecent install --client vscode --apply
+onecent install --client codex
+```
+
+`--apply` backs up an existing JSON file before editing it. Codex prints its exact CLI command and
+does not edit configuration automatically.
+
 `onecent wallet set` reads the key through a hidden terminal prompt and saves it using Windows
 Credential Locker, macOS Keychain or the configured Linux keyring backend. Never put a key in MCP
 JSON/TOML, source code, shell history, chat or a directory listing.
@@ -138,6 +150,13 @@ Delete the wallet only when intended:
 ```bash
 onecent wallet delete --confirm-delete DELETE-WALLET
 ```
+
+## Finite recurring change checks
+
+`onecent watch` calls the existing `url_changed` service; it is not a second payment path. It is
+disabled until the buyer supplies `--execute`, `ALLOW-CAPPED-WATCH`, exact Base Mainnet
+network/asset/seller confirmations and local per-call/day caps. Interval is at least 300 seconds,
+run count is finite, and any UNKNOWN stops the process without retry.
 
 ## No-payment smoke
 

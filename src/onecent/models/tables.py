@@ -35,6 +35,7 @@ class RequestEvent(Base):
     source: Mapped[str] = mapped_column(String(16), default="unknown")
     client_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     attribution: Mapped[str] = mapped_column(String(24), default="unknown_historical")
+    referral_source: Mapped[str] = mapped_column(String(40), default="unknown_historical")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
 
 
@@ -85,6 +86,7 @@ class ErrorEvent(Base):
     source: Mapped[str] = mapped_column(String(16), default="unknown")
     client_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
     attribution: Mapped[str] = mapped_column(String(24), default="unknown_historical")
+    referral_source: Mapped[str] = mapped_column(String(40), default="unknown_historical")
 
 
 class BotAuditLog(Base):
@@ -220,6 +222,7 @@ class PaymentEvent(Base):
     source: Mapped[str] = mapped_column(String(16), default="unknown")
     client_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     attribution: Mapped[str] = mapped_column(String(24), default="unknown_historical")
+    referral_source: Mapped[str] = mapped_column(String(40), default="unknown_historical")
 
 
 class PaymentAttempt(Base):
@@ -234,8 +237,9 @@ class PaymentAttempt(Base):
     source: Mapped[str] = mapped_column(String(16), default="unknown", index=True)
     normalized_user_agent: Mapped[str] = mapped_column(String(80), default="unknown")
     client_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
-    attribution: Mapped[str] = mapped_column(
-        String(24), default="unknown_historical", index=True
+    attribution: Mapped[str] = mapped_column(String(24), default="unknown_historical", index=True)
+    referral_source: Mapped[str] = mapped_column(
+        String(40), default="unknown_historical", index=True
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
 
@@ -255,8 +259,9 @@ class PaymentFunnelEvent(Base):
     source: Mapped[str] = mapped_column(String(16), default="unknown", index=True)
     normalized_user_agent: Mapped[str] = mapped_column(String(80), default="unknown")
     client_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
-    attribution: Mapped[str] = mapped_column(
-        String(24), default="unknown_historical", index=True
+    attribution: Mapped[str] = mapped_column(String(24), default="unknown_historical", index=True)
+    referral_source: Mapped[str] = mapped_column(
+        String(40), default="unknown_historical", index=True
     )
     network: Mapped[str | None] = mapped_column(String(64), nullable=True)
     asset: Mapped[str | None] = mapped_column(String(64), nullable=True)
