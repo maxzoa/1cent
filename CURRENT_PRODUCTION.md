@@ -19,8 +19,10 @@
 | Paid REST/MCP operations | 43 |
 | Free MCP tools | 3 |
 | Total MCP tools | 46 |
-| MCP prompts/resources | 1 / 1 |
-| NAS host/container port | `18013:8013` |
+| MCP prompts | 1: `choose_url_tool` |
+| MCP resources | 1: `onecent://buyer-guide` |
+| NAS host port | `18013` |
+| API container port | `8013` |
 | Alembic | `0009 (head)` |
 | Mainnet marker | `PUBLIC_MAINNET_ACTIVE=true` |
 
@@ -52,12 +54,14 @@ challenge прошли. Все 43 платных маршрута объявля
 - `X402_ENVIRONMENT=mainnet`, `X402_NETWORK=eip155:8453`.
 - `DEVELOPMENT_BYPASS_ENABLED=false`.
 - Buyer/seller private key отсутствуют в серверном runtime.
+- Безопасная установка покупателя: [BUYER_BRIDGE.md](BUYER_BRIDGE.md).
 - URL-операция запрещена до успешной verify/settle цепочки.
 - UNKNOWN не получает автоматический retry или новый payment ID.
 - Сохранены idempotency, pause, rate limits, очередь, concurrency, circuit breaker,
   SSRF, cache, аудит и rollback.
-- Коммерческие дневные квоты отключены явными boolean-флагами; технические защиты
-  продолжают действовать.
+- Коммерческие дневные квоты отключены явными boolean-флагами:
+  `MAINNET_DAILY_SETTLEMENT_LIMIT_ENABLED=false` и
+  `MAINNET_DAILY_REVENUE_LIMIT_ENABLED=false`; технические защиты продолжают действовать.
 - До и после deploy: `41` исторический successful settlement, `228000` atomic
   суммарно по Mainnet и testnet. Это не равно доказанной внешней выручке.
 - Доказанная независимая коммерческая выручка: `0 USDC`; один Mainnet settlement
