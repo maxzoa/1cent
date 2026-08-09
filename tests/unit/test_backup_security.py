@@ -39,6 +39,12 @@ def test_docker_build_context_excludes_runtime_secrets_and_state() -> None:
         assert required in ignored
 
 
+def test_nas_deploy_uses_the_public_host_port_by_default() -> None:
+    root = Path(__file__).resolve().parents[2]
+    deploy = (root / "scripts" / "deploy_nas.sh").read_text(encoding="utf-8")
+    assert "HOST_PORT=${ONECENT_HOST_PORT:-18013}" in deploy
+
+
 def test_monitor_reads_only_safe_runtime_environment() -> None:
     script = (
         Path(__file__).resolve().parents[2] / "scripts" / "monitor_mainnet_health.sh"

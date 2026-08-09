@@ -14,7 +14,7 @@ DOCKER=${DOCKER:-/usr/local/bin/docker}
 test -x "$DOCKER" || DOCKER=docker
 DOCKER_BUILDKIT=${DOCKER_BUILDKIT:-0}
 export DOCKER_BUILDKIT
-HOST_PORT=${ONECENT_HOST_PORT:-8013}
+HOST_PORT=${ONECENT_HOST_PORT:-18013}
 
 "$DOCKER" compose config >/dev/null
 "$DOCKER" compose build
