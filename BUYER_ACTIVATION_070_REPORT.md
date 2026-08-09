@@ -81,6 +81,19 @@ container IDs and start times unchanged.
 - Monitor: `mainnet_health=PASS`; maintenance marker cleared; service enabled.
 - Successful settlement count and sum remained `41 / 228000 atomic`. No payment was executed.
 
+## Public buyer packages (2026-08-09)
+
+- PyPI: `onecent` version `0.7.0` is public and installable with
+  `pipx install "onecent[buyer]==0.7.0"`.
+- npm: `onecent-buyer` version `0.7.0` is public and installable with
+  `npm install --global onecent-buyer@0.7.0`.
+- Public registry metadata confirms the Apache-2.0 license and the canonical
+  `https://github.com/maxzoa/1cent` repository.
+- GitHub Actions package publishing is defined in `.github/workflows/publish-packages.yml`; PyPI
+  trusts that workflow and npm Trusted Publisher configuration is recorded separately from buyer
+  or seller credentials.
+- Publishing the packages executed no x402 payment and changed no production runtime setting.
+
 ## Payment safety
 
 Deploy и smoke не отправляют `PAYMENT-SIGNATURE`, не создают payment ID и не выполняют settlement.

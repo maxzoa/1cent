@@ -94,7 +94,7 @@ async def test_uniform_promo_activates_and_restores_exact_original_prices() -> N
     assert expires_at == now + timedelta(days=7)
     assert {row.price_atomic for row in session.tools} == {1_000}
     assert session.settings[PROMO_ACTIVE_KEY].value == "true"
-    assert (await price_promo_status(session))["active"] is True  # type: ignore[arg-type]
+    assert (await price_promo_status(session, now=now))["active"] is True  # type: ignore[arg-type]
 
     restored = await restore_price_promo_if_expired(  # type: ignore[arg-type]
         session, now=expires_at + timedelta(seconds=1)
