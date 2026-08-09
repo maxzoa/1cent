@@ -30,6 +30,13 @@ def test_backup_sidecar_is_bounded_and_does_not_use_docker_socket() -> None:
     assert "--remove-orphans" not in compose
 
 
+def test_docker_build_context_excludes_runtime_secrets_and_state() -> None:
+    root = Path(__file__).resolve().parents[2]
+    ignored = (root / ".dockerignore").read_text(encoding="utf-8").splitlines()
+    for required in (".env", ".env.*", ".state", "secrets", "backups", "logs"):
+        assert required in ignored
+
+
 def test_monitor_reads_only_safe_runtime_environment() -> None:
     script = (
         Path(__file__).resolve().parents[2] / "scripts" / "monitor_mainnet_health.sh"
