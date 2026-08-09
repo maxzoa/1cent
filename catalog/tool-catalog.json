@@ -1,5 +1,5 @@
 {
-  "version": "0.7.1",
+  "version": "0.8.0",
   "currency": "USDC",
   "network": "eip155:8453",
   "tools": [
@@ -9,6 +9,8 @@
       "rest_path": "/v1/url/pulse",
       "category": "bundle",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -17,6 +19,8 @@
       "rest_path": "/v1/url/passport",
       "category": "bundle",
       "price_atomic": 10000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -25,6 +29,8 @@
       "rest_path": "/v1/url/extract",
       "category": "bundle",
       "price_atomic": 10000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -33,6 +39,8 @@
       "rest_path": "/v1/url/changed",
       "category": "bundle",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -41,6 +49,8 @@
       "rest_path": "/v1/url/status",
       "category": "micro",
       "price_atomic": 2000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -49,6 +59,8 @@
       "rest_path": "/v1/url/redirects",
       "category": "micro",
       "price_atomic": 2000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -57,6 +69,8 @@
       "rest_path": "/v1/url/headers",
       "category": "micro",
       "price_atomic": 2000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -65,6 +79,8 @@
       "rest_path": "/v1/url/timing",
       "category": "micro",
       "price_atomic": 2000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -73,6 +89,8 @@
       "rest_path": "/v1/url/content-type",
       "category": "micro",
       "price_atomic": 2000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -81,6 +99,8 @@
       "rest_path": "/v1/url/canonical",
       "category": "micro",
       "price_atomic": 2000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -89,6 +109,8 @@
       "rest_path": "/v1/url/language",
       "category": "micro",
       "price_atomic": 2000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -97,6 +119,8 @@
       "rest_path": "/v1/url/hash",
       "category": "micro",
       "price_atomic": 2000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -105,6 +129,8 @@
       "rest_path": "/v1/url/metadata",
       "category": "metadata",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -113,6 +139,8 @@
       "rest_path": "/v1/url/social-cards",
       "category": "metadata",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -121,6 +149,8 @@
       "rest_path": "/v1/url/jsonld",
       "category": "metadata",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -129,6 +159,8 @@
       "rest_path": "/v1/url/headings",
       "category": "metadata",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -137,6 +169,8 @@
       "rest_path": "/v1/url/word-stats",
       "category": "metadata",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -145,6 +179,8 @@
       "rest_path": "/v1/url/links",
       "category": "content",
       "price_atomic": 4000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -153,6 +189,8 @@
       "rest_path": "/v1/url/images",
       "category": "content",
       "price_atomic": 4000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -161,6 +199,8 @@
       "rest_path": "/v1/url/text",
       "category": "content",
       "price_atomic": 4000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -169,6 +209,8 @@
       "rest_path": "/v1/url/markdown",
       "category": "content",
       "price_atomic": 5000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -177,6 +219,8 @@
       "rest_path": "/v1/url/rag-chunks",
       "category": "content",
       "price_atomic": 7000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -185,6 +229,8 @@
       "rest_path": "/v1/url/diff",
       "category": "content",
       "price_atomic": 5000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -193,6 +239,8 @@
       "rest_path": "/v1/site/robots",
       "category": "discovery",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -201,6 +249,8 @@
       "rest_path": "/v1/site/sitemaps",
       "category": "discovery",
       "price_atomic": 4000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -209,6 +259,8 @@
       "rest_path": "/v1/site/feeds",
       "category": "discovery",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -217,6 +269,8 @@
       "rest_path": "/v1/site/llms-txt",
       "category": "discovery",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -225,6 +279,8 @@
       "rest_path": "/v1/site/security-txt",
       "category": "discovery",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -233,6 +289,8 @@
       "rest_path": "/v1/site/openapi",
       "category": "discovery",
       "price_atomic": 4000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -241,6 +299,8 @@
       "rest_path": "/v1/url/security-headers",
       "category": "security",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -249,6 +309,8 @@
       "rest_path": "/v1/url/tls",
       "category": "security",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
       "mcp": true
     },
     {
@@ -257,6 +319,118 @@
       "rest_path": "/v1/url/access-flags",
       "category": "security",
       "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
+      "mcp": true
+    },
+    {
+      "tool": "url_schema_validation",
+      "mcp_tool": "web.url.schema_validation",
+      "rest_path": "/v1/url/schema-validation",
+      "category": "quality",
+      "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
+      "mcp": true
+    },
+    {
+      "tool": "url_accessibility",
+      "mcp_tool": "web.url.accessibility",
+      "rest_path": "/v1/url/accessibility",
+      "category": "quality",
+      "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
+      "mcp": true
+    },
+    {
+      "tool": "url_technology",
+      "mcp_tool": "web.url.technology",
+      "rest_path": "/v1/url/technology",
+      "category": "quality",
+      "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
+      "mcp": true
+    },
+    {
+      "tool": "url_policy",
+      "mcp_tool": "web.url.policy",
+      "rest_path": "/v1/url/policy",
+      "category": "security",
+      "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
+      "mcp": true
+    },
+    {
+      "tool": "url_localization",
+      "mcp_tool": "web.url.localization",
+      "rest_path": "/v1/url/localization",
+      "category": "quality",
+      "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
+      "mcp": true
+    },
+    {
+      "tool": "url_content_quality",
+      "mcp_tool": "web.url.content_quality",
+      "rest_path": "/v1/url/content-quality",
+      "category": "quality",
+      "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
+      "mcp": true
+    },
+    {
+      "tool": "url_tables",
+      "mcp_tool": "web.url.tables",
+      "rest_path": "/v1/url/tables",
+      "category": "content",
+      "price_atomic": 4000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
+      "mcp": true
+    },
+    {
+      "tool": "url_citations",
+      "mcp_tool": "web.url.citations",
+      "rest_path": "/v1/url/citations",
+      "category": "content",
+      "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
+      "mcp": true
+    },
+    {
+      "tool": "url_performance",
+      "mcp_tool": "web.url.performance",
+      "rest_path": "/v1/url/performance",
+      "category": "quality",
+      "price_atomic": 3000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
+      "mcp": true
+    },
+    {
+      "tool": "site_coherence",
+      "mcp_tool": "web.site.coherence",
+      "rest_path": "/v1/site/coherence",
+      "category": "discovery",
+      "price_atomic": 4000,
+      "pricing_model": "fixed",
+      "max_requests": 1,
+      "mcp": true
+    },
+    {
+      "tool": "batch_url_status",
+      "mcp_tool": "web.batch.url_status",
+      "rest_path": "/v1/batch/url-status",
+      "category": "batch",
+      "price_atomic": 1000,
+      "pricing_model": "per_input_url",
+      "max_requests": 5,
       "mcp": true
     }
   ]

@@ -3,6 +3,7 @@ import hmac
 import json
 from asyncio import Lock
 from collections.abc import Awaitable, Callable
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from decimal import Decimal
 from time import monotonic
@@ -48,6 +49,7 @@ from onecent.repositories.payments import (
     record_attempt,
     reserve_payment,
 )
+from onecent.schemas import BatchUrlRequest
 from onecent.services.discovery import ENDPOINT_DESCRIPTIONS, discovery_extension
 from onecent.services.offer_receipt import OfferReceiptSigner
 from onecent.services.settings_registry import settings_service
@@ -67,6 +69,9 @@ PAID_ROUTES = {
     **{("POST", path): operation for path, operation in PAID_PATHS.items()},
     **{("GET", path): operation for path, operation in BROWSER_PAID_PATHS.items()},
 }
+_REQUEST_PRICE_ATOMIC: ContextVar[int | None] = ContextVar(
+    "onecent_request_price_atomic", default=None
+)
 
 
 class _EffectivePriceCache:
@@ -318,7 +323,9 @@ def build_x402_middleware(
 
     async def dynamic_price(context: HTTPRequestContext) -> str:
         operation = PAID_PATHS.get(context.path) or BROWSER_PAID_PATHS[context.path]
-        atomic = await price_cache.get(settings, operation)
+        atomic = _REQUEST_PRICE_ATOMIC.get()
+        if atomic is None:
+            atomic = await price_cache.get(settings, operation)
         return f"${Decimal(atomic) / Decimal(1_000_000):.6f}"
 
     routes = {
@@ -414,6 +421,14 @@ def build_x402_middleware(
         body = await request.body()
         if len(body) > 16_384:
             return JSONResponse(status_code=413, content={"detail": "request JSON limit exceeded"})
+        unit_amount = await price_cache.get(settings, operation)
+        expected_amount = unit_amount
+        if operation == "batch_url_status":
+            try:
+                batch_payload = BatchUrlRequest.model_validate_json(body)
+            except Exception:
+                return JSONResponse(status_code=422, content={"detail": "invalid batch request"})
+            expected_amount = unit_amount * len(batch_payload.urls)
         fingerprint = _fingerprint(request, body)
         traffic = current_traffic_context()
         if traffic is not None:
@@ -474,7 +489,6 @@ def build_x402_middleware(
                 amount_atomic=int(accepted.amount),
                 facilitator=facilitator_name,
             )
-            expected_amount = await price_cache.get(settings, operation)
             precheck_reason = _payload_precheck_reason(payload, settings, expected_amount)
             await _record_funnel(
                 "payload_precheck",
@@ -633,6 +647,7 @@ def build_x402_middleware(
                         return JSONResponse(status_code=409, content={"detail": "payment busy"})
 
         roundtrip_started = monotonic()
+        price_token = _REQUEST_PRICE_ATOMIC.set(expected_amount)
         try:
             response = await sdk_middleware(request, call_next)
         except Exception:
@@ -646,6 +661,8 @@ def build_x402_middleware(
                 elapsed_ms=int((monotonic() - roundtrip_started) * 1000),
             )
             raise
+        finally:
+            _REQUEST_PRICE_ATOMIC.reset(price_token)
         response_body = b""
         body_iterator = getattr(response, "body_iterator", None)
         if body_iterator is None:

@@ -18,7 +18,7 @@ chmod 600 .env
 DOCKER=${DOCKER:-/usr/local/bin/docker}
 test -x "$DOCKER" || DOCKER=docker
 "$DOCKER" compose config >/dev/null
-"$DOCKER" compose up -d onecent-db onecent-api onecent-bot
+"$DOCKER" compose up -d onecent-db onecent-api onecent-bot onecent-backup
 STATE_DIR=/volume1/docker/1cent/.state
 mkdir -p "$STATE_DIR"
 chmod 700 "$STATE_DIR"

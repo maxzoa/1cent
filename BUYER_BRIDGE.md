@@ -24,14 +24,14 @@ adapter for MCP clients that can call tools but cannot create x402 payments them
 Requires Python 3.12+ and `pipx`:
 
 ```bash
-pipx install "onecent[buyer]==0.7.1"
+pipx install "onecent[buyer]==0.8.0"
 onecent wallet set
 onecent wallet status
 onecent doctor
 ```
 
 The published package is available at
-[PyPI `onecent` 0.7.1](https://pypi.org/project/onecent/0.7.1/). GitHub installation is reserved for
+[PyPI `onecent` 0.8.0](https://pypi.org/project/onecent/0.8.0/). GitHub installation is reserved for
 contributors testing unreleased changes.
 
 Generate a client configuration without secrets:
@@ -120,6 +120,10 @@ tool set: clients may show duplicate names and choose the non-paying remote path
 
 Approval expires after ten minutes and is bound to exact tool, input, amount, network, asset,
 seller and resource. Changed price or arguments require a new quote.
+
+For `batch_url_status`, the bridge validates one to five distinct URLs and binds approval to the
+whole ordered input. The approved amount is the live per-URL quote multiplied by URL count. An
+ambiguous result blocks that exact fingerprint and never creates a replacement payment ID.
 
 ## Capped automatic mode — explicit opt-in
 

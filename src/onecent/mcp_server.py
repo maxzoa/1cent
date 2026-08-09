@@ -19,6 +19,7 @@ from onecent.config import get_settings
 from onecent.db import Session
 from onecent.repositories.funnel import facilitator_label, record_funnel_event
 from onecent.schemas import (
+    BatchToolResponse,
     CatalogSearchResponse,
     ChangedResponse,
     DemoPulseResponse,
@@ -162,6 +163,18 @@ PromptTargetUrl = Annotated[
             "and SSRF-sensitive destinations are rejected."
         ),
         examples=["https://example.com"],
+    ),
+]
+BatchPublicUrls = Annotated[
+    list[PublicHttpUrl],
+    Field(
+        min_length=1,
+        max_length=5,
+        description=(
+            "One to five distinct public HTTP(S) URLs. Price is current unit price multiplied "
+            "by URL count before any fetch begins."
+        ),
+        examples=[["https://example.com", "https://www.iana.org"]],
     ),
 ]
 
@@ -343,7 +356,13 @@ async def _paid_rest_call(
 ) -> CallToolResult:
     payment = _payment_from_context(ctx)
     outer_traffic = current_traffic_context()
-    tool_key = operation if operation.startswith(("url_", "site_")) else f"url_{operation}"
+    tool_key = (
+        operation
+        if operation in TOOL_BY_KEY
+        else operation
+        if operation.startswith(("url_", "site_"))
+        else f"url_{operation}"
+    )
     path = TOOL_BY_KEY[tool_key].path
     if outer_traffic:
         outer_traffic.endpoint = path
@@ -484,6 +503,28 @@ async def url_changed(
     return await _paid_rest_call("changed", {"url": url, "fresh": fresh}, ctx)
 
 
+@mcp.tool(
+    name="batch_url_status",
+    title="Batch URL Status",
+    description=(
+        "Check HTTP status for one to five distinct public URLs. Quote equals the current "
+        "per-URL unit price multiplied by URL count before work. Processing is sequential, "
+        "bounded and preserves input order; partial failures use safe error codes."
+    ),
+    annotations=_tool_annotations(),
+)
+async def batch_url_status(
+    ctx: Context[Any, Any, Any],
+    urls: BatchPublicUrls,
+    fresh: FreshFlag = False,
+) -> CallToolResult:
+    return await _paid_rest_call(
+        "batch_url_status",
+        {"urls": urls, "fresh": fresh},
+        ctx,
+    )
+
+
 def _make_projection_tool(tool_key: str):  # type: ignore[no-untyped-def]
     async def projection(
         ctx: Context[Any, Any, Any], url: PublicHttpUrl, fresh: FreshFlag = False
@@ -495,7 +536,13 @@ def _make_projection_tool(tool_key: str):  # type: ignore[no-untyped-def]
 
 
 for _definition in TOOLS:
-    if _definition.key in {"url_pulse", "url_passport", "url_extract", "url_changed"}:
+    if _definition.key in {
+        "url_pulse",
+        "url_passport",
+        "url_extract",
+        "url_changed",
+        "batch_url_status",
+    }:
         continue
     mcp.tool(
         name=_definition.key,
@@ -517,6 +564,7 @@ MCP_OUTPUT_MODELS: dict[str, type[BaseModel]] = {
     "url_passport": PassportResponse,
     "url_extract": ExtractResponse,
     "url_changed": ChangedResponse,
+    "batch_url_status": BatchToolResponse,
     **{
         item.key: ToolResponse
         for item in TOOLS

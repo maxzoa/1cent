@@ -11,10 +11,10 @@ Public endpoint: `https://1cent.maxzoa.ru/mcp`
 
 ## Tools
 
-Production publishes 35 MCP tools: 32 paid URL/site operations and three free tools.
+Production publishes 46 MCP tools: 43 paid URL/site/batch operations and three free tools.
 
-Release 0.7.0 adds no aliases to `tools/list`, so marketplace schema and count contracts remain
-stable.
+Release 0.8.0 adds ten low-cost shared-artifact projections and one bounded body-priced batch tool.
+No compatibility alias is added to `tools/list`.
 
 `demo.live.pulse` performs a real, rate-limited check only for fixed `example.com`; it accepts
 no URL and reuses the normal SSRF-safe fetch, cache and audit service.
@@ -33,9 +33,11 @@ Recommended paid bundles:
 | `web.url.passport` | Identity, redirects, TLS, discovery and page metadata | `url`, optional `fresh` |
 | `web.url.extract` | Safe readable text and optional public links | `url`, optional `fresh`, `include_links` |
 | `web.url.changed` | Compare current public content with prior snapshot | `url`, optional `fresh` |
+| `web.batch.url_status` | Check 1–5 URLs with one deterministic pre-work quote | `urls`, optional `fresh` |
 
-The other 28 paid projections cover status, redirects, metadata, content, discovery, TLS and
-security evidence. Current names and prices come from `GET /v1/catalog`.
+The other 38 paid projections cover status, redirects, metadata, extraction, discovery,
+structured-data quality, accessibility, technology, policy, localization, TLS and static
+performance evidence. Current names and prices come from `GET /v1/catalog`.
 
 `tools/list` publishes navigable dot-notation: `web.url.*`, `web.site.*`, `catalog.*` and `demo.*`.
 Legacy underscore names from releases before 0.6 remain callable as hidden compatibility aliases.
@@ -71,7 +73,7 @@ sign x402 payments.
   idempotency and SSRF guidance. Reading it performs no URL operation and requires no payment.
 
 Clients without native x402 signing should run the local stdio
-[1cent Buyer Bridge](BUYER_BRIDGE.md). It exposes the same 32 paid tool names plus free catalog,
+[1cent Buyer Bridge](BUYER_BRIDGE.md). It exposes the same 43 paid tool names plus free catalog,
 demos and `buyer_bridge_status`, validates the live REST 402 challenge and signs only inside the
 buyer process. Manual one-call approval is default; capped automatic mode requires explicit gates.
 See `scripts/smoke_buyer_bridge.py`, `scripts/test_mcp_client.py` and

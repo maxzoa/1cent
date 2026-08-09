@@ -11,16 +11,16 @@ from onecent.services.tool_operations import catalog_search
 
 
 def test_exact_tool_count_and_unique_contracts() -> None:
-    assert len(TOOLS) == 32
-    assert len(TOOL_BY_KEY) == len(TOOL_BY_PATH) == 32
-    assert len({tool.description_en for tool in TOOLS}) == 32
+    assert len(TOOLS) == 43
+    assert len(TOOL_BY_KEY) == len(TOOL_BY_PATH) == 43
+    assert len({tool.description_en for tool in TOOLS}) == 43
     assert all(tool.price_atomic >= tool.floor_atomic > 0 for tool in TOOLS)
-    assert sum(tool.key.startswith("site_") for tool in TOOLS) == 6
+    assert sum(tool.key.startswith("site_") for tool in TOOLS) == 7
 
 
 def test_public_catalog_has_no_internal_floor_or_audit_fields() -> None:
     rows = public_catalog()
-    assert len(rows) == 32
+    assert len(rows) == 43
     serialized = json.dumps(rows)
     assert "floor_atomic" not in serialized
     assert "updated_by" not in serialized

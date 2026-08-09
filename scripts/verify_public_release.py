@@ -17,6 +17,7 @@ async def run(base_url: str) -> None:
     async with httpx.AsyncClient(timeout=90, headers=headers) as client:
         info = await client.get(f"{base_url}/info")
         status = await client.get(f"{base_url}/status.json")
+        catalog = await client.get(f"{base_url}/v1/catalog")
         demo = await client.get(f"{base_url}/v1/demo/pulse")
         security = await client.get(f"{base_url}/.well-known/security.txt")
         openapi = await client.get(f"{base_url}/openapi.json")
@@ -46,15 +47,17 @@ async def run(base_url: str) -> None:
 
     info_data = cast(dict[str, Any], info.json())
     status_data = cast(dict[str, Any], status.json())
+    catalog_data = cast(list[dict[str, Any]], catalog.json())
     demo_data = cast(dict[str, Any], demo.json())
     openapi_data = cast(dict[str, Any], openapi.json())
     card_data = cast(dict[str, Any], card.json())
 
-    assert info.status_code == 200 and info_data["version"] == "0.7.0"
+    assert info.status_code == 200 and info_data["version"] == "0.8.0"
     assert info_data["network"] == NETWORK
     assert info_data["facilitator"] == "https://facilitator.payai.network"
     assert status.status_code == 200 and status_data["status"] == "ok"
-    assert status_data["paid_tools"] == 32
+    assert status_data["paid_tools"] == 43
+    assert catalog.status_code == 200 and len(catalog_data) == 43
     assert status_data["free_mcp_tools"] == [
         "catalog.tools.search",
         "demo.url.pulse",
@@ -70,11 +73,12 @@ async def run(base_url: str) -> None:
 
     server_info = cast(dict[str, Any], card_data["serverInfo"])
     tools = cast(list[dict[str, Any]], card_data["tools"])
-    assert card.status_code == 200 and server_info["version"] == "0.7.0"
-    assert len(tools) == 35
-    assert [tool["name"] for tool in tools[:2]] == [
+    assert card.status_code == 200 and server_info["version"] == "0.8.0"
+    assert len(tools) == 46
+    assert [tool["name"] for tool in tools[:3]] == [
         "catalog.tools.search",
         "demo.url.pulse",
+        "demo.live.pulse",
     ]
     assert all(tool.get("outputSchema") and tool.get("annotations") for tool in tools)
     assert all(
@@ -96,11 +100,14 @@ async def run(base_url: str) -> None:
     assert requirement_data["x402Version"] == 2
     assert accepted["network"] == NETWORK
     assert accepted["asset"].lower() == ASSET.lower()
-    assert accepted["amount"] == "1000"
+    pulse_price = next(
+        int(item["price_atomic"]) for item in catalog_data if item["tool"] == "url_pulse"
+    )
+    assert int(accepted["amount"]) == pulse_price
     assert accepted["payTo"].lower() == PAY_TO.lower()
     assert bad_origin.status_code == 403
 
-    print("public_release=PASS; version=0.7.0; paid_tools=32; free_tools=3")
+    print("public_release=PASS; version=0.8.0; paid_tools=43; free_tools=3")
     print("rest_402=PASS; amount=1000; network=eip155:8453; origin_guard=PASS")
     print("demo=PASS; network_request=false; settlement_performed=false")
 

@@ -17,54 +17,18 @@ from x402.mechanisms.evm import EthAccountSigner
 from x402.mechanisms.evm.exact.register import register_exact_evm_client
 from x402.schemas import PaymentRequired
 
-EXPECTED_LEGACY_TOOLS = {
-    "catalog_search",
-    "demo_url_pulse",
-    "demo_live_url_pulse",
-    "url_pulse",
-    "url_passport",
-    "url_extract",
-    "url_changed",
-    "url_status",
-    "url_redirects",
-    "url_headers",
-    "url_timing",
-    "url_content_type",
-    "url_canonical",
-    "url_language",
-    "url_hash",
-    "url_metadata",
-    "url_social_cards",
-    "url_jsonld",
-    "url_headings",
-    "url_word_stats",
-    "url_links",
-    "url_images",
-    "url_text",
-    "url_markdown",
-    "url_rag_chunks",
-    "url_diff",
-    "site_robots",
-    "site_sitemaps",
-    "site_feeds",
-    "site_llms_txt",
-    "site_security_txt",
-    "site_openapi",
-    "url_security_headers",
-    "url_tls",
-    "url_access_flags",
+from onecent.mcp_server import public_mcp_tool_name
+from onecent.services.tool_catalog import TOOL_BY_KEY
+
+EXPECTED_TOOLS = {
+    public_mcp_tool_name(name)
+    for name in {
+        "catalog_search",
+        "demo_url_pulse",
+        "demo_live_url_pulse",
+        *TOOL_BY_KEY,
+    }
 }
-def public_name(legacy_name: str) -> str:
-    if legacy_name == "catalog_search":
-        return "catalog.tools.search"
-    if legacy_name == "demo_url_pulse":
-        return "demo.url.pulse"
-    if legacy_name == "demo_live_url_pulse":
-        return "demo.live.pulse"
-    return "web." + legacy_name.replace("_", ".", 1)
-
-
-EXPECTED_TOOLS = {public_name(name) for name in EXPECTED_LEGACY_TOOLS}
 EXPECTED_NETWORK = os.environ.get("EXPECTED_X402_NETWORK", "eip155:84532")
 EXPECTED_AMOUNT = os.environ.get("EXPECTED_X402_AMOUNT", "3000")
 
@@ -94,7 +58,13 @@ async def run(endpoint: str, paid: bool) -> None:
                 if schema.get("additionalProperties") is not False:
                     raise RuntimeError(f"{tool.name}: input schema is not strict")
                 if tool.name not in {"demo.url.pulse", "demo.live.pulse"}:
-                    required_field = "query" if tool.name == "catalog.tools.search" else "url"
+                    required_field = (
+                        "query"
+                        if tool.name == "catalog.tools.search"
+                        else "urls"
+                        if tool.name == "web.batch.url_status"
+                        else "url"
+                    )
                     if required_field not in schema.get("required", []):
                         raise RuntimeError(f"{tool.name}: required field missing")
                 if not tool.outputSchema:

@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from x402.extensions.bazaar import OutputConfig, declare_discovery_extension
 
 from onecent.schemas import (
+    BatchToolResponse,
+    BatchUrlRequest,
     ChangedResponse,
     ExtractRequest,
     ExtractResponse,
@@ -142,7 +144,53 @@ RESPONSE_MODELS: dict[str, type[BaseModel]] = {
 
 for _definition in TOOLS:
     _name = _definition.key
-    if _name.startswith("url_") and _name[4:] in ENDPOINT_DESCRIPTIONS:
+    if _name == "batch_url_status":
+        ENDPOINT_DESCRIPTIONS[_name] = (
+            _definition.description_en
+            + " Supply one to five distinct public HTTP(S) URLs. The x402 amount is the current "
+            "unit price multiplied by URL count before any URL operation begins. Results retain "
+            "input order and report bounded partial failures without automatic payment retry."
+        )
+        INPUT_EXAMPLES[_name] = {
+            "urls": ["https://example.com", "https://www.iana.org"],
+            "fresh": False,
+        }
+        OUTPUT_EXAMPLES[_name] = {
+            "request_id": "019f8476-4324-7161-8db9-b910cd4171ae",
+            "tool": _name,
+            "url_count": 2,
+            "quoted_unit_atomic": 1000,
+            "quoted_amount_atomic": 2000,
+            "succeeded": 1,
+            "failed": 1,
+            "items": [
+                {
+                    "url": "https://example.com",
+                    "status": "ok",
+                    "result": {
+                        "request_id": "019f8476-4324-7161-8db9-b910cd4171ae",
+                        "tool": "url_status",
+                        "url_requested": "https://example.com",
+                        "url_final": "https://example.com/",
+                        "data": {"status_code": 200},
+                        "content_hash": "sha256:example",
+                        "from_cache": True,
+                        "checked_at": "2026-08-09T12:00:00Z",
+                    },
+                    "error_code": None,
+                },
+                {
+                    "url": "https://www.iana.org",
+                    "status": "error",
+                    "result": None,
+                    "error_code": "upstream_unavailable",
+                },
+            ],
+            "checked_at": "2026-08-09T12:00:00Z",
+        }
+        REQUEST_MODELS[_name] = BatchUrlRequest
+        RESPONSE_MODELS[_name] = BatchToolResponse
+    elif _name.startswith("url_") and _name[4:] in ENDPOINT_DESCRIPTIONS:
         _legacy = _name[4:]
         ENDPOINT_DESCRIPTIONS[_name] = ENDPOINT_DESCRIPTIONS[_legacy]
         INPUT_EXAMPLES[_name] = INPUT_EXAMPLES[_legacy]

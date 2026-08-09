@@ -1,0 +1,100 @@
+{
+  "snapshot_at_utc": "2026-08-09T15:15:00Z",
+  "runtime_at_snapshot": {
+    "version": "0.7.0",
+    "payment_mode": "x402-v2-testnet",
+    "network": "eip155:84532"
+  },
+  "windows": {
+    "1d": {
+      "unique_safe_fingerprints": 117,
+      "challenges_402": 285,
+      "valid_payment_payloads": 0,
+      "facilitator_verify_success": 0,
+      "settlement_success": 0,
+      "paid_operation_success": 0,
+      "paid_operation_failure": 0,
+      "confirmed_revenue_atomic": 0,
+      "funnel_latency_p50_ms": 9,
+      "funnel_latency_p95_ms": 196.4,
+      "attribution": {
+        "internal": 0,
+        "owner": 0,
+        "probable_external": 285,
+        "confirmed_external": 0,
+        "unknown_historical": 0
+      }
+    },
+    "7d": {
+      "unique_safe_fingerprints": 357,
+      "challenges_402": 1265,
+      "valid_payment_payloads": 0,
+      "facilitator_verify_success": 0,
+      "settlement_success": 0,
+      "paid_operation_success": 0,
+      "paid_operation_failure": 0,
+      "confirmed_revenue_atomic": 0,
+      "funnel_latency_p50_ms": 7,
+      "funnel_latency_p95_ms": 89.8,
+      "attribution": {
+        "internal": 0,
+        "owner": 0,
+        "probable_external": 1265,
+        "confirmed_external": 0,
+        "unknown_historical": 0
+      }
+    },
+    "30d": {
+      "unique_safe_fingerprints": 516,
+      "challenges_402": 5689,
+      "valid_payment_payloads": 0,
+      "facilitator_verify_success": 0,
+      "settlement_success": 41,
+      "paid_operation_success_with_request_event": 1,
+      "paid_operation_failure_with_request_event": 0,
+      "settled_atomic": 228000,
+      "confirmed_external_revenue_atomic": 0,
+      "funnel_latency_p50_ms": 9,
+      "funnel_latency_p95_ms": 28,
+      "paid_operation_latency_p50_ms": 306,
+      "paid_operation_latency_p95_ms": 306,
+      "attribution": {
+        "internal": 478,
+        "owner": 0,
+        "probable_external": 5211,
+        "confirmed_external": 0,
+        "unknown_historical": 0
+      },
+      "settlement_attribution": {
+        "probable_external_count": 1,
+        "probable_external_atomic": 3000,
+        "unknown_historical_count": 40,
+        "unknown_historical_atomic": 225000,
+        "confirmed_external_count": 0,
+        "confirmed_external_atomic": 0
+      }
+    }
+  },
+  "challenge_sources_30d": {
+    "rest": 5660,
+    "mcp": 29
+  },
+  "normalized_user_agents_30d": {
+    "unknown": 3113,
+    "other": 2087,
+    "onecent-smoke": 469,
+    "browser": 10,
+    "python-httpx": 7,
+    "curl": 3
+  },
+  "referral_30d": {
+    "unknown_historical": 2977,
+    "direct": 2712
+  },
+  "interpretation": {
+    "confirmed_current_sales": 0,
+    "challenge_is_not_sale": true,
+    "probable_external_is_not_confirmed_buyer": true,
+    "historical_settlements_are_not_relabelled": true
+  }
+}

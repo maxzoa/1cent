@@ -112,6 +112,11 @@ async def fetch_url(url: str, settings: Settings) -> FetchResult:
                             "x-frame-options",
                             "referrer-policy",
                             "permissions-policy",
+                            "access-control-allow-origin",
+                            "access-control-allow-credentials",
+                            "cross-origin-opener-policy",
+                            "cross-origin-resource-policy",
+                            "cross-origin-embedder-policy",
                         }
                     }
                     return FetchResult(

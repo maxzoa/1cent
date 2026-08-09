@@ -15,6 +15,21 @@ def test_backup_script_restricts_directory_and_dump_permissions() -> None:
     assert "! -name 'onecent-latest.sql.gz'" in script
 
 
+def test_backup_sidecar_is_bounded_and_does_not_use_docker_socket() -> None:
+    root = Path(__file__).resolve().parents[2]
+    script = (root / "scripts" / "backup_db_container.sh").read_text(encoding="utf-8")
+    compose = (root / "docker-compose.yml").read_text(encoding="utf-8")
+
+    assert "BACKUP_INTERVAL_SECONDS" in script
+    assert "pg_dump" in script
+    assert "umask 077" in script
+    assert "onecent-latest.sql.gz" in script
+    assert "onecent-backup:" in compose
+    assert "backup_db_container.sh:/scripts/backup_db_container.sh:ro" in compose
+    assert "/var/run/docker.sock" not in compose
+    assert "--remove-orphans" not in compose
+
+
 def test_monitor_reads_only_safe_runtime_environment() -> None:
     script = (
         Path(__file__).resolve().parents[2] / "scripts" / "monitor_mainnet_health.sh"

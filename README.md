@@ -33,13 +33,14 @@ curl -sS "https://1cent.maxzoa.ru/v1/demo/preview?url=https%3A%2F%2Fexample.com%
 - Browser purchase entry: `https://1cent.maxzoa.ru/try`
 - Outcome packages: `https://1cent.maxzoa.ru/v1/products`
 
-Production exposes 32 paid REST/MCP operations plus three free MCP tools:
+Release 0.8.0 exposes 43 paid REST/MCP operations plus three free MCP tools:
 
 - `catalog.tools.search` — find the correct operation and live price without a URL fetch;
 - `demo.url.pulse` — inspect a fixed precomputed output sample without payment or network access.
 - `demo.live.pulse` — run the real safe service against fixed `example.com`, rate-limited.
 
-Public MCP discovery uses navigable dot-notation (`web.url.status`, `web.site.openapi`). Pre-0.6
+Public MCP discovery uses navigable dot-notation (`web.url.status`, `web.site.openapi`,
+`web.batch.url_status`). Pre-0.6
 underscore names remain accepted as compatibility aliases but are intentionally omitted from
 `tools/list`.
 
@@ -82,7 +83,7 @@ onecent install --client codex
 For MCP clients without native x402 signing, install the local Buyer Bridge:
 
 ```bash
-pipx install "onecent[buyer]==0.7.1"
+pipx install "onecent[buyer]==0.8.0"
 onecent wallet set
 onecent bridge --max-usdc-per-call 0.001 --daily-limit-usdc 0.01
 ```
@@ -98,13 +99,20 @@ confirms Base Mainnet and types the one-call confirmation. See `examples/buyer-p
 Node buyers can install the public release package:
 
 ```bash
-npm install --global onecent-buyer@0.7.1
+npm install --global onecent-buyer@0.8.0
 onecent-buyer doctor
 ```
 
 The package source remains available in [`packages/onecent-buyer`](packages/onecent-buyer).
-Registry pages: [PyPI `onecent` 0.7.1](https://pypi.org/project/onecent/0.7.1/) and
-[npm `onecent-buyer` 0.7.1](https://www.npmjs.com/package/onecent-buyer/v/0.7.1).
+Registry pages: [PyPI `onecent` 0.8.0](https://pypi.org/project/onecent/0.8.0/) and
+[npm `onecent-buyer` 0.8.0](https://www.npmjs.com/package/onecent-buyer/v/0.8.0).
+
+The bounded batch tool accepts one to five distinct public URLs. Its x402 quote is the live
+unit price multiplied by the validated URL count before any URL fetch begins. Results retain
+input order and use an explicit partial-failure contract; UNKNOWN payments are never retried.
+
+The product denominator, including planned, externally blocked and unsafe outcomes, is published
+in [WEB_INTELLIGENCE_COVERAGE_MATRIX.md](WEB_INTELLIGENCE_COVERAGE_MATRIX.md) with JSON and CSV.
 
 `onecent watch` provides finite, capped change monitoring. It is disabled by default, requires
 explicit Base network/asset/seller confirmations and stops on UNKNOWN without creating a new
