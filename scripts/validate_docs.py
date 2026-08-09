@@ -61,12 +61,12 @@ ARCHIVE_DOCS = (
 )
 
 RUNTIME_FACTS = (
-    "0.7.0",
+    "0.8.0",
     "eip155:8453",
     "https://facilitator.payai.network",
     "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     "0x4798e8401ba3b1566685257c82d06303AB90EA35",
-    "Total MCP tools | 35",
+    "Total MCP tools | 46",
     "MCP prompts | 1: `choose_url_tool`",
     "MCP resources | 1: `onecent://buyer-guide`",
     "NAS host port | `18013`",

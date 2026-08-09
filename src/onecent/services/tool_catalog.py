@@ -35,6 +35,7 @@ class ToolDefinition:
     description_ru: str
     cache_ttl: int = 3600
     max_requests: int = 1
+    pricing_model: str = "fixed"
 
     @property
     def mcp_name(self) -> str:
@@ -223,7 +224,7 @@ _ROWS = [
         "/v1/url/diff",
         "content",
         5000,
-        "Return a bounded normalized diff against the previous snapshot.",
+        "Compare the normalized content hash with the previous stored snapshot.",
         "Ограниченная разница с прошлым снимком.",
     ),
     (
@@ -231,7 +232,7 @@ _ROWS = [
         "/v1/site/robots",
         "discovery",
         3000,
-        "Fetch and parse the origin robots.txt policy.",
+        "Report the robots.txt policy decision applied to the requested URL.",
         "Получение и разбор robots.txt.",
     ),
     (
@@ -239,7 +240,7 @@ _ROWS = [
         "/v1/site/sitemaps",
         "discovery",
         4000,
-        "Discover up to five bounded sitemap resources.",
+        "Discover up to five sitemap links declared by the requested page.",
         "Обнаружение до пяти sitemap.",
     ),
     (
@@ -263,7 +264,7 @@ _ROWS = [
         "/v1/site/security-txt",
         "discovery",
         3000,
-        "Parse public security.txt fields without following contacts.",
+        "Fetch bounded public security.txt text without following contacts.",
         "Поля security.txt без перехода по контактам.",
     ),
     (
@@ -271,7 +272,7 @@ _ROWS = [
         "/v1/site/openapi",
         "discovery",
         4000,
-        "Discover and summarize bounded public OpenAPI documents.",
+        "Discover bounded OpenAPI candidate links declared by the requested page.",
         "Обнаружение публичной OpenAPI-схемы.",
     ),
     (
@@ -287,7 +288,7 @@ _ROWS = [
         "/v1/url/tls",
         "security",
         3000,
-        "Inspect the public HTTPS certificate on port 443.",
+        "Report HTTPS certificate validation performed by the safe fetch transport.",
         "Проверка публичного TLS-сертификата на порту 443.",
     ),
     (
@@ -297,6 +298,86 @@ _ROWS = [
         3000,
         "Report heuristic authentication, paywall and JavaScript access flags.",
         "Эвристики авторизации, paywall и JavaScript.",
+    ),
+    (
+        "url_schema_validation",
+        "/v1/url/schema-validation",
+        "quality",
+        3000,
+        "Validate embedded JSON-LD syntax and required Schema.org identifiers.",
+        "Проверка синтаксиса JSON-LD и ключевых полей Schema.org.",
+    ),
+    (
+        "url_accessibility",
+        "/v1/url/accessibility",
+        "quality",
+        3000,
+        "Run bounded static HTML accessibility checks without a browser.",
+        "Ограниченная статическая проверка доступности HTML без браузера.",
+    ),
+    (
+        "url_technology",
+        "/v1/url/technology",
+        "quality",
+        3000,
+        "Report evidence-backed framework, CMS and generator signals.",
+        "Признаки framework, CMS и generator с доказательствами.",
+    ),
+    (
+        "url_policy",
+        "/v1/url/policy",
+        "security",
+        3000,
+        "Assess CSP, CORS, cross-origin policy and mixed-content signals.",
+        "Оценка CSP, CORS, cross-origin policy и mixed content.",
+    ),
+    (
+        "url_localization",
+        "/v1/url/localization",
+        "quality",
+        3000,
+        "Inspect hreflang, canonical and declared-language coherence.",
+        "Согласованность hreflang, canonical и языка документа.",
+    ),
+    (
+        "url_content_quality",
+        "/v1/url/content-quality",
+        "quality",
+        3000,
+        "Return deterministic thin-content and page-structure quality signals.",
+        "Детерминированные признаки тонкого контента и структуры страницы.",
+    ),
+    (
+        "url_tables",
+        "/v1/url/tables",
+        "content",
+        4000,
+        "Extract bounded HTML tables into machine-readable rows.",
+        "Извлечение ограниченных HTML-таблиц в машинные строки.",
+    ),
+    (
+        "url_citations",
+        "/v1/url/citations",
+        "content",
+        3000,
+        "Extract bounded citation and reference links with visible labels.",
+        "Извлечение ссылок-цитат и источников с видимыми подписями.",
+    ),
+    (
+        "url_performance",
+        "/v1/url/performance",
+        "quality",
+        3000,
+        "Return safe network timing, payload and cacheability diagnostics.",
+        "Безопасная диагностика времени сети, размера и кешируемости.",
+    ),
+    (
+        "site_coherence",
+        "/v1/site/coherence",
+        "discovery",
+        4000,
+        "Check declared robots, sitemap, feed, OpenAPI and llms.txt discovery coherence.",
+        "Согласованность robots, sitemap, feed, OpenAPI и llms.txt.",
     ),
 ]
 
@@ -311,6 +392,21 @@ TOOLS = tuple(
         description_ru=row[5],
     )
     for row in _ROWS
+) + (
+    ToolDefinition(
+        key="batch_url_status",
+        path="/v1/batch/url-status",
+        category="batch",
+        price_atomic=1000,
+        floor_atomic=1000,
+        description_en=(
+            "Check HTTP status for one to five public URLs with a deterministic per-URL quote."
+        ),
+        description_ru="HTTP-статус от одного до пяти публичных URL с ценой за URL.",
+        cache_ttl=3600,
+        max_requests=5,
+        pricing_model="per_input_url",
+    ),
 )
 TOOL_BY_KEY = {item.key: item for item in TOOLS}
 TOOL_BY_PATH = {item.path: item for item in TOOLS}
@@ -331,6 +427,7 @@ def public_catalog() -> list[dict[str, object]]:
                 "max_external_requests": item.max_requests,
                 "cache_ttl_seconds": item.cache_ttl,
             },
+            "pricing_model": item.pricing_model,
         }
         for item in TOOLS
     ]

@@ -15,6 +15,44 @@ def test_backup_script_restricts_directory_and_dump_permissions() -> None:
     assert "! -name 'onecent-latest.sql.gz'" in script
 
 
+def test_backup_sidecar_is_bounded_and_does_not_use_docker_socket() -> None:
+    root = Path(__file__).resolve().parents[2]
+    script = (root / "scripts" / "backup_db_container.sh").read_text(encoding="utf-8")
+    compose = (root / "docker-compose.yml").read_text(encoding="utf-8")
+
+    assert "BACKUP_INTERVAL_SECONDS" in script
+    assert "pg_dump" in script
+    assert "umask 077" in script
+    assert "onecent-latest.sql.gz" in script
+    assert "onecent-backup:" in compose
+    assert 'user: "${BACKUP_UID:-1026}:${BACKUP_GID:-100}"' in compose
+    assert 'user: "0:0"' not in compose
+    assert "backup_db_container.sh:/scripts/backup_db_container.sh:ro" in compose
+    assert "/var/run/docker.sock" not in compose
+    assert "--remove-orphans" not in compose
+
+
+def test_docker_build_context_excludes_runtime_secrets_and_state() -> None:
+    root = Path(__file__).resolve().parents[2]
+    ignored = (root / ".dockerignore").read_text(encoding="utf-8").splitlines()
+    for required in (".env", ".env.*", ".state", "secrets", "backups", "logs"):
+        assert required in ignored
+
+
+def test_nas_deploy_uses_the_public_host_port_by_default() -> None:
+    root = Path(__file__).resolve().parents[2]
+    deploy = (root / "scripts" / "deploy_nas.sh").read_text(encoding="utf-8")
+    assert "HOST_PORT=${ONECENT_HOST_PORT:-18013}" in deploy
+
+
+def test_mainnet_preflight_validates_the_real_container_backup_path() -> None:
+    root = Path(__file__).resolve().parents[2]
+    preflight = (root / "scripts" / "preflight_mainnet.sh").read_text(encoding="utf-8")
+    assert "EXPECTED_RUNTIME_BACKUP=/backups/onecent-latest.sql.gz" in preflight
+    assert "CONFIGURED_BACKUP" in preflight
+    assert "/run/onecent-backup.dump" not in preflight
+
+
 def test_monitor_reads_only_safe_runtime_environment() -> None:
     script = (
         Path(__file__).resolve().parents[2] / "scripts" / "monitor_mainnet_health.sh"

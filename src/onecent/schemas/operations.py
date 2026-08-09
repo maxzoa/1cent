@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class StrictModel(BaseModel):
@@ -141,6 +142,58 @@ class ToolResponse(StrictModel):
     data: dict[str, object]
     content_hash: str
     from_cache: bool
+    checked_at: datetime
+    quality: ResultQuality = Field(default_factory=ResultQuality)
+
+
+PublicBatchUrl = Annotated[
+    str,
+    Field(
+        min_length=1,
+        max_length=2048,
+        pattern=r"^https?://",
+        description="Absolute public HTTP or HTTPS URL; SSRF-sensitive targets are rejected.",
+    ),
+]
+
+
+class BatchUrlRequest(StrictModel):
+    urls: list[PublicBatchUrl] = Field(
+        min_length=1,
+        max_length=5,
+        description="One to five distinct public URLs. Price equals unit price times URL count.",
+        examples=[["https://example.com", "https://www.iana.org"]],
+    )
+    fresh: bool = Field(
+        default=False,
+        description="False permits cache reuse independently for each URL.",
+    )
+
+    @field_validator("urls")
+    @classmethod
+    def distinct_urls(cls, urls: list[str]) -> list[str]:
+        normalized = [url.strip() for url in urls]
+        if len({url.casefold() for url in normalized}) != len(normalized):
+            raise ValueError("batch URLs must be distinct")
+        return normalized
+
+
+class BatchItemResponse(StrictModel):
+    url: str
+    status: Literal["ok", "error"]
+    result: ToolResponse | None = None
+    error_code: str | None = None
+
+
+class BatchToolResponse(StrictModel):
+    request_id: str
+    tool: Literal["batch_url_status"] = "batch_url_status"
+    url_count: int = Field(ge=1, le=5)
+    quoted_unit_atomic: int = Field(gt=0)
+    quoted_amount_atomic: int = Field(gt=0)
+    succeeded: int = Field(ge=0, le=5)
+    failed: int = Field(ge=0, le=5)
+    items: list[BatchItemResponse] = Field(min_length=1, max_length=5)
     checked_at: datetime
     quality: ResultQuality = Field(default_factory=ResultQuality)
 

@@ -12,7 +12,7 @@ from onecent import __version__
 from onecent.buyer_bridge import BridgePolicy, BuyerBridgeService, create_buyer_bridge
 from onecent.buyer_state import BuyerLedger
 from onecent.mcp_server import FREE_MCP_TOOL_NAMES, mcp
-from onecent.services.tool_catalog import PRODUCTS
+from onecent.services.tool_catalog import PRODUCTS, TOOLS
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -40,7 +40,7 @@ async def _validate_mcp() -> None:
     tools = await mcp.list_tools()
     prompts = await mcp.list_prompts()
     resources = await mcp.list_resources()
-    assert len(tools) == 35
+    assert len(tools) == len(TOOLS) + 3
     assert [prompt.name for prompt in prompts] == ["choose_url_tool"]
     assert [str(resource.uri) for resource in resources] == ["onecent://buyer-guide"]
     assert [tool.name for tool in tools[:3]] == list(FREE_MCP_TOOL_NAMES)
@@ -64,7 +64,7 @@ async def _validate_buyer_bridge() -> None:
             )
         )
         tools = await bridge.list_tools()
-    assert len(tools) == 36
+    assert len(tools) == len(TOOLS) + 4
     assert [tool.name for tool in tools[:4]] == [
         "buyer_bridge_status",
         "catalog_search",
@@ -92,7 +92,7 @@ def main() -> None:
         str(catalog_registry["version"]),
         str(tool_catalog["version"]),
     }
-    assert versions == {"0.7.1"}, versions
+    assert versions == {"0.8.0"}, versions
     assert registry["name"] == catalog_registry["name"] == "ru.maxzoa/1cent"
     assert glama == {
         "$schema": "https://glama.ai/mcp/schemas/server.json",
@@ -103,16 +103,16 @@ def main() -> None:
     ]
     assert catalog_registry["remotes"] == registry["remotes"]
     assert lobehub["identifier"] == "maxzoa-1cent"
-    assert lobehub["version"] == "0.7.1"
+    assert lobehub["version"] == "0.8.0"
     assert lobehub["cloudEndpoint"] == "https://1cent.maxzoa.ru/mcp"
-    assert len(cast(list[dict[str, object]], lobehub["tools"])) == 35
+    assert len(cast(list[dict[str, object]], lobehub["tools"])) == len(TOOLS) + 3
     assert len(cast(list[dict[str, object]], lobehub["prompts"])) == 1
     assert len(cast(list[dict[str, object]], lobehub["resources"])) == 1
     assert npm_buyer["name"] == "onecent-buyer"
-    assert npm_buyer["version"] == "0.7.1"
+    assert npm_buyer["version"] == "0.8.0"
     assert len(PRODUCTS) == 4
     catalog_tools = cast(list[dict[str, object]], tool_catalog["tools"])
-    assert len(catalog_tools) == 32
+    assert len(catalog_tools) == len(TOOLS)
     assert all(
         item["mcp_tool"]
         == "web." + str(item["tool"]).replace("_", ".", 1)
@@ -148,8 +148,9 @@ def main() -> None:
     asyncio.run(_validate_mcp())
     asyncio.run(_validate_buyer_bridge())
     print(
-        "release_validation=PASS; version=0.7.1; paid_tools=32; "
-        "free_tools=3; prompts=1; resources=1; products=4; buyer_bridge_tools=36"
+        f"release_validation=PASS; version=0.8.0; paid_tools={len(TOOLS)}; "
+        f"free_tools=3; prompts=1; resources=1; products=4; "
+        f"buyer_bridge_tools={len(TOOLS) + 4}"
     )
 
 

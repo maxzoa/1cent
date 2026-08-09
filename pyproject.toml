@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "onecent"
-version = "0.7.1"
+version = "0.8.0"
 description = "Pay-per-call SSRF-safe web intelligence for AI agents through MCP and x402."
 readme = "README.md"
 license = { file = "LICENSE" }

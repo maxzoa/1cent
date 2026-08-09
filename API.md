@@ -31,11 +31,12 @@ client locally. It does not create a second business-logic or payment path on th
 
 ## Catalog
 
-`GET /v1/catalog` is the machine-readable source for all 32 paid tools, REST paths, MCP names,
-prices and public limits. Every paid route accepts strict JSON with `url` and optional `fresh`;
-unknown fields are rejected. Unpaid calls return x402 v2 requirements for Base Mainnet USDC.
+`GET /v1/catalog` is the machine-readable source for all 43 paid tools, REST paths, MCP names,
+prices, pricing model and public limits. Single-URL routes accept strict JSON with `url` and
+optional `fresh`; the batch route accepts strict `urls` plus optional `fresh`. Unknown fields are
+rejected. Unpaid calls return x402 v2 requirements for Base Mainnet USDC.
 
-Categories: bundle, micro, metadata, content, discovery and security. Three free MCP tools precede
+Categories: bundle, micro, metadata, content, discovery, quality, security and batch. Three free MCP tools precede
 the paid catalog: `catalog.tools.search` performs a bounded local lookup; `demo.url.pulse` returns a
 fixed precomputed sample; `demo.live.pulse` runs the normal safe service only for fixed
 `example.com`. Neither demo accepts a caller-supplied URL.
@@ -49,7 +50,7 @@ fingerprint and UTC day. It does not bypass payment on any paid REST or MCP rout
 `GET /try` is a no-payment form. `GET /try/pay?url=<encoded-url>` redirects to
 `GET /try/result?url=<encoded-url>`, which is protected by the official x402 browser paywall.
 An unpaid request receives HTTP 402; the selected URL is not fetched until payment succeeds.
-This browser route is not a Bazaar resource and does not change the 32-resource paid catalog.
+This browser route is not a Bazaar resource and does not change the 43-resource paid catalog.
 
 ## Outcome products
 
@@ -101,6 +102,19 @@ Returns normalized main text, metadata, optional links, hash, truncation and cac
 ```
 
 Creates a baseline on first use; later calls compare normalized content hashes.
+
+## Bounded batch URL status
+
+`POST /v1/batch/url-status`
+
+```json
+{"urls":["https://example.com","https://www.iana.org"],"fresh":false}
+```
+
+Accepts one to five distinct public HTTP(S) URLs. Before any URL operation, the payment gateway
+validates the body and quotes `live unit price × URL count`. The implementation processes URLs
+sequentially, preserving global/per-domain limits and input order. A settled call can return
+bounded per-item errors without retrying the payment or creating a new payment identifier.
 
 ## Limits and safety
 

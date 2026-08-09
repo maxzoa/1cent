@@ -7,6 +7,7 @@ from typing import cast
 
 from onecent import __version__
 from onecent.mcp_server import mcp
+from onecent.services.tool_catalog import TOOLS
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -25,8 +26,8 @@ async def build_manifest() -> dict[str, object]:
         "category": "developer",
         "cloudEndpoint": "https://1cent.maxzoa.ru/mcp",
         "description": (
-            "Production remote MCP server with 35 safe web-intelligence tools: "
-            "32 paid x402 URL operations and 3 free discovery/demo tools."
+            f"Production remote MCP server with {len(TOOLS) + 3} safe web-intelligence "
+            f"tools: {len(TOOLS)} paid x402 operations and 3 free discovery/demo tools."
         ),
         "homepage": "https://github.com/maxzoa/1cent",
         "icon": "https://1cent.maxzoa.ru/favicon.ico",

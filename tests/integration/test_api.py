@@ -76,10 +76,10 @@ def test_root_and_info(client: TestClient) -> None:
     assert "https://smithery.ai/servers/maxzoa27/onecent" in smithery.text
     info = client.get("/info").json()
     assert info["network"] == "eip155:84532"
-    assert len(info["operations"]) == 32
+    assert len(info["operations"]) == len(TOOLS)
     assert {"url_pulse", "url_status", "site_openapi"} <= set(info["operations"])
     catalog = client.get("/v1/catalog").json()
-    assert len(catalog) == 32
+    assert len(catalog) == len(TOOLS)
     assert all(
         item["mcp_tool"] == "web." + item["tool"].replace("_", ".", 1)
         for item in catalog
@@ -161,7 +161,7 @@ def test_agent_discovery_documents_and_content_negotiation(client: TestClient) -
     assert skill.headers["content-type"].startswith("text/markdown")
     assert skill.text.startswith("---\nname: onecent-web-intelligence\n")
     assert client.get("/agents.txt").status_code == 200
-    assert client.get("/.well-known/webmcp.json").json()["version"] == "0.7.1"
+    assert client.get("/.well-known/webmcp.json").json()["version"] == "0.8.0"
 
 
 def test_mcp_cors_preflight(client: TestClient) -> None:
@@ -182,7 +182,7 @@ def test_x402_well_known_manifest(client: TestClient) -> None:
     manifest = client.get("/.well-known/x402").json()
     assert manifest["x402Version"] == 2
     assert manifest["mcp"]["url"].endswith("/mcp/")
-    assert len(manifest["resources"]) == 32
+    assert len(manifest["resources"]) == len(TOOLS)
     status = next(item for item in manifest["resources"] if item["name"] == "url_status")
     assert status["price"]["network"] == "eip155:84532"
     assert status["price"]["scheme"] == "exact"
@@ -206,7 +206,7 @@ def test_mcp_well_known_manifest(client: TestClient) -> None:
     assert manifest.headers["content-type"].startswith("application/json")
     body = manifest.json()
     assert body["name"] == "ru.maxzoa/1cent"
-    assert body["version"] == "0.7.1"
+    assert body["version"] == "0.8.0"
     assert body["websiteUrl"] == "https://1cent.maxzoa.ru"
     assert body["remotes"] == [
         {
@@ -245,8 +245,8 @@ def test_free_demo_status_security_and_server_card(
 
     status = client.get("/status.json")
     assert status.status_code == 200
-    assert status.json()["version"] == "0.7.1"
-    assert status.json()["paid_tools"] == 32
+    assert status.json()["version"] == "0.8.0"
+    assert status.json()["paid_tools"] == len(TOOLS)
     assert status.json()["free_mcp_tools"] == [
         "catalog.tools.search",
         "demo.url.pulse",
@@ -262,7 +262,7 @@ def test_free_demo_status_security_and_server_card(
     card = client.get("/.well-known/mcp/server-card.json").json()
     assert [item["name"] for item in card["prompts"]] == ["choose_url_tool"]
     assert [item["uri"] for item in card["resources"]] == ["onecent://buyer-guide"]
-    assert len(card["tools"]) == 35
+    assert len(card["tools"]) == len(TOOLS) + 3
     assert [tool["name"] for tool in card["tools"][:3]] == [
         "catalog.tools.search",
         "demo.url.pulse",
@@ -379,7 +379,7 @@ def test_browser_purchase_is_paid_but_not_an_extra_bazaar_resource(client: TestC
     assert "payment-required" in response.headers
     required = decode_payment_required_header(response.headers["payment-required"])
     assert required.accepts[0].network == "eip155:84532"
-    assert len(client.get("/.well-known/x402").json()["resources"]) == 32
+    assert len(client.get("/.well-known/x402").json()["resources"]) == len(TOOLS)
 
 
 def test_public_hostname_cannot_use_development_bypass(client: TestClient) -> None:
@@ -395,7 +395,7 @@ def test_stage11_all_paid_routes_return_correct_unpaid_requirement(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # The challenge contract is the subject of this test. Keep database-backed
-    # telemetry out of the loop so 32 requests do not depend on a local Postgres.
+    # telemetry out of the loop so all requests do not depend on a local Postgres.
     monkeypatch.setattr("onecent.services.payments.Session", MiddlewareSession)
     monkeypatch.setattr("onecent.services.payments._record_funnel", AsyncMock())
     prices = {tool.key: tool.price_atomic for tool in TOOLS}
@@ -404,12 +404,44 @@ def test_stage11_all_paid_routes_return_correct_unpaid_requirement(
         AsyncMock(side_effect=lambda _settings, operation: prices[operation]),
     )
     for tool in TOOLS:
-        response = client.post(tool.path, json={"url": "https://example.com", "fresh": False})
+        payload = (
+            {"urls": ["https://example.com", "https://www.iana.org"], "fresh": False}
+            if tool.key == "batch_url_status"
+            else {"url": "https://example.com", "fresh": False}
+        )
+        response = client.post(tool.path, json=payload)
         assert response.status_code == 402, tool.key
         required = decode_payment_required_header(response.headers["payment-required"])
         assert required.accepts[0].network == "eip155:84532"
-        assert int(required.accepts[0].amount) == tool.price_atomic
+        expected = tool.price_atomic * (2 if tool.key == "batch_url_status" else 1)
+        assert int(required.accepts[0].amount) == expected
         assert "bazaar" in required.extensions
+
+
+def test_batch_quote_is_body_aware_and_invalid_body_never_reaches_payment(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("onecent.services.payments.Session", MiddlewareSession)
+    monkeypatch.setattr("onecent.services.payments._record_funnel", AsyncMock())
+    monkeypatch.setattr(
+        "onecent.services.payments._effective_price_atomic",
+        AsyncMock(return_value=1000),
+    )
+
+    quoted = client.post(
+        "/v1/batch/url-status",
+        json={"urls": ["https://example.com", "https://www.iana.org"], "fresh": False},
+    )
+    assert quoted.status_code == 402
+    required = decode_payment_required_header(quoted.headers["payment-required"])
+    assert int(required.accepts[0].amount) == 2000
+
+    invalid = client.post(
+        "/v1/batch/url-status",
+        json={"urls": ["https://example.com"] * 6, "fresh": False},
+    )
+    assert invalid.status_code == 422
+    assert "payment-required" not in invalid.headers
 
 
 def test_corrupt_payment_signature_is_not_accepted(

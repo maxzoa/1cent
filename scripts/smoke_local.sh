@@ -5,6 +5,7 @@ cd "$(dirname "$0")/.."
 test -f .env
 DOCKER=${DOCKER:-/usr/local/bin/docker}
 EXPECTED_X402_NETWORK=${EXPECTED_X402_NETWORK:-eip155:84532}
+EXPECTED_PAID_TOOLS=${EXPECTED_PAID_TOOLS:-43}
 test -x "$DOCKER" || DOCKER=docker
 
 if [ -z "${BASE_URL:-}" ]; then
@@ -17,7 +18,7 @@ fi
 "$DOCKER" compose exec -T onecent-api alembic current
 curl -fsS "$BASE_URL/health" | grep -q '"status":"ok"'
 curl -fsS "$BASE_URL/info" | grep -q "$EXPECTED_X402_NETWORK"
-curl -fsS "$BASE_URL/status.json" | grep -q '"paid_tools":32'
+curl -fsS "$BASE_URL/status.json" | grep -q "\"paid_tools\":$EXPECTED_PAID_TOOLS"
 curl -fsS "$BASE_URL/v1/demo/pulse" | grep -q '"network_request_performed":false'
 
 code=$(curl -A 'onecent-smoke/1.0' -sS -o /tmp/onecent-unpaid.json -w '%{http_code}' \

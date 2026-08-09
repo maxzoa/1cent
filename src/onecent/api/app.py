@@ -25,6 +25,8 @@ from onecent.repositories.catalog import price_promo_status, public_catalog_rows
 from onecent.repositories.data import record_error, service_enabled
 from onecent.repositories.funnel import record_funnel_event
 from onecent.schemas import (
+    BatchToolResponse,
+    BatchUrlRequest,
     ChangedResponse,
     DemoPulseResponse,
     ExtractRequest,
@@ -38,13 +40,13 @@ from onecent.schemas import (
     UrlRequest,
 )
 from onecent.services.demo import demo_pulse_result
-from onecent.services.discovery import ENDPOINT_DESCRIPTIONS
+from onecent.services.discovery import ENDPOINT_DESCRIPTIONS, REQUEST_MODELS, RESPONSE_MODELS
 from onecent.services.live_demo import LiveDemoRateLimited, live_demo_pulse
 from onecent.services.offer_receipt import OfferReceiptSigner, did_document
 from onecent.services.operations import changed, extract, passport, pulse
 from onecent.services.payments import build_x402_middleware
 from onecent.services.tool_catalog import PRODUCTS, TOOLS, public_catalog
-from onecent.services.tool_operations import run_projection
+from onecent.services.tool_operations import run_batch_url_status, run_projection
 from onecent.services.traffic_audit import (
     build_traffic_context,
     current_traffic_context,
@@ -413,8 +415,8 @@ async def _x402_manifest(session: AsyncSession) -> dict[str, object]:
                 "amount": str(row["price_atomic"]),
                 "payTo": settings.x402_pay_to,
             },
-            "inputSchema": ToolRequest.model_json_schema(),
-            "outputSchema": ToolResponse.model_json_schema(),
+            "inputSchema": REQUEST_MODELS[str(row["tool"])].model_json_schema(),
+            "outputSchema": RESPONSE_MODELS[str(row["tool"])].model_json_schema(),
         }
         for row in rows
     ]
@@ -552,7 +554,8 @@ async def tools_page() -> HTMLResponse:
         "<li><strong>Content for AI</strong> — clean text and links for RAG or summaries.</li>"
         "<li><strong>Change monitor</strong> — compare a page with its prior snapshot.</li></ul>"
         "<p>These packages use the stable url_pulse, url_passport, url_extract and url_changed "
-        "contracts. The full catalog contains 32 paid REST/MCP tools plus three free MCP tools: "
+        f"contracts. The full catalog contains {len(TOOLS)} paid REST/MCP tools plus three "
+        "free MCP tools: "
         "<code>catalog.tools.search</code>, <code>demo.url.pulse</code> and "
         "<code>demo.live.pulse</code>.</p>"
         "<p><a href='/try'>Preview your own URL free</a> · "
@@ -834,7 +837,7 @@ async def public_llms_full() -> str:
     return (
         "# 1cent Web Intelligence\n\n"
         "1cent is a production remote MCP and REST service for safe analysis of public "
-        "HTTP(S) URLs. It offers 32 paid tools and three free MCP tools.\n\n"
+        f"HTTP(S) URLs. It offers {len(TOOLS)} paid tools and three free MCP tools.\n\n"
         "## Connect\n\nMCP Streamable HTTP: https://1cent.maxzoa.ru/mcp\n\n"
         "Free MCP tools: catalog.tools.search, demo.url.pulse, demo.live.pulse.\n\n"
         "## Payments\n\nPaid operations use x402 v2 exact payments with Base Mainnet USDC. "
@@ -1105,6 +1108,28 @@ async def paid_changed(
     return await changed(payload.url, settings, session)
 
 
+@app.post(
+    "/v1/batch/url-status",
+    response_model=BatchToolResponse,
+    tags=["URL intelligence"],
+    summary="Check HTTP status for up to five public URLs",
+    description=(
+        "Sequential bounded batch. Price is quoted before work as current unit price multiplied "
+        "by the number of distinct URLs. Partial failures use stable safe error codes."
+    ),
+    responses={402: {"description": "x402 v2 payment required"}},
+)
+async def paid_batch_url_status(
+    payload: BatchUrlRequest,
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> BatchToolResponse:
+    await gate(request, session, settings)
+    if not await tool_enabled(session, "batch_url_status", "rest"):
+        raise HTTPException(503, "tool disabled")
+    return await run_batch_url_status(payload.urls, payload.fresh, settings, session)
+
+
 def _projection_handler(tool_key: str):  # type: ignore[no-untyped-def]
     async def handler(
         payload: ToolRequest,
@@ -1121,7 +1146,13 @@ def _projection_handler(tool_key: str):  # type: ignore[no-untyped-def]
 
 
 for _definition in TOOLS:
-    if _definition.key in {"url_pulse", "url_passport", "url_extract", "url_changed"}:
+    if _definition.key in {
+        "url_pulse",
+        "url_passport",
+        "url_extract",
+        "url_changed",
+        "batch_url_status",
+    }:
         continue
     app.add_api_route(
         _definition.path,

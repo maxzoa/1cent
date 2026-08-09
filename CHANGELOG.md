@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.8.0 - 2026-08-09
+
+- Added ten deterministic shared-artifact projections: static schema validation, accessibility,
+  technology, policy, localization, content quality, tables, citations, static performance and
+  site-coherence evidence.
+- Added `batch_url_status` with one-to-five URL cap, strict body schema, deterministic body-aware
+  x402 quote before work, ordered partial results and no automatic payment retry.
+- Expanded the canonical paid catalog from 32 to 43 tools and MCP discovery from 35 to 46 tools;
+  REST, remote MCP and Buyer Bridge reuse the same service and payment logic.
+- Fixed JSON-LD extraction so blocks survive HTML script cleanup and added semantic golden tests.
+- Fixed the health monitor so a public TLS/tunnel failure cannot roll back a healthy local Mainnet
+  API; only three local Mainnet failures with a valid persisted marker permit rollback.
+- Added a Docker-socket-free PostgreSQL backup sidecar, fresh-backup health, restore evidence and
+  resilient Telegram bot command registration.
+- Added a 26-outcome market denominator with JSON/CSV, `unknown=0`, plus a DB-backed 1/7/30 funnel
+  snapshot that never calls a 402 quote a purchase.
+- No payment is executed by this release. Network, Base USDC, seller and PayAI contracts remain
+  pinned; production activation still requires the normal backup, preflight and rollback gates.
+
 ## 0.7.1 - 2026-08-09
 
 - Updated `cryptography` from 49.0.0 to 50.0.0 after CI identified PYSEC-2026-3552; regenerated

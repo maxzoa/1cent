@@ -1,4 +1,7 @@
 from onecent.schemas.operations import (
+    BatchItemResponse,
+    BatchToolResponse,
+    BatchUrlRequest,
     CatalogSearchRequest,
     CatalogSearchResponse,
     ChangedResponse,
@@ -16,6 +19,9 @@ from onecent.schemas.operations import (
 )
 
 __all__ = [
+    "BatchItemResponse",
+    "BatchToolResponse",
+    "BatchUrlRequest",
     "ChangedResponse",
     "CatalogSearchRequest",
     "CatalogSearchResponse",

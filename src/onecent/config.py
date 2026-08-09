@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     owner_mainnet_approved: bool = False
     seller_address_confirmed: bool = False
     owner_price_floor_approved: bool = False
-    mainnet_backup_path: str = "/backups/onecent-latest.dump"
+    mainnet_backup_path: str = "/backups/onecent-latest.sql.gz"
     mainnet_backup_max_age_hours: int = 24
     mainnet_daily_settlement_limit_enabled: bool = False
     mainnet_daily_revenue_limit_enabled: bool = False

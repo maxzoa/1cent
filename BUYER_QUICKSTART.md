@@ -31,7 +31,7 @@ Many MCP clients can list and call remote tools but cannot create an x402 wallet
 local bridge when the client does not explicitly support x402 v2 payments:
 
 ```bash
-pipx install "onecent[buyer] @ git+https://github.com/maxzoa/1cent.git"
+pipx install "onecent[buyer]==0.8.0"
 onecent wallet set
 onecent doctor
 onecent install --client claude
@@ -103,9 +103,13 @@ Buyer requirements:
 Direct remote MCP configuration alone does not add a signer. Use Buyer Bridge unless the selected
 MCP client documents native x402 payment creation and local wallet policy.
 
+For up to five URLs, `batch_url_status` quotes the exact total before payment and then executes the
+same SSRF-safe status operation sequentially. Each URL is validated before payment; partial results
+are explicit and ambiguous settlements are never retried automatically.
+
 Node users can run `npm ci` and then `npm exec -- onecent-buyer doctor` from
 `packages/onecent-buyer`. A paid call still requires explicit network, asset, seller, amount and
-one-call confirmation flags. No public npm publication is implied by this repository command.
+one-call confirmation flags. The published package version for this release is `0.8.0`.
 
 ## Key safety
 

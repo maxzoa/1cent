@@ -9,7 +9,7 @@ Public security contact: `https://1cent.maxzoa.ru/.well-known/security.txt`.
 
 ## Supported release
 
-Only current production release `0.7.0` and latest `main` revision receive security fixes.
+Only current production release `0.8.0` and latest `main` revision receive security fixes.
 See [CURRENT_PRODUCTION.md](CURRENT_PRODUCTION.md) for the active runtime contract.
 
 ## Scope
@@ -29,6 +29,8 @@ access-control bypass or tests against third-party sites without authorization. 
 - Raw payment signatures and wallet secrets are not audit fields.
 - UNKNOWN settlement has no automatic retry.
 - Operational pause occurs before facilitator verify/settle.
+- Batch input is validated and priced before work; it is capped at five distinct URLs and runs
+  through the same SSRF, concurrency, cache, audit and idempotency controls.
 
 ## Buyer Bridge guarantees
 

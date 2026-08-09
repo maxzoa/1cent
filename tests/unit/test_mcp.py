@@ -33,9 +33,16 @@ async def test_mcp_tools_have_strict_schemas_and_descriptions() -> None:
             assert tool.inputSchema.get("required", []) == []
             assert tool.inputSchema.get("properties", {}) == {}
         else:
-            field = "query" if tool.name == "catalog.tools.search" else "url"
+            field = (
+                "query"
+                if tool.name == "catalog.tools.search"
+                else "urls"
+                if tool.name == "web.batch.url_status"
+                else "url"
+            )
             assert field in tool.inputSchema["required"]
-            assert tool.inputSchema["properties"][field]["type"] == "string"
+            expected_type = "array" if field == "urls" else "string"
+            assert tool.inputSchema["properties"][field]["type"] == expected_type
             assert tool.inputSchema["properties"][field]["description"]
             assert tool.inputSchema["properties"][field]["examples"]
         for property_schema in tool.inputSchema.get("properties", {}).values():
@@ -101,7 +108,7 @@ def test_registry_remote_metadata() -> None:
     document = json.loads((Path(__file__).parents[2] / "server.json").read_text("utf-8"))
     assert MCP_PROTOCOL_VERSION == "2025-11-25"
     assert document["name"] == "ru.maxzoa/1cent"
-    assert document["version"] == "0.7.1"
+    assert document["version"] == "0.8.0"
     assert document["remotes"] == [
         {"type": "streamable-http", "url": "https://1cent.maxzoa.ru/mcp"}
     ]

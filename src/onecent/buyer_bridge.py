@@ -5,7 +5,7 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, cast
+from typing import Annotated, Literal, cast
 from urllib.parse import urlsplit
 
 import httpx
@@ -13,6 +13,7 @@ from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
+from pydantic import Field
 from x402 import x402Client
 from x402.client_base import PaymentPolicy, RequirementsView
 from x402.http import decode_payment_required_header, decode_payment_response_header
@@ -30,7 +31,7 @@ BASE_URL = "https://1cent.maxzoa.ru"
 BASE_MAINNET = "eip155:8453"
 BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 SELLER = "0x4798e8401ba3b1566685257c82d06303AB90EA35"
-BRIDGE_VERSION = "0.7.1"
+BRIDGE_VERSION = "0.8.0"
 
 
 class BuyerBridgeError(RuntimeError):
@@ -565,7 +566,30 @@ def create_buyer_bridge(service: BuyerBridgeService) -> FastMCP[None]:
         )(paid_tool)
 
     for definition in TOOLS:
-        if definition.key == "url_extract":
+        if definition.key == "batch_url_status":
+
+            async def batch_url_status(
+                urls: Annotated[list[str], Field(min_length=1, max_length=5)],
+                fresh: bool = False,
+            ) -> dict[str, object]:
+                try:
+                    return await service.paid_call(
+                        "batch_url_status",
+                        {"urls": urls, "fresh": fresh},
+                    )
+                except (BuyerBridgeError, BuyerStateError) as exc:
+                    return _tool_error(exc)
+
+            bridge.tool(
+                name="batch_url_status",
+                title="Batch URL Status",
+                description=(
+                    definition.description_en
+                    + " The local bridge validates the body-aware live x402 quote before signing."
+                ),
+                annotations=_annotations(open_world=True),
+            )(batch_url_status)
+        elif definition.key == "url_extract":
 
             async def url_extract(
                 url: str,

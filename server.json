@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "ru.maxzoa/1cent",
   "title": "1cent Web Intelligence for AI Agents",
-  "description": "SSRF-safe web intelligence: 4 outcomes, 32 paid x402 tools, 3 free tools and a URL preview.",
-  "version": "0.7.1",
+  "description": "SSRF-safe web intelligence: 4 outcomes, 43 paid x402 tools, 3 free tools and a URL preview.",
+  "version": "0.8.0",
   "websiteUrl": "https://1cent.maxzoa.ru",
   "remotes": [
     {

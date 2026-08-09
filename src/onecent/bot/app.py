@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
@@ -64,6 +65,36 @@ settings = get_settings()
 UTC = timezone.utc
 confirmations: dict[str, tuple[int, str, datetime]] = {}
 action_lock = asyncio.Lock()
+logger = logging.getLogger(__name__)
+
+BOT_COMMANDS = [
+    BotCommand(command="menu", description="Главное меню"),
+    BotCommand(command="status", description="Статус"),
+    BotCommand(command="prices", description="Цены"),
+    BotCommand(command="payments", description="Платежи"),
+    BotCommand(command="revenue", description="Деньги"),
+    BotCommand(command="today", description="Сегодня"),
+    BotCommand(command="funnel", description="Почему не платят"),
+    BotCommand(command="errors", description="Ошибки"),
+    BotCommand(command="production_readiness", description="Готовность"),
+]
+
+
+async def configure_commands_best_effort(bot: Bot, attempts: int = 3) -> bool:
+    """Do not crash-loop polling when Telegram DNS/API is briefly unavailable."""
+    for attempt in range(1, attempts + 1):
+        try:
+            await bot.set_my_commands(BOT_COMMANDS)
+            return True
+        except Exception as exc:
+            logger.warning(
+                "telegram command registration unavailable attempt=%s error=%s",
+                attempt,
+                type(exc).__name__,
+            )
+            if attempt < attempts:
+                await asyncio.sleep(2 ** (attempt - 1))
+    return False
 
 
 async def authorized(message: Message, command: str) -> bool:
@@ -492,7 +523,10 @@ async def show_settings_category(callback: CallbackQuery) -> None:
             or "История пуста."
         )
     elif category == "tools":
-        body = "Цены и доступность 32 tools находятся в PostgreSQL tool_catalog. Используй /prices."
+        body = (
+            f"Цены и доступность {len(TOOL_BY_KEY)} инструментов находятся в PostgreSQL "
+            "tool_catalog. Используй /prices."
+        )
     else:
         selected = [item for item in SETTINGS if item.category == category]
         async with Session() as session:
@@ -662,25 +696,18 @@ async def main() -> None:
     if settings.telegram_bot_token == "CHANGE_ME":
         raise RuntimeError("TELEGRAM_BOT_TOKEN is not configured")
     bot = Bot(settings.telegram_bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    await bot.set_my_commands(
-        [
-            BotCommand(command="menu", description="Главное меню"),
-            BotCommand(command="status", description="Статус"),
-            BotCommand(command="prices", description="Цены"),
-            BotCommand(command="payments", description="Платежи"),
-            BotCommand(command="revenue", description="Деньги"),
-            BotCommand(command="today", description="Сегодня"),
-            BotCommand(command="funnel", description="Почему не платят"),
-            BotCommand(command="errors", description="Ошибки"),
-            BotCommand(command="production_readiness", description="Готовность"),
-        ]
-    )
-    async with Session() as session:
-        await validate_database_templates(session)
-    dispatcher = Dispatcher()
-    dispatcher.include_router(router)
-    Path("/tmp/onecent-bot-ready").touch()
-    await dispatcher.start_polling(bot)
+    ready_file = Path("/tmp/onecent-bot-ready")
+    try:
+        await configure_commands_best_effort(bot)
+        async with Session() as session:
+            await validate_database_templates(session)
+        dispatcher = Dispatcher()
+        dispatcher.include_router(router)
+        ready_file.touch()
+        await dispatcher.start_polling(bot)
+    finally:
+        ready_file.unlink(missing_ok=True)
+        await bot.session.close()
 
 
 if __name__ == "__main__":
