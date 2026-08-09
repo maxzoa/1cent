@@ -82,7 +82,7 @@ onecent install --client codex
 For MCP clients without native x402 signing, install the local Buyer Bridge:
 
 ```bash
-pipx install "onecent[buyer]==0.7.0"
+pipx install "onecent[buyer]==0.7.1"
 onecent wallet set
 onecent bridge --max-usdc-per-call 0.001 --daily-limit-usdc 0.01
 ```
@@ -98,13 +98,13 @@ confirms Base Mainnet and types the one-call confirmation. See `examples/buyer-p
 Node buyers can install the public release package:
 
 ```bash
-npm install --global onecent-buyer@0.7.0
+npm install --global onecent-buyer@0.7.1
 onecent-buyer doctor
 ```
 
 The package source remains available in [`packages/onecent-buyer`](packages/onecent-buyer).
-Registry pages: [PyPI `onecent` 0.7.0](https://pypi.org/project/onecent/0.7.0/) and
-[npm `onecent-buyer` 0.7.0](https://www.npmjs.com/package/onecent-buyer/v/0.7.0).
+Registry pages: [PyPI `onecent` 0.7.1](https://pypi.org/project/onecent/0.7.1/) and
+[npm `onecent-buyer` 0.7.1](https://www.npmjs.com/package/onecent-buyer/v/0.7.1).
 
 `onecent watch` provides finite, capped change monitoring. It is disabled by default, requires
 explicit Base network/asset/seller confirmations and stops on UNKNOWN without creating a new

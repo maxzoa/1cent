@@ -161,7 +161,7 @@ def test_agent_discovery_documents_and_content_negotiation(client: TestClient) -
     assert skill.headers["content-type"].startswith("text/markdown")
     assert skill.text.startswith("---\nname: onecent-web-intelligence\n")
     assert client.get("/agents.txt").status_code == 200
-    assert client.get("/.well-known/webmcp.json").json()["version"] == "0.7.0"
+    assert client.get("/.well-known/webmcp.json").json()["version"] == "0.7.1"
 
 
 def test_mcp_cors_preflight(client: TestClient) -> None:
@@ -206,7 +206,7 @@ def test_mcp_well_known_manifest(client: TestClient) -> None:
     assert manifest.headers["content-type"].startswith("application/json")
     body = manifest.json()
     assert body["name"] == "ru.maxzoa/1cent"
-    assert body["version"] == "0.7.0"
+    assert body["version"] == "0.7.1"
     assert body["websiteUrl"] == "https://1cent.maxzoa.ru"
     assert body["remotes"] == [
         {
@@ -245,7 +245,7 @@ def test_free_demo_status_security_and_server_card(
 
     status = client.get("/status.json")
     assert status.status_code == 200
-    assert status.json()["version"] == "0.7.0"
+    assert status.json()["version"] == "0.7.1"
     assert status.json()["paid_tools"] == 32
     assert status.json()["free_mcp_tools"] == [
         "catalog.tools.search",

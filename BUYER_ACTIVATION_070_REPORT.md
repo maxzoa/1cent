@@ -81,14 +81,16 @@ container IDs and start times unchanged.
 - Monitor: `mainnet_health=PASS`; maintenance marker cleared; service enabled.
 - Successful settlement count and sum remained `41 / 228000 atomic`. No payment was executed.
 
-## Public buyer packages (2026-08-09)
+## Public buyer packages and security update (2026-08-09)
 
-- PyPI: `onecent` version `0.7.0` is public and installable with
-  `pipx install "onecent[buyer]==0.7.0"`.
-- npm: `onecent-buyer` version `0.7.0` is public and installable with
-  `npm install --global onecent-buyer@0.7.0`.
+- PyPI: `onecent` version `0.7.1` is the supported install target:
+  `pipx install "onecent[buyer]==0.7.1"`.
+- npm: `onecent-buyer` version `0.7.1` is the supported install target:
+  `npm install --global onecent-buyer@0.7.1`.
 - Public registry metadata confirms the Apache-2.0 license and the canonical
   `https://github.com/maxzoa/1cent` repository.
+- Patch `0.7.1` replaces vulnerable `cryptography==49.0.0` with `50.0.0`; all three hashed lock
+  files retain the existing platform-specific pins.
 - GitHub Actions package publishing is defined in `.github/workflows/publish-packages.yml`; PyPI
   trusts that workflow and npm Trusted Publisher configuration is recorded separately from buyer
   or seller credentials.

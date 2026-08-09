@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.1 - 2026-08-09
+
+- Updated `cryptography` from 49.0.0 to 50.0.0 after CI identified PYSEC-2026-3552; regenerated
+  runtime, buyer and development lock hashes without dropping Linux-only dependencies.
+- Published-install documentation now points to the PyPI and npm buyer packages instead of a
+  source checkout.
+- Made promo-status time injectable so the seven-day campaign tests remain deterministic after
+  the campaign expires; production pricing behavior is unchanged.
+- No production deployment, x402 settlement, network, facilitator, seller or price change is part
+  of this package security release.
+
 ## 0.7.0 - 2026-07-30
 
 - Added one buyer-selected, SSRF-protected URL preview per client and UTC day at
