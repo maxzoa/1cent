@@ -4,14 +4,14 @@
 
 - Registry: `https://registry.modelcontextprotocol.io`.
 - Name: `ru.maxzoa/1cent`.
-- Version: `0.7.0`.
+- Version: `0.8.0`.
 - Status at publication: `active`.
 - Latest at publication: `true`.
 - Remote: `https://1cent.maxzoa.ru/mcp`.
 - Transport: Streamable HTTP.
 - Schema: `https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json`.
 - Authentication: DNS, dedicated Registry-only Ed25519 key.
-- Published: `2026-07-30T12:19:34.384162Z`.
+- Published: `2026-08-09T16:54:35.038028Z`.
 
 Private key stays under ignored local `.secrets/`, never in Git/NAS/Telegram/report/process logs.
 Seller/buyer keys are not Registry keys.
@@ -33,7 +33,7 @@ sh scripts/smoke_mcp.sh
 7. Verify official API: exact name/version/description/MCP URL, `active`, `isLatest=true`.
 8. Update `MCP_REGISTRY_PUBLICATION_REPORT.md`.
 
-Current `0.7.0` verification matched exact name, version, description and remote. The Registry API
+Current `0.8.0` verification matched exact name, version, description and remote. The Registry API
 reported `active` and `latest=true`.
 
 Не публиковать metadata для версии, которая ещё не работает публично. Registry publication не
