@@ -45,6 +45,14 @@ def test_nas_deploy_uses_the_public_host_port_by_default() -> None:
     assert "HOST_PORT=${ONECENT_HOST_PORT:-18013}" in deploy
 
 
+def test_mainnet_preflight_validates_the_real_container_backup_path() -> None:
+    root = Path(__file__).resolve().parents[2]
+    preflight = (root / "scripts" / "preflight_mainnet.sh").read_text(encoding="utf-8")
+    assert "EXPECTED_RUNTIME_BACKUP=/backups/onecent-latest.sql.gz" in preflight
+    assert "CONFIGURED_BACKUP" in preflight
+    assert "/run/onecent-backup.dump" not in preflight
+
+
 def test_monitor_reads_only_safe_runtime_environment() -> None:
     script = (
         Path(__file__).resolve().parents[2] / "scripts" / "monitor_mainnet_health.sh"
