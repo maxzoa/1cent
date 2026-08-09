@@ -1,27 +1,17 @@
 # Текущее production-состояние
 
-Актуально на `2026-08-09`. Это живой документ. При расхождении с endpoint работа с
-платежами останавливается до read-only диагностики.
+Проверено `2026-08-09T16:34:49Z` по публичным endpoint и NAS runtime.
 
-## Статус перед релизом 0.8.0
+## Live
 
-Публичный runtime фактически откатился на release `0.7.0`, testnet `eip155:84532` и
-facilitator `https://x402.org/facilitator`. Причина доказана в monitor-логе: три внешних
-TLS reset подряд были ошибочно приняты за отказ локального API, после чего штатный rollback
-восстановил сохранённый testnet-профиль. До завершения preflight и нового production deploy
-это состояние имеет вердикт `NO-GO production truth` и не называется Base Mainnet.
-
-Подготавливаемый release: `0.8.0`. Он не считается публичным, пока NAS, public smoke и
-нижеописанные gates не пройдут.
-
-## Утверждённый production-профиль
-
-| Параметр | Значение |
+| Параметр | Фактическое значение |
 |---|---|
+| Версия API | `0.8.0` |
 | REST | `https://1cent.maxzoa.ru` |
 | MCP | `https://1cent.maxzoa.ru/mcp` |
 | MCP protocol | `2025-11-25` |
 | Transport | Streamable HTTP |
+| Payment mode | `x402-v2-mainnet` |
 | Network | Base Mainnet `eip155:8453` |
 | Facilitator | `https://facilitator.payai.network` |
 | Asset | Base USDC `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` |
@@ -29,43 +19,60 @@ TLS reset подряд были ошибочно приняты за отказ 
 | Paid REST/MCP operations | 43 |
 | Free MCP tools | 3 |
 | Total MCP tools | 46 |
-| MCP prompts | 1: `choose_url_tool` |
-| MCP resources | 1: `onecent://buyer-guide` |
-| NAS host port | `18013` |
-| API container port | `8013` |
-| PostgreSQL | internal `5432` |
+| MCP prompts/resources | 1 / 1 |
+| NAS host/container port | `18013:8013` |
+| Alembic | `0009 (head)` |
+| Mainnet marker | `PUBLIC_MAINNET_ACTIVE=true` |
+
+Публичные `/health`, `/info`, `/status.json`, OpenAPI, REST 402 и MCP unpaid
+challenge прошли. Все 43 платных маршрута объявляют Base Mainnet, Base USDC и
+настроенного seller. Во время релиза settlement не выполнялся.
+
+## Контейнеры и backup
+
+| Сервис | Состояние | Restart count |
+|---|---|---:|
+| `onecent-api` | healthy | 0 |
+| `onecent-bot` | healthy | 0 |
+| `onecent-db` | healthy | 0 |
+| `onecent-backup` | healthy | 0 |
+
+- Release image ID: `sha256:deaffb65cbee0ea19367c1dea9b2db7749a41a3625bbc3bcf56826742de64cab`.
+- Image created: `2026-08-09T15:57:44.82532602Z`.
+- Fresh backup: `/volume1/docker/1cent/backups/onecent-latest.sql.gz`,
+  `2127262` bytes, mode `600`, epoch `1786290859`.
+- Изолированный restore drill: PASS, 17 таблиц, migration `0009`.
+- Rollback artifact: `/volume1/docker/1cent/onecent-pre-080-20260809T153814Z.tar.gz`,
+  mode `600`.
+- Monitor: `mainnet_health=PASS`; публичный TLS отделён от локального health gate.
 
 ## Платежи и безопасность
 
-- x402 v2, scheme `exact`; цена всегда берётся из live challenge/catalog.
-- Коммерческие дневные квоты выключены через
-  `MAINNET_DAILY_SETTLEMENT_LIMIT_ENABLED=false` и
-  `MAINNET_DAILY_REVENUE_LIMIT_ENABLED=false`.
-- Сохраняются rate limits, очередь, concurrency, circuit breaker, operational/emergency pause,
-  SSRF, cache, аудит, payment identifier, request fingerprint и idempotency.
-- URL-операция не начинается до успешной проверки оплаты.
+- `APP_ENV=production`, `OWNER_MAINNET_APPROVED=true`.
+- `X402_ENVIRONMENT=mainnet`, `X402_NETWORK=eip155:8453`.
+- `DEVELOPMENT_BYPASS_ENABLED=false`.
+- Buyer/seller private key отсутствуют в серверном runtime.
+- URL-операция запрещена до успешной verify/settle цепочки.
 - UNKNOWN не получает автоматический retry или новый payment ID.
-- Buyer private key остаётся на стороне покупателя; seller private key на сервере отсутствует.
-- Development bypass в production запрещён.
-- Безопасная настройка покупателя: [BUYER_BRIDGE.md](BUYER_BRIDGE.md).
+- Сохранены idempotency, pause, rate limits, очередь, concurrency, circuit breaker,
+  SSRF, cache, аудит и rollback.
+- Коммерческие дневные квоты отключены явными boolean-флагами; технические защиты
+  продолжают действовать.
+- До и после deploy: `41` исторический successful settlement, `228000` atomic
+  суммарно по Mainnet и testnet. Это не равно доказанной внешней выручке.
+- Доказанная независимая коммерческая выручка: `0 USDC`; один Mainnet settlement
+  `3000` atomic остаётся только `probable_external`.
 
 ## Release 0.8.0
 
-- 43 платных REST/MCP операции и 46 MCP tools всего.
-- Десять новых дешёвых проекций общего безопасно загруженного документа.
-- `batch_url_status`: 1–5 разных HTTP(S) URL, строгая schema, детерминированная цена до работы,
-  последовательное безопасное выполнение и явные partial results.
-- Product denominator: [WEB_INTELLIGENCE_COVERAGE_MATRIX.md](WEB_INTELLIGENCE_COVERAGE_MATRIX.md),
+- Добавлено 10 безопасных проекций уже ограниченно загруженного документа.
+- Добавлен `batch_url_status`: 1–5 разных HTTP(S) URL, цена до работы, строгий
+  body/schema cap, последовательное выполнение, явные partial results.
+- Исправлены завышенные контракты language, Markdown, JSON-LD, metadata и charset.
+- Полный denominator: [WEB_INTELLIGENCE_COVERAGE_MATRIX.md](WEB_INTELLIGENCE_COVERAGE_MATRIX.md),
   JSON и CSV; `Unknown = 0`.
-
-## Обязательные gates перед возвратом Mainnet
-
-1. Fresh PostgreSQL backup младше 24 часов и изолированный restore drill.
-2. Migration `0009`, Docker/NAS build, healthy API/bot/DB/backup.
-3. `APP_ENV=production`, owner approval, Base Mainnet network/USDC/seller/PayAI и bypass off.
-4. Локальный и публичный unpaid REST/MCP smoke всех контрактов.
-5. Monitor проверяет локальный runtime отдельно от публичного TLS и имеет валидный rollback marker.
-6. Ни одного тестового settlement; settlement/revenue до и после deploy должны совпасть.
+- Funnel: [FUNNEL_SNAPSHOT_2026-08-09.md](FUNNEL_SNAPSHOT_2026-08-09.md).
+- Полный аудит: [HANDOFF_FULL_COVERAGE_AUDIT_RU.md](HANDOFF_FULL_COVERAGE_AUDIT_RU.md).
 
 ## Live источники
 
@@ -76,7 +83,5 @@ TLS reset подряд были ошибочно приняты за отказ 
 - `https://1cent.maxzoa.ru/.well-known/x402`
 - `https://1cent.maxzoa.ru/openapi.json`
 
-Финальные image ID/digest, backup, UTC запуска, container health, Telegram `message_id`,
-settlement delta и marketplace status будут зафиксированы в
-[HANDOFF_FULL_COVERAGE_AUDIT_RU.md](HANDOFF_FULL_COVERAGE_AUDIT_RU.md) только после фактической
-приёмки.
+При расхождении документа с endpoint платежный deploy получает `NO-GO` до
+read-only диагностики.
