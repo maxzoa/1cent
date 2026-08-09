@@ -90,7 +90,7 @@ Mainnet marker: `PUBLIC_MAINNET_ACTIVE=true`.
 |---|---|
 | Ruff | PASS |
 | mypy strict | PASS |
-| pytest | PASS: 168 passed, 7 skipped |
+| pytest | PASS: 173 passed, 7 skipped |
 | Semantic/security tests | PASS |
 | Python sdist/wheel | PASS |
 | npm pack | PASS |
@@ -120,9 +120,15 @@ Mainnet marker: `PUBLIC_MAINNET_ACTIVE=true`.
 
 ## Distribution и package alignment
 
-GitHub release, Official MCP Registry, npm/PyPI, Buyer Bridge и marketplace-карточки
-проверяются после merge/tag 0.8.0. Финальные статусы записываются в
-`CATALOG_SUBMISSION_STATUS.md`; внешний async cache не называется PASS.
+GitHub release `v0.8.0`, Official MCP Registry `0.8.0 active/latest`, PyPI
+`onecent==0.8.0`, npm `onecent-buyer@0.8.0` и Buyer Bridge совпадают с live runtime.
+Полная текущая матрица: `CATALOG_SUBMISSION_STATUS.md`.
+
+Marketplace-карточки Smithery, Glama, LobeHub, MCP.so, MCPServers.org и
+modelcontext-protocol.com ещё показывают старые 32/35 tools или старую версию.
+PayAI Bazaar содержит 32 из 43 exact resource URL; новые 11 не оплачиваются ради
+индексации. Awesome PR #11089 остаётся open/mergeable; MCP.Directory, MCPfinder и
+PulseMCP остаются внешними review/import pending. Эти статусы не названы PASS.
 
 ## Credential incident
 
@@ -135,7 +141,8 @@ codes через зарегистрированный security key. Публик
 ## Границы приёмки
 
 - Local PASS, NAS/Docker PASS, public PASS, Telegram PASS доказаны отдельно.
-- Marketplace/package/release статусы до их фактической публикации остаются pending.
+- GitHub/Registry/npm/PyPI опубликованы; внешние stale/review marketplace статусы
+  отделены в актуальной матрице.
 - Coinbase/CDP не подключён. Mainnet configuration не менялась произвольно.
 - Реальных или testnet платежей для проверки не выполнялось.
 - Другие проекты, контейнеры, volumes и Docker socket не затронуты.
