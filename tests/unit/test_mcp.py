@@ -101,7 +101,7 @@ def test_registry_remote_metadata() -> None:
     document = json.loads((Path(__file__).parents[2] / "server.json").read_text("utf-8"))
     assert MCP_PROTOCOL_VERSION == "2025-11-25"
     assert document["name"] == "ru.maxzoa/1cent"
-    assert document["version"] == "0.7.0"
+    assert document["version"] == "0.7.1"
     assert document["remotes"] == [
         {"type": "streamable-http", "url": "https://1cent.maxzoa.ru/mcp"}
     ]

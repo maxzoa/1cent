@@ -24,11 +24,15 @@ adapter for MCP clients that can call tools but cannot create x402 payments them
 Requires Python 3.12+ and `pipx`:
 
 ```bash
-pipx install "onecent[buyer] @ git+https://github.com/maxzoa/1cent.git"
+pipx install "onecent[buyer]==0.7.1"
 onecent wallet set
 onecent wallet status
 onecent doctor
 ```
+
+The published package is available at
+[PyPI `onecent` 0.7.1](https://pypi.org/project/onecent/0.7.1/). GitHub installation is reserved for
+contributors testing unreleased changes.
 
 Generate a client configuration without secrets:
 

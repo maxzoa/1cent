@@ -32,8 +32,10 @@ async def price_promo_active(session: AsyncSession) -> bool:
     return active is not None and active.value.lower() == "true"
 
 
-async def price_promo_status(session: AsyncSession) -> dict[str, object]:
-    await restore_price_promo_if_expired(session)
+async def price_promo_status(
+    session: AsyncSession, *, now: datetime | None = None
+) -> dict[str, object]:
+    await restore_price_promo_if_expired(session, now=now)
     active = await price_promo_active(session)
     atomic = await _setting(session, PROMO_ATOMIC_KEY)
     expires = await _setting(session, PROMO_EXPIRES_KEY)
