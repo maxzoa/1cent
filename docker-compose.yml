@@ -53,7 +53,7 @@ services:
     restart: unless-stopped
   onecent-backup:
     image: postgres:16-alpine
-    user: "0:0"
+    user: "${BACKUP_UID:-1026}:${BACKUP_GID:-100}"
     environment:
       POSTGRES_HOST: onecent-db
       POSTGRES_DB: ${POSTGRES_DB:-onecent}

@@ -25,6 +25,8 @@ def test_backup_sidecar_is_bounded_and_does_not_use_docker_socket() -> None:
     assert "umask 077" in script
     assert "onecent-latest.sql.gz" in script
     assert "onecent-backup:" in compose
+    assert 'user: "${BACKUP_UID:-1026}:${BACKUP_GID:-100}"' in compose
+    assert 'user: "0:0"' not in compose
     assert "backup_db_container.sh:/scripts/backup_db_container.sh:ro" in compose
     assert "/var/run/docker.sock" not in compose
     assert "--remove-orphans" not in compose
