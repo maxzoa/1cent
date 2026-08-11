@@ -57,7 +57,9 @@ Stage 13 завершён и развёрнут в публичном production
 
 - Telegram funnel показывает facilitator latency и delivery latency: average и p95.
 - Тексты Telegram сохранены на понятном русском языке.
-- Добавлен независимый GitHub external-health каждые 15 минут.
+- Добавлен независимый GitHub external-health. Первоначальный интервал 15 минут
+  заменён 2026-08-11 на ежечасный: NAS monitor уже проверяет сервис каждые 5 минут,
+  а GitHub probe нужен как независимая внешняя проверка без дублирования alert spam.
 - External-health проверяет public health/status, бесплатный demo и декодированный
   unpaid x402 challenge: network, amount, Base USDC и seller.
 - Добавлен bounded unpaid load smoke: 25 запросов, concurrency 5, без платежа.
