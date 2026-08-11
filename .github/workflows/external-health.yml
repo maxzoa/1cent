@@ -2,7 +2,9 @@ name: external-health
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    # NAS monitoring already runs every five minutes. This independent public
+    # probe is intentionally hourly to avoid noisy duplicate alerts.
+    - cron: "17 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -27,36 +29,62 @@ jobs:
           trap 'rm -rf "$work"' EXIT
 
           health_code=$(curl -A "$ua" --fail --silent --show-error \
+            --retry 2 --retry-delay 3 --retry-all-errors \
+            --connect-timeout 10 --max-time 30 \
             --output "$work/health" --write-out '%{http_code}' "$base/health")
           test "$health_code" = 200
           grep -q '"status":"ok"' "$work/health"
 
           status_code=$(curl -A "$ua" --fail --silent --show-error \
+            --retry 2 --retry-delay 3 --retry-all-errors \
+            --connect-timeout 10 --max-time 30 \
             --output "$work/status" --write-out '%{http_code}' "$base/status.json")
           test "$status_code" = 200
           grep -q '"network":"eip155:8453"' "$work/status"
 
+          info_code=$(curl -A "$ua" --fail --silent --show-error \
+            --retry 2 --retry-delay 3 --retry-all-errors \
+            --connect-timeout 10 --max-time 30 \
+            --output "$work/info" --write-out '%{http_code}' "$base/info")
+          test "$info_code" = 200
+
           demo_code=$(curl -A "$ua" --fail --silent --show-error \
+            --retry 2 --retry-delay 3 --retry-all-errors \
+            --connect-timeout 10 --max-time 30 \
             --output "$work/demo" --write-out '%{http_code}' "$base/v1/demo/pulse")
           test "$demo_code" = 200
           grep -q '"network_request_performed":false' "$work/demo"
 
-          code=$(curl -A "$ua" --silent --show-error --dump-header "$work/headers" \
-            --output "$work/body" --write-out '%{http_code}' \
-            -H 'Content-Type: application/json' \
-            -d '{"url":"https://example.com/","fresh":false}' \
-            "$base/v1/url/status")
+          code=000
+          for attempt in 1 2 3; do
+            code=$(curl -A "$ua" --silent --show-error \
+              --connect-timeout 10 --max-time 30 \
+              --dump-header "$work/headers" \
+              --output "$work/body" --write-out '%{http_code}' \
+              -H 'Content-Type: application/json' \
+              -d '{"url":"https://example.com/","fresh":false}' \
+              "$base/v1/url/status") || code=000
+            test "$code" != 402 || break
+            test "$attempt" = 3 || sleep $((attempt * 3))
+          done
           test "$code" = 402
           grep -qi '^payment-required:' "$work/headers"
           payment_required=$(sed -n \
             's/^[Pp][Aa][Yy][Mm][Ee][Nn][Tt]-[Rr][Ee][Qq][Uu][Ii][Rr][Ee][Dd]:[[:space:]]*//p' \
             "$work/headers" | tr -d '\r' | tail -1)
           test -n "$payment_required"
-          PAYMENT_REQUIRED="$payment_required" python - <<'PY'
+          INFO_FILE="$work/info" PAYMENT_REQUIRED="$payment_required" python - <<'PY'
           import base64
           import json
           import os
+          from decimal import Decimal
 
+          with open(os.environ["INFO_FILE"], encoding="utf-8") as source:
+              info = json.load(source)
+          expected_amount = str(
+              int(Decimal(info["operations"]["url_status"]) * Decimal(1_000_000))
+          )
+          assert int(expected_amount) > 0
           encoded = os.environ["PAYMENT_REQUIRED"]
           payload = json.loads(
               base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4))
@@ -64,12 +92,13 @@ jobs:
           accepts = payload["accepts"]
           assert any(
               item["network"] == "eip155:8453"
-              and item["amount"] == "1000"
+              and item["amount"] == expected_amount
               and item["asset"].lower()
               == "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
               and item["payTo"].lower()
               == "0x4798e8401ba3b1566685257c82d06303ab90ea35"
               for item in accepts
           )
+          print(f"url_status_amount_atomic={expected_amount}")
           PY
           echo external_health=PASS
