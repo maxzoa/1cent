@@ -9,6 +9,8 @@
   response when `/v1/demo/preview` is opened without a URL.
 - Expanded conversion telemetry across landing, tools, pricing, preview, payment guide and unpaid
   browser payment entry without classifying HTTP 402 as a purchase.
+- Upgraded fixed Debian runtime packages during image build to remove CVE-2026-53615 from the
+  inherited `python:3.12-slim` base image.
 - Server-side daily sales and revenue quotas remain disabled. Rate limits, concurrency, queue,
   pause, SSRF, idempotency and UNKNOWN no-retry protections remain active.
 - No settlement, network, facilitator, seller or price change is part of this release.
