@@ -31,7 +31,7 @@ BASE_URL = "https://1cent.maxzoa.ru"
 BASE_MAINNET = "eip155:8453"
 BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 SELLER = "0x4798e8401ba3b1566685257c82d06303AB90EA35"
-BRIDGE_VERSION = "0.8.0"
+BRIDGE_VERSION = "0.8.1"
 
 
 class BuyerBridgeError(RuntimeError):
@@ -70,8 +70,8 @@ class ApprovalRequired(BuyerBridgeError):
 
 @dataclass(frozen=True)
 class BridgePolicy:
-    max_per_call_atomic: int
-    daily_limit_atomic: int
+    max_per_call_atomic: int | None = None
+    daily_limit_atomic: int | None = None
     approval_mode: Literal["manual", "auto"] = "manual"
     base_url: str = BASE_URL
     timeout_seconds: float = 30.0
@@ -100,9 +100,19 @@ def _short_address(value: str) -> str:
 
 
 def validate_bridge_policy(policy: BridgePolicy) -> None:
-    if policy.max_per_call_atomic <= 0:
+    if policy.max_per_call_atomic is not None and policy.max_per_call_atomic <= 0:
         raise BuyerBridgeError("max per call must be positive")
-    if policy.daily_limit_atomic < policy.max_per_call_atomic:
+    if policy.daily_limit_atomic is not None and policy.daily_limit_atomic <= 0:
+        raise BuyerBridgeError("daily spend cap must be positive")
+    if policy.approval_mode == "auto" and (
+        policy.max_per_call_atomic is None or policy.daily_limit_atomic is None
+    ):
+        raise BuyerBridgeError("auto-pay requires explicit per-call and daily spend caps")
+    if (
+        policy.max_per_call_atomic is not None
+        and policy.daily_limit_atomic is not None
+        and policy.daily_limit_atomic < policy.max_per_call_atomic
+    ):
         raise BuyerBridgeError("daily spend cap must be at least the per-call cap")
     parsed = urlsplit(policy.base_url)
     if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
@@ -203,7 +213,7 @@ def parse_quote(
     required: PaymentRequired,
     *,
     expected_resource: str,
-    max_per_call_atomic: int,
+    max_per_call_atomic: int | None,
 ) -> PaymentQuote:
     if required.x402_version != 2:
         raise BuyerBridgeError("only x402 v2 is accepted")
@@ -221,11 +231,12 @@ def parse_quote(
             and item.network == BASE_MAINNET
             and item.asset.lower() == BASE_USDC.lower()
             and item.pay_to.lower() == SELLER.lower()
-            and 0 < amount <= max_per_call_atomic
+            and 0 < amount
+            and (max_per_call_atomic is None or amount <= max_per_call_atomic)
         ):
             matching.append((item, amount))
     if len(matching) != 1:
-        raise BuyerBridgeError("challenge has no single safe payment option under local cap")
+        raise BuyerBridgeError("challenge has no single safe exact payment option")
     selected, amount = matching[0]
     return PaymentQuote(
         amount_atomic=amount,
@@ -358,6 +369,8 @@ class BuyerBridgeService:
                 daily_limit_atomic=self.policy.daily_limit_atomic,
             )
         else:
+            if self.policy.daily_limit_atomic is None:
+                raise BuyerBridgeError("auto-pay requires an explicit daily spend cap")
             reservation = self.ledger.reserve_auto(
                 fingerprint=fingerprint,
                 tool=tool_key,

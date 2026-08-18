@@ -12,8 +12,10 @@ adapter for MCP clients that can call tools but cannot create x402 payments them
 - Default mode is manual: every paid tool call returns a quote first and performs no payment.
 - User approves exactly one quoted call with `onecent approve ... --confirm-charge PAY-ONCE`.
 - Base Mainnet `eip155:8453`, Base USDC, seller, `exact`, resource URL and amount are pinned.
-- Per-call and UTC-day spend caps are local buyer limits, not seller commercial quotas.
-- Pending and UNKNOWN amounts consume the local daily cap.
+- Manual mode has no per-call or UTC-day commercial quota. Every exact payment still needs a fresh
+  one-call approval.
+- Optional local spend caps remain available for buyers that want them. Automatic mode requires
+  explicit positive caps.
 - UNKNOWN outcome blocks the same request fingerprint; no automatic payment retry.
 - A successful result requires HTTP 200 and `PAYMENT-RESPONSE`.
 - Wallet secret is stored in the operating-system keyring or supplied by a headless process env.
@@ -24,14 +26,14 @@ adapter for MCP clients that can call tools but cannot create x402 payments them
 Requires Python 3.12+ and `pipx`:
 
 ```bash
-pipx install "onecent[buyer]==0.8.0"
+pipx install "onecent[buyer]==0.8.1"
 onecent wallet set
 onecent wallet status
 onecent doctor
 ```
 
 The published package is available at
-[PyPI `onecent` 0.8.0](https://pypi.org/project/onecent/0.8.0/). GitHub installation is reserved for
+[PyPI `onecent` 0.8.1](https://pypi.org/project/onecent/0.8.1/). GitHub installation is reserved for
 contributors testing unreleased changes.
 
 Generate a client configuration without secrets:
@@ -58,7 +60,7 @@ existing secret manager. Environment injection overrides keyring lookup. 1cent n
 Generic stdio command:
 
 ```bash
-onecent bridge --max-usdc-per-call 0.001 --daily-limit-usdc 0.01
+onecent bridge
 ```
 
 Generic Claude Desktop/Cursor-style configuration:
@@ -68,11 +70,7 @@ Generic Claude Desktop/Cursor-style configuration:
   "mcpServers": {
     "1cent-buyer": {
       "command": "onecent",
-      "args": [
-        "bridge",
-        "--max-usdc-per-call", "0.001",
-        "--daily-limit-usdc", "0.01"
-      ]
+      "args": ["bridge"]
     }
   }
 }
@@ -84,9 +82,7 @@ workspace `mcp.json`.
 Codex CLI:
 
 ```bash
-codex mcp add 1cent-buyer -- onecent bridge \
-  --max-usdc-per-call 0.001 \
-  --daily-limit-usdc 0.01
+codex mcp add 1cent-buyer -- onecent bridge
 codex mcp list
 ```
 
@@ -95,11 +91,7 @@ Equivalent Codex `~/.codex/config.toml`:
 ```toml
 [mcp_servers.1cent-buyer]
 command = "onecent"
-args = [
-  "bridge",
-  "--max-usdc-per-call", "0.001",
-  "--daily-limit-usdc", "0.01",
-]
+args = ["bridge"]
 default_tools_approval_mode = "prompt"
 tool_timeout_sec = 90
 ```
@@ -140,9 +132,9 @@ onecent bridge \
   --confirm-charge ALLOW-CAPPED-PAYMENTS
 ```
 
-Missing or wrong gate aborts startup. The local daily limit is never unlimited and cannot be set to
-zero. Choose caps independently from current promotional prices because live 402 remains the source
-of truth.
+Missing or wrong gate aborts startup. Automatic payment remains capped by design; removing its
+spend caps would permit unattended wallet drain. Choose caps independently from current prices
+because live 402 remains the source of truth.
 
 ## Recovery
 

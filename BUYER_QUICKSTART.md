@@ -22,8 +22,8 @@ One buyer-selected preview is also available per safe client fingerprint and UTC
 curl -sS "https://1cent.maxzoa.ru/v1/demo/preview?url=https%3A%2F%2Fexample.com%2F"
 ```
 
-For a browser-first purchase, open `https://1cent.maxzoa.ru/try`. The selected URL is not fetched
-until the x402 paywall confirms payment.
+For a browser-first path, open `https://1cent.maxzoa.ru/try`. The free preview performs one bounded,
+SSRF-safe fetch. A paid operation performs no additional URL work until x402 settlement succeeds.
 
 ## 2. Fastest MCP path: local Buyer Bridge
 
@@ -31,7 +31,7 @@ Many MCP clients can list and call remote tools but cannot create an x402 wallet
 local bridge when the client does not explicitly support x402 v2 payments:
 
 ```bash
-pipx install "onecent[buyer]==0.8.0"
+pipx install "onecent[buyer]==0.8.1"
 onecent wallet set
 onecent doctor
 onecent install --client claude
@@ -40,10 +40,11 @@ onecent install --client claude
 Add this stdio command to Claude Desktop, Cursor, VS Code or Codex:
 
 ```bash
-onecent bridge --max-usdc-per-call 0.001 --daily-limit-usdc 0.01
+onecent bridge
 ```
 
-Default behavior is quote-only. First paid call returns an approval ID and performs no payment.
+Manual mode has no per-call or daily commercial quota. Default behavior is quote-only. First paid
+call returns an approval ID and performs no payment.
 Approve exactly once, then repeat the same tool call once:
 
 ```bash
@@ -109,7 +110,7 @@ are explicit and ambiguous settlements are never retried automatically.
 
 Node users can run `npm ci` and then `npm exec -- onecent-buyer doctor` from
 `packages/onecent-buyer`. A paid call still requires explicit network, asset, seller, amount and
-one-call confirmation flags. The published package version for this release is `0.8.0`.
+one-call confirmation flags. The published package version for this release is `0.8.1`.
 
 ## Key safety
 

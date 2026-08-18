@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from html import escape
 from time import monotonic
 from typing import Annotated, cast
+from urllib.parse import urlencode
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,6 +37,7 @@ from onecent.schemas import (
     PulseResponse,
     ToolRequest,
     ToolResponse,
+    TrialPreviewInstructions,
     TrialPreviewResponse,
     UrlRequest,
 )
@@ -64,6 +66,18 @@ BRAND_ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
 <path d="M18 14h10v36H18zM35 14h11v8H35zM35 28h11v8H35zM35 42h11v8H35z" fill="#f97316"/>
 <circle cx="23" cy="32" r="4" fill="#fff"/>
 </svg>"""
+
+PUBLIC_PAGE_FUNNEL_STAGES = {
+    "/": "landing_view",
+    "/tools": "tools_view",
+    "/pricing": "pricing_view",
+    "/try": "trial_landing_view",
+    "/try/preview": "trial_preview_result",
+    "/try/pay": "payment_guide_view",
+    "/try/result": "browser_payment_entry",
+    "/docs/getting-started": "buyer_guide_view",
+    "/docs/buyer-bridge": "buyer_bridge_view",
+}
 
 
 async def get_session() -> AsyncIterator[AsyncSession]:
@@ -146,21 +160,29 @@ async def request_trace_middleware(request: Request, call_next):  # type: ignore
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         stage = None
-        if request.method == "GET" and request.url.path == "/":
-            stage = "landing_view"
-        elif request.method == "GET" and request.url.path == "/try":
-            stage = "trial_landing_view"
-        elif request.method == "GET" and request.url.path == "/v1/demo/preview":
-            stage = "trial_preview"
-        elif request.url.path in {"/mcp", "/mcp/"}:
+        if request.method == "GET":
+            stage = PUBLIC_PAGE_FUNNEL_STAGES.get(request.url.path)
+            if request.url.path == "/v1/demo/preview":
+                stage = "trial_preview" if request.query_params.get("url") else "trial_preview_help"
+        if request.url.path in {"/mcp", "/mcp/"}:
             stage = "mcp_request"
         if stage is not None:
             try:
+                expected_payment_challenge = (
+                    stage == "browser_payment_entry" and response.status_code == 402
+                )
+                successful = response.status_code < 400 or expected_payment_challenge
+                reason_code = None
+                if expected_payment_challenge:
+                    reason_code = "payment_required"
+                elif not successful:
+                    reason_code = f"http_{response.status_code}"
                 async with Session() as session:
                     await record_funnel_event(
                         session,
                         stage,
-                        "success" if response.status_code < 400 else "failure",
+                        "success" if successful else "failure",
+                        reason_code=reason_code,
                         http_status=response.status_code,
                     )
             except Exception:
@@ -215,9 +237,10 @@ def _mcp_presentation(media_type: str) -> Response:
         response = _landing(
             "1cent MCP endpoint",
             "<p>Streamable HTTP endpoint: <code>https://1cent.maxzoa.ru/mcp</code>.</p>"
-            "<p><a href='/.well-known/mcp.json'>MCP metadata</a> В· "
-            "<a href='/.well-known/x402.json'>x402 discovery</a> В· "
+            "<p><a href='/.well-known/mcp.json'>MCP metadata</a> · "
+            "<a href='/.well-known/x402.json'>x402 discovery</a> · "
             "<a href='/docs/getting-started'>Buyer guide</a></p>",
+            canonical_path="/mcp",
         )
     else:
         document = (
@@ -273,8 +296,24 @@ async def favicon() -> Response:
     )
 
 
+async def _catalog_snapshot(session: AsyncSession) -> list[dict[str, object]]:
+    try:
+        rows = await public_catalog_rows(session)
+        return rows or public_catalog()
+    except Exception:
+        return public_catalog()
+
+
+def _catalog_price(rows: list[dict[str, object]], tool: str) -> str:
+    row = next((item for item in rows if item.get("tool") == tool), None)
+    return str(row.get("price_usdc")) if row is not None else "see live catalog"
+
+
 @app.get("/", response_class=HTMLResponse, tags=["Service"], summary="Public landing")
-async def root(request: Request) -> Response:
+async def root(
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> Response:
     accept = request.headers.get("accept", "")
     selected = _accepted_presentation(accept)
     if selected is None:
@@ -286,12 +325,22 @@ async def root(request: Request) -> Response:
             selected = "text/markdown"
     if selected is not None and selected != "text/html":
         return _mcp_presentation(selected)
+    rows = await _catalog_snapshot(session)
+    status_price = escape(_catalog_price(rows, "url_status"))
+    pulse_price = escape(_catalog_price(rows, "url_pulse"))
     return _landing(
         "1cent Web Intelligence for AI Agents",
-        "<p>Safe URL answers for AI agents. Preview your own public URL free, then pay "
-        "per result with Base USDC. No account or API key required.</p>"
-        "<p><code>https://1cent.maxzoa.ru/mcp/</code></p><p><a href='/tools'>Browse tools</a> · "
-        "<a href='/try'>Try your URL free</a> · "
+        "<p><strong>Turn a public URL into structured evidence for an AI agent.</strong> "
+        "Check reachability, metadata, content, redirects, security and change signals "
+        "without running page JavaScript.</p>"
+        "<ul><li><strong>Free proof:</strong> preview one URL with no wallet.</li>"
+        f"<li><strong>Small paid check:</strong> URL status — {status_price} USDC.</li>"
+        f"<li><strong>Site health audit:</strong> pulse — {pulse_price} USDC.</li>"
+        "<li><strong>No subscription:</strong> pay only for the requested result.</li></ul>"
+        "<p><a href='/try'><strong>Run free URL preview</strong></a> · "
+        "<a href='/try/pay'>See the 2-minute buyer setup</a></p>"
+        "<p>MCP: <code>https://1cent.maxzoa.ru/mcp/</code></p>"
+        "<p><a href='/tools'>Browse tools</a> · "
         "<a href='/docs'>OpenAPI</a> · <a href='/docs/getting-started'>Pay with x402</a> · "
         "<a href='https://smithery.ai/servers/maxzoa27/onecent' rel='me'>Smithery</a> · "
         "<a href='/marketplaces'>Verified listings</a></p>",
@@ -304,6 +353,7 @@ async def smithery_backlink() -> HTMLResponse:
         "1cent on Smithery",
         "<p>Connect to the verified public 1cent MCP listing on "
         "<a href='https://smithery.ai/servers/maxzoa27/onecent' rel='me'>Smithery</a>.</p>",
+        canonical_path="/smithery",
     )
 
 
@@ -320,6 +370,7 @@ async def marketplace_links() -> HTMLResponse:
         "<li><a href='https://mcp.so/servers/1cent' rel='me'>MCP.so</a></li>"
         "<li><a href='https://lobehub.com/mcp/maxzoa-1cent' rel='me'>LobeHub</a></li></ul>"
         "<p>Listings must resolve to this same endpoint. Buyer keys remain client-side.</p>",
+        canonical_path="/marketplaces",
     )
 
 
@@ -485,8 +536,15 @@ async def agent_card() -> dict[str, object]:
     }
 
 
-def _landing(title: str, body: str) -> HTMLResponse:
+def _landing(
+    title: str,
+    body: str,
+    *,
+    status_code: int = 200,
+    canonical_path: str = "",
+) -> HTMLResponse:
     base_url = settings.public_base_url.rstrip("/")
+    canonical_url = f"{base_url}{canonical_path}"
     structured_data = json.dumps(
         {
             "@context": "https://schema.org",
@@ -527,7 +585,7 @@ def _landing(title: str, body: str) -> HTMLResponse:
         "<link rel='shortcut icon' href='/favicon.ico'>"
         "<link rel='alternate' type='text/plain' title='llms.txt' href='/llms.txt'>"
         "<link rel='alternate' type='text/plain' title='llms-full.txt' href='/llms-full.txt'>"
-        f"<link rel='canonical' href='{base_url}'>"
+        f"<link rel='canonical' href='{canonical_url}'>"
         f"<script type='application/ld+json'>{structured_data}</script></head>"
     )
     nav = (
@@ -540,19 +598,30 @@ def _landing(title: str, body: str) -> HTMLResponse:
         head + nav + f"<h1>{title}</h1>{body}"
         "<footer><p>No tracking cookies. Public HTTP(S) only. "
         "No JavaScript rendering.</p></footer></body></html>",
+        status_code=status_code,
         headers={"Cache-Control": "public, max-age=300"},
     )
 
 
 @app.get("/tools", response_class=HTMLResponse, include_in_schema=False)
-async def tools_page() -> HTMLResponse:
+async def tools_page(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> HTMLResponse:
+    rows = await _catalog_snapshot(session)
+    pulse_price = escape(_catalog_price(rows, "url_pulse"))
+    passport_price = escape(_catalog_price(rows, "url_passport"))
+    extract_price = escape(_catalog_price(rows, "url_extract"))
+    changed_price = escape(_catalog_price(rows, "url_changed"))
     return _landing(
         "Choose an outcome",
         "<ul><li><strong>Site health audit</strong> — reachability, redirects "
-        "and page signals.</li>"
-        "<li><strong>SEO discovery audit</strong> — metadata, robots, sitemaps and feeds.</li>"
-        "<li><strong>Content for AI</strong> — clean text and links for RAG or summaries.</li>"
-        "<li><strong>Change monitor</strong> — compare a page with its prior snapshot.</li></ul>"
+        f"and page signals — {pulse_price} USDC.</li>"
+        "<li><strong>SEO discovery audit</strong> — metadata, robots, sitemaps and feeds "
+        f"— {passport_price} USDC.</li>"
+        "<li><strong>Content for AI</strong> — clean text and links for RAG or summaries "
+        f"— {extract_price} USDC.</li>"
+        "<li><strong>Change monitor</strong> — compare a page with its prior snapshot "
+        f"— {changed_price} USDC.</li></ul>"
         "<p>These packages use the stable url_pulse, url_passport, url_extract and url_changed "
         f"contracts. The full catalog contains {len(TOOLS)} paid REST/MCP tools plus three "
         "free MCP tools: "
@@ -560,6 +629,7 @@ async def tools_page() -> HTMLResponse:
         "<code>demo.live.pulse</code>.</p>"
         "<p><a href='/try'>Preview your own URL free</a> · "
         "<a href='/v1/catalog'>Machine-readable catalog</a></p>",
+        canonical_path="/tools",
     )
 
 
@@ -569,36 +639,116 @@ async def try_page() -> HTMLResponse:
         "Try 1cent on your website",
         "<p>One safe, limited preview per client per UTC day. Public HTTP(S) URLs only. "
         "No wallet is needed for the preview.</p>"
-        "<form method='get' action='/v1/demo/preview'>"
+        "<form method='get' action='/try/preview'>"
         "<label for='url'>Website URL</label><br>"
         "<input id='url' name='url' type='url' required placeholder='https://example.com/' "
         "style='width:100%;padding:.7rem;margin:.5rem 0'>"
         "<button type='submit' style='padding:.7rem 1rem'>Run free preview</button></form>"
-        "<p>Need the full result? <a href='/try/pay'>Open browser payment</a> or connect "
-        "the MCP buyer.</p>",
+        "<p>The result page explains what was checked and carries the same URL into the "
+        "paid setup. No payment happens during preview.</p>",
+        canonical_path="/try",
+    )
+
+
+@app.get("/try/preview", response_class=HTMLResponse, include_in_schema=False)
+async def try_preview_page(
+    url: Annotated[str, Query(min_length=10, max_length=2048)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> HTMLResponse:
+    try:
+        result = await trial_preview(url, settings, session)
+    except TrialPreviewRateLimited:
+        return _landing(
+            "Free preview limit reached",
+            "<p>This client already used today's buyer-selected preview. The limit resets "
+            "at the next UTC day.</p><p><a href='/try/pay'>See paid setup</a> · "
+            "<a href='/v1/demo/live-pulse'>Run fixed-target live demo</a></p>",
+            status_code=429,
+            canonical_path="/try",
+        )
+    except UnsafeUrl:
+        return _landing(
+            "URL rejected safely",
+            "<p>Only public HTTP(S) URLs on ports 80 and 443 are accepted. Private, local, "
+            "link-local and metadata targets stay blocked.</p><p><a href='/try'>Try another "
+            "public URL</a></p>",
+            status_code=400,
+            canonical_path="/try",
+        )
+    pay_query = urlencode({"url": result.url_requested})
+    title = escape(result.title or "Not detected")
+    final_url = escape(result.url_final)
+    return _landing(
+        "Your free URL preview",
+        f"<p><strong>Requested:</strong> {escape(result.url_requested)}<br>"
+        f"<strong>Final URL:</strong> {final_url}<br>"
+        f"<strong>Reachable:</strong> {'yes' if result.reachable else 'no'}<br>"
+        f"<strong>HTTP status:</strong> {result.status_code}<br>"
+        f"<strong>Response time:</strong> {result.response_time_ms} ms<br>"
+        f"<strong>Content type:</strong> {escape(result.content_type)}<br>"
+        f"<strong>Title:</strong> {title}</p>"
+        "<p>This preview proves safe fetching. Paid site health adds redirects, language, "
+        "canonical, content hash, JavaScript/auth/paywall signals and quality evidence.</p>"
+        f"<p><a href='/try/pay?{pay_query}'><strong>See exact price and buyer setup</strong>"
+        "</a> · <a href='/tools'>Compare outcomes</a></p>",
+        canonical_path="/try/preview",
     )
 
 
 @app.get("/try/pay", response_class=HTMLResponse, include_in_schema=False)
-async def try_pay_page() -> HTMLResponse:
+async def try_pay_page(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    url: Annotated[str | None, Query(min_length=10, max_length=2048)] = None,
+) -> HTMLResponse:
+    rows = await _catalog_snapshot(session)
+    pulse_price = escape(_catalog_price(rows, "url_pulse"))
+    value = escape(url or "", quote=True)
     return _landing(
-        "Buy one site health audit",
-        "<p>The next screen shows the live x402 price and wallet payment request before any "
-        "URL operation runs.</p><form method='get' action='/try/result'>"
+        "Buy one site health audit safely",
+        f"<p><strong>Current pulse price: {pulse_price} USDC on Base Mainnet.</strong> "
+        "No subscription or API key. Opening this page performs no payment.</p>"
+        "<h2>Fastest path for Claude, Cursor, VS Code or Codex</h2>"
+        "<pre><code>pipx install &quot;onecent[buyer]&quot;\n"
+        "onecent wallet set\n"
+        "onecent doctor\n"
+        "onecent bridge</code></pre>"
+        "<p>First paid call only shows a quote. Payment requires the exact generated "
+        "<code>onecent approve ... --confirm-charge PAY-ONCE</code> command. Unknown outcomes "
+        "are never retried automatically.</p>"
+        "<h2>Machine-readable x402 quote</h2>"
+        "<p>An ordinary browser cannot sign x402 by itself. This button is for an x402-capable "
+        "wallet/client and returns HTTP 402 before any URL fetch.</p>"
+        "<form method='get' action='/try/result'>"
         "<label for='url'>Website URL</label><br>"
-        "<input id='url' name='url' type='url' required placeholder='https://example.com/' "
+        f"<input id='url' name='url' type='url' required value='{value}' "
+        "placeholder='https://example.com/' "
         "style='width:100%;padding:.7rem;margin:.5rem 0'>"
-        "<button type='submit' style='padding:.7rem 1rem'>Continue to secure payment</button>"
-        "</form>",
+        "<button type='submit' style='padding:.7rem 1rem'>Request unpaid x402 quote</button>"
+        "</form><p><a href='/docs/buyer-bridge'>Full Buyer Bridge setup</a></p>",
+        canonical_path="/try/pay",
     )
 
 
 @app.get("/pricing", response_class=HTMLResponse, include_in_schema=False)
-async def pricing_page() -> HTMLResponse:
+async def pricing_page(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> HTMLResponse:
+    rows = await _catalog_snapshot(session)
+    status_price = escape(_catalog_price(rows, "url_status"))
+    pulse_price = escape(_catalog_price(rows, "url_pulse"))
+    passport_price = escape(_catalog_price(rows, "url_passport"))
+    extract_price = escape(_catalog_price(rows, "url_extract"))
     return _landing(
         "Usage pricing",
-        "<p>Prices are returned by the live "
-        "<a href='/v1/catalog'>catalog</a> in atomic Base USDC.</p>",
+        "<p>No subscription. One confirmed x402 payment buys one result.</p>"
+        f"<ul><li>URL status: {status_price} USDC</li>"
+        f"<li>Site health pulse: {pulse_price} USDC</li>"
+        f"<li>Site passport: {passport_price} USDC</li>"
+        f"<li>Content extract: {extract_price} USDC</li></ul>"
+        "<p>The live <a href='/v1/catalog'>machine-readable catalog</a> is authoritative. "
+        "The HTTP 402 challenge repeats exact amount, network, asset and seller before work.</p>"
+        "<p><a href='/try'>Try one URL free</a> · <a href='/try/pay'>Buyer setup</a></p>",
+        canonical_path="/pricing",
     )
 
 
@@ -622,6 +772,7 @@ async def getting_started() -> HTMLResponse:
         "<p>MCP transport: <code>https://1cent.maxzoa.ru/mcp/</code>. "
         "Private keys stay only inside the buyer client and are never sent to 1cent. "
         "Always read the current advertised price instead of hard-coding it.</p>",
+        canonical_path="/docs/getting-started",
     )
 
 
@@ -631,18 +782,17 @@ async def buyer_bridge_guide() -> HTMLResponse:
         "Connect and pay from an MCP client",
         "<p>Buyer Bridge is a local stdio MCP server. Wallet signing stays on your computer; "
         "1cent and MCP directories never receive the private key.</p>"
-        "<pre><code>pipx install &quot;onecent[buyer] @ "
-        "git+https://github.com/maxzoa/1cent.git&quot;\n"
+        "<pre><code>pipx install &quot;onecent[buyer]&quot;\n"
         "onecent wallet set\n"
         "onecent doctor</code></pre>"
         "<p>Add this local command to your MCP client:</p>"
-        "<pre><code>onecent bridge --max-usdc-per-call 0.001 "
-        "--daily-limit-usdc 0.01</code></pre>"
+        "<pre><code>onecent bridge</code></pre>"
         "<p>First paid call returns a quote and performs no payment. Review it, run the exact "
         "<code>onecent approve ... --confirm-charge PAY-ONCE</code> command, then repeat the same "
         "tool call once. UNKNOWN outcomes are never retried automatically.</p>"
         "<p><a href='https://github.com/maxzoa/1cent/blob/main/BUYER_BRIDGE.md'>"
         "Full Claude, Cursor, VS Code and Codex setup</a></p>",
+        canonical_path="/docs/buyer-bridge",
     )
 
 
@@ -704,6 +854,7 @@ async def privacy() -> HTMLResponse:
         "Privacy",
         "<p>Operational audit data is bounded. Secrets and raw payment signatures "
         "are not exposed.</p>",
+        canonical_path="/privacy",
     )
 
 
@@ -713,6 +864,7 @@ async def terms() -> HTMLResponse:
         "Terms",
         "<p>Best-effort static web intelligence. No access-control bypass or "
         "security guarantee.</p>",
+        canonical_path="/terms",
     )
 
 
@@ -765,7 +917,7 @@ async def status_page(
         "<a href='/health'>Health probe</a> · "
         "<a href='/v1/demo/live-pulse'>Free live demo</a></p>"
     )
-    return _landing("Service status", body)
+    return _landing("Service status", body, canonical_path="/status")
 
 
 @app.get("/.well-known/security.txt", response_class=PlainTextResponse, include_in_schema=False)
@@ -790,8 +942,11 @@ async def public_sitemap() -> Response:
         "",
         "/tools",
         "/pricing",
+        "/try",
+        "/try/pay",
         "/v1/demo/pulse",
         "/v1/demo/live-pulse",
+        "/v1/demo/preview",
         "/docs/getting-started",
         "/docs/buyer-bridge",
         "/examples/python-x402",
@@ -821,6 +976,7 @@ async def public_llms() -> str:
         "- [A2A agent card](https://1cent.maxzoa.ru/.well-known/agent.json) - agent identity\n"
         "- [Full LLM context](https://1cent.maxzoa.ru/llms-full.txt) - complete public guide\n\n"
         "## Free access\n\n"
+        "- [Buyer-selected URL preview](https://1cent.maxzoa.ru/try)\n"
         "- [Static demo](https://1cent.maxzoa.ru/v1/demo/pulse)\n"
         "- [Live fixed-target demo](https://1cent.maxzoa.ru/v1/demo/live-pulse)\n"
         "- [Public status](https://1cent.maxzoa.ru/status.json)\n\n"
@@ -840,11 +996,13 @@ async def public_llms_full() -> str:
         f"HTTP(S) URLs. It offers {len(TOOLS)} paid tools and three free MCP tools.\n\n"
         "## Connect\n\nMCP Streamable HTTP: https://1cent.maxzoa.ru/mcp\n\n"
         "Free MCP tools: catalog.tools.search, demo.url.pulse, demo.live.pulse.\n\n"
+        "Browser preview: https://1cent.maxzoa.ru/try\n\n"
         "## Payments\n\nPaid operations use x402 v2 exact payments with Base Mainnet USDC. "
         "Read the current amount, asset, network, payTo and Bazaar metadata from "
         "https://1cent.maxzoa.ru/.well-known/x402.json before every call. "
         "Buyer keys stay client-side. Ambiguous payment results must never be retried "
-        "automatically.\n\n"
+        "automatically. Manual Buyer Bridge mode has no commercial daily quota and requires "
+        "a fresh PAY-ONCE approval for every exact payment.\n\n"
         "## Safety\n\nCaller-provided URLs are protected by SSRF checks, bounded fetches, redirect "
         "validation, cache controls, rate limits, concurrency limits, audit records, "
         "payment identifiers and idempotency. JavaScript is not executed.\n\n"
@@ -995,7 +1153,7 @@ async def demo_live_pulse(
 
 @app.get(
     "/v1/demo/preview",
-    response_model=TrialPreviewResponse,
+    response_model=TrialPreviewResponse | TrialPreviewInstructions,
     tags=["Free demo"],
     summary="Preview one buyer-selected public URL",
     description=(
@@ -1004,9 +1162,11 @@ async def demo_live_pulse(
     ),
 )
 async def demo_trial_preview(
-    url: Annotated[str, Query(min_length=10, max_length=2048)],
     session: Annotated[AsyncSession, Depends(get_session)],
-) -> TrialPreviewResponse:
+    url: Annotated[str | None, Query(min_length=10, max_length=2048)] = None,
+) -> TrialPreviewResponse | TrialPreviewInstructions:
+    if url is None:
+        return TrialPreviewInstructions()
     try:
         return await trial_preview(url, settings, session)
     except TrialPreviewRateLimited as exc:

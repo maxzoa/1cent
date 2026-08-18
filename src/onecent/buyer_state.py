@@ -238,7 +238,7 @@ class BuyerLedger:
         self,
         *,
         fingerprint: str,
-        daily_limit_atomic: int,
+        daily_limit_atomic: int | None,
     ) -> LedgerEntry:
         now = _utc_now()
         with self._connect() as connection:
@@ -255,9 +255,10 @@ class BuyerLedger:
             ).fetchone()
             if row is None:
                 raise BuyerStateError("payment needs a fresh one-call approval")
-            total = self._daily_total(connection, now.date().isoformat())
-            if total + int(row["amount_atomic"]) > daily_limit_atomic:
-                raise BuyerStateError("local daily spend cap would be exceeded")
+            if daily_limit_atomic is not None:
+                total = self._daily_total(connection, now.date().isoformat())
+                if total + int(row["amount_atomic"]) > daily_limit_atomic:
+                    raise BuyerStateError("local daily spend cap would be exceeded")
             connection.execute(
                 "UPDATE bridge_payments SET status='pending', updated_at=? WHERE entry_id=?",
                 (now.isoformat(), row["entry_id"]),

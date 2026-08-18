@@ -9,7 +9,7 @@ Public security contact: `https://1cent.maxzoa.ru/.well-known/security.txt`.
 
 ## Supported release
 
-Only current production release `0.8.0` and latest `main` revision receive security fixes.
+Only current production release `0.8.1` and latest `main` revision receive security fixes.
 See [CURRENT_PRODUCTION.md](CURRENT_PRODUCTION.md) for the active runtime contract.
 
 ## Scope
@@ -40,7 +40,8 @@ access-control bypass or tests against third-party sites without authorization. 
 - Bridge validates x402 v2, `exact`, Base Mainnet, Base USDC, seller, amount and exact resource.
 - Manual mode quotes without signing, then consumes one approval bound to exact input/payment terms.
 - Auto-pay startup requires explicit network/asset/seller/charge gates and positive local caps.
-- Pending/UNKNOWN amounts count against the buyer daily cap; identical UNKNOWN requests are blocked.
+- Identical UNKNOWN requests are blocked. Pending/UNKNOWN amounts remain visible in the local
+  ledger; they count against an optional buyer cap only when that cap is configured.
 - A success requires HTTP 200 plus `PAYMENT-RESPONSE`; ambiguous failure is never called unpaid.
 
 ## Signed offer and receipt evidence

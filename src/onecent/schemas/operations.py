@@ -241,6 +241,20 @@ class LiveDemoPulseResponse(StrictModel):
     result: PulseResponse
 
 
+class TrialPreviewInstructions(StrictModel):
+    """Safe discovery response when a preview URL was not supplied."""
+
+    demo: bool = True
+    payment_required: bool = False
+    input_required: bool = True
+    parameter: str = "url"
+    endpoint: str = "/v1/demo/preview"
+    example: str = "/v1/demo/preview?url=https%3A%2F%2Fexample.com%2F"
+    browser_form: str = "/try"
+    limit: str = "one buyer-selected public HTTP(S) URL per client per UTC day"
+    next_action: str = "Provide the url query parameter or open the browser form."
+
+
 class TrialPreviewResponse(StrictModel):
     """Bounded free preview for one buyer-selected public URL."""
 

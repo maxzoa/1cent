@@ -1,5 +1,8 @@
 FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 RUN groupadd --gid 10001 onecent && useradd --uid 10001 --gid onecent --no-create-home onecent
 WORKDIR /app
 COPY pyproject.toml requirements.lock ./

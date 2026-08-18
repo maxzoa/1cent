@@ -6,7 +6,7 @@
 
 | Параметр | Фактическое значение |
 |---|---|
-| Версия API | `0.8.0` |
+| Версия API | `0.8.1` |
 | REST | `https://1cent.maxzoa.ru` |
 | MCP | `https://1cent.maxzoa.ru/mcp` |
 | MCP protocol | `2025-11-25` |
@@ -62,10 +62,20 @@ challenge прошли. Все 43 платных маршрута объявля
 - Коммерческие дневные квоты отключены явными boolean-флагами:
   `MAINNET_DAILY_SETTLEMENT_LIMIT_ENABLED=false` и
   `MAINNET_DAILY_REVENUE_LIMIT_ENABLED=false`; технические защиты продолжают действовать.
+- Ручной Buyer Bridge запускается командой `onecent bridge` без коммерческого лимита на
+  количество/сумму; каждый exact-платёж всё равно требует отдельный `PAY-ONCE` approval.
 - До и после deploy: `41` исторический successful settlement, `228000` atomic
   суммарно по Mainnet и testnet. Это не равно доказанной внешней выручке.
 - Доказанная независимая коммерческая выручка: `0 USDC`; один Mainnet settlement
   `3000` atomic остаётся только `probable_external`.
+
+## Release 0.8.1
+
+- Убраны обязательные per-call/day cap из ручного Buyer Bridge; auto-pay/watch остаются capped.
+- Добавлен понятный browser-first путь: `/try` -> бесплатный результат -> точная цена -> buyer setup.
+- Открытие `/v1/demo/preview` без `url` теперь возвращает инструкцию 200, а не бесполезный 422.
+- Расширен funnel-аудит публичных страниц; HTTP 402 по-прежнему не считается покупкой.
+- Payment logic, сеть, PayAI, seller и цены не изменены; релиз не выполняет settlement.
 
 ## Release 0.8.0
 
