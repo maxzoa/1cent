@@ -238,17 +238,16 @@ def wallet_command(args: argparse.Namespace) -> int:
 
 
 def _bridge_config(args: argparse.Namespace) -> dict[str, object]:
+    bridge_args = ["bridge"]
+    if args.max_usdc_per_call is not None:
+        bridge_args.extend(["--max-usdc-per-call", args.max_usdc_per_call])
+    if args.daily_limit_usdc is not None:
+        bridge_args.extend(["--daily-limit-usdc", args.daily_limit_usdc])
     return {
         "mcpServers": {
             "1cent-buyer": {
                 "command": "onecent",
-                "args": [
-                    "bridge",
-                    "--max-usdc-per-call",
-                    args.max_usdc_per_call,
-                    "--daily-limit-usdc",
-                    args.daily_limit_usdc,
-                ],
+                "args": bridge_args,
             }
         }
     }
@@ -257,11 +256,12 @@ def _bridge_config(args: argparse.Namespace) -> dict[str, object]:
 def install_client(args: argparse.Namespace) -> int:
     config = _bridge_config(args)
     if args.client == "codex":
-        print(
-            "codex mcp add 1cent-buyer -- onecent bridge "
-            f"--max-usdc-per-call {args.max_usdc_per_call} "
-            f"--daily-limit-usdc {args.daily_limit_usdc}"
-        )
+        command = "codex mcp add 1cent-buyer -- onecent bridge"
+        if args.max_usdc_per_call is not None:
+            command += f" --max-usdc-per-call {args.max_usdc_per_call}"
+        if args.daily_limit_usdc is not None:
+            command += f" --daily-limit-usdc {args.daily_limit_usdc}"
+        print(command)
         return 0
     targets = {
         "claude": Path(os.getenv("APPDATA", Path.home())) / "Claude" / "claude_desktop_config.json",
@@ -372,8 +372,12 @@ def run_bridge(args: argparse.Namespace) -> None:
         confirm_charge=args.confirm_charge,
     )
     policy = BridgePolicy(
-        max_per_call_atomic=atomic_from_usdc(args.max_usdc_per_call),
-        daily_limit_atomic=atomic_from_usdc(args.daily_limit_usdc),
+        max_per_call_atomic=(
+            atomic_from_usdc(args.max_usdc_per_call) if args.max_usdc_per_call is not None else None
+        ),
+        daily_limit_atomic=(
+            atomic_from_usdc(args.daily_limit_usdc) if args.daily_limit_usdc is not None else None
+        ),
         approval_mode=approval_mode,
         base_url=args.base_url,
         timeout_seconds=args.timeout,
@@ -451,8 +455,8 @@ def _parser() -> argparse.ArgumentParser:
         help="run the local stdio MCP buyer bridge; manual approval is the default",
     )
     bridge_parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
-    bridge_parser.add_argument("--max-usdc-per-call", required=True)
-    bridge_parser.add_argument("--daily-limit-usdc", required=True)
+    bridge_parser.add_argument("--max-usdc-per-call")
+    bridge_parser.add_argument("--daily-limit-usdc")
     bridge_parser.add_argument("--state-path", default=str(default_state_path()))
     bridge_parser.add_argument("--timeout", type=float, default=30.0)
     bridge_parser.add_argument("--auto-pay", action="store_true")
@@ -486,8 +490,8 @@ def _parser() -> argparse.ArgumentParser:
         choices=("claude", "cursor", "vscode", "codex"),
         required=True,
     )
-    install_parser.add_argument("--max-usdc-per-call", default="0.01")
-    install_parser.add_argument("--daily-limit-usdc", default="0.10")
+    install_parser.add_argument("--max-usdc-per-call")
+    install_parser.add_argument("--daily-limit-usdc")
     install_parser.add_argument("--apply", action="store_true")
     watch_parser = subparsers.add_parser(
         "watch", help="run a finite, capped url_changed schedule; disabled by default"

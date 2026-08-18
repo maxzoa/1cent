@@ -6,7 +6,7 @@ on:
       ref:
         description: "Git ref containing the release version"
         required: true
-        default: "v0.7.1"
+        default: "v0.8.1"
       registry:
         description: "Registry to publish"
         required: true

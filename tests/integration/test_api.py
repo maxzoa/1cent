@@ -54,9 +54,10 @@ def test_root_and_info(client: TestClient) -> None:
     assert root.headers["x-content-type-options"] == "nosniff"
     assert root.headers["referrer-policy"] == "no-referrer"
     assert root.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
-    assert "script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'" in root.headers[
-        "content-security-policy"
-    ]
+    assert (
+        "script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'"
+        in root.headers["content-security-policy"]
+    )
     assert "https://smithery.ai/servers/maxzoa27/onecent" in root.text
     assert "rel='icon' type='image/svg+xml' href='/favicon.svg'" in root.text
     favicon = client.get("/favicon.svg")
@@ -80,10 +81,7 @@ def test_root_and_info(client: TestClient) -> None:
     assert {"url_pulse", "url_status", "site_openapi"} <= set(info["operations"])
     catalog = client.get("/v1/catalog").json()
     assert len(catalog) == len(TOOLS)
-    assert all(
-        item["mcp_tool"] == "web." + item["tool"].replace("_", ".", 1)
-        for item in catalog
-    )
+    assert all(item["mcp_tool"] == "web." + item["tool"].replace("_", ".", 1) for item in catalog)
     assert len(client.get("/v1/products").json()) == 4
     assert client.get("/try").status_code == 200
 
@@ -92,6 +90,9 @@ def test_public_buyer_bridge_documentation(client: TestClient) -> None:
     guide = client.get("/docs/buyer-bridge")
     assert guide.status_code == 200
     assert "onecent wallet set" in guide.text
+    assert "onecent bridge</code>" in guide.text
+    assert "--daily-limit-usdc" not in guide.text
+    assert "--max-usdc-per-call" not in guide.text
     assert "--confirm-charge PAY-ONCE" in guide.text
     assert "private key" in guide.text
 
@@ -101,15 +102,59 @@ def test_public_buyer_bridge_documentation(client: TestClient) -> None:
 
     sitemap = client.get("/sitemap.xml")
     assert "/docs/buyer-bridge" in sitemap.text
-    assert "[Buyer Bridge](https://1cent.maxzoa.ru/docs/buyer-bridge)" in client.get(
-        "/llms.txt"
-    ).text
+    assert "https://1cent.maxzoa.ru/try</loc>" in sitemap.text
+    assert "https://1cent.maxzoa.ru/v1/demo/preview</loc>" in sitemap.text
+    assert (
+        "[Buyer Bridge](https://1cent.maxzoa.ru/docs/buyer-bridge)" in client.get("/llms.txt").text
+    )
+
+
+def test_trial_pages_explain_missing_input_and_never_charge(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    preview = AsyncMock(
+        return_value=type(
+            "Preview",
+            (),
+            {
+                "url_requested": "https://example.com/",
+                "url_final": "https://example.com/",
+                "reachable": True,
+                "status_code": 200,
+                "response_time_ms": 42,
+                "content_type": "text/html",
+                "title": "Example Domain",
+            },
+        )()
+    )
+    monkeypatch.setattr("onecent.api.app.trial_preview", preview)
+    app.dependency_overrides[get_session] = fake_session
+    try:
+        form = client.get("/try")
+        assert "action='/try/preview'" in form.text
+
+        help_response = client.get("/v1/demo/preview")
+        assert help_response.status_code == 200
+        assert help_response.json()["input_required"] is True
+        preview.assert_not_awaited()
+
+        result = client.get("/try/preview", params={"url": "https://example.com/"})
+        assert result.status_code == 200
+        assert "Example Domain" in result.text
+        assert "/try/pay?url=https%3A%2F%2Fexample.com%2F" in result.text
+        preview.assert_awaited_once()
+
+        pay = client.get("/try/pay", params={"url": "https://example.com/"})
+        assert pay.status_code == 200
+        assert "onecent bridge</code>" in pay.text
+        assert "--daily-limit-usdc" not in pay.text
+        assert "--max-usdc-per-call" not in pay.text
+    finally:
+        app.dependency_overrides.clear()
 
 
 def test_agent_discovery_documents_and_content_negotiation(client: TestClient) -> None:
-    root_markdown = client.get(
-        "/", headers={"Accept": "text/markdown, text/html, */*"}
-    )
+    root_markdown = client.get("/", headers={"Accept": "text/markdown, text/html, */*"})
     assert root_markdown.status_code == 200
     assert root_markdown.headers["content-type"].startswith("text/markdown")
     assert root_markdown.headers["vary"] == "Accept"
@@ -124,9 +169,7 @@ def test_agent_discovery_documents_and_content_negotiation(client: TestClient) -
     assert root_html.headers["content-type"].startswith("text/html")
     assert root_html.headers["cache-control"] == "public, max-age=300"
 
-    markdown = client.get(
-        "/mcp", headers={"Accept": "text/markdown, text/html, */*"}
-    )
+    markdown = client.get("/mcp", headers={"Accept": "text/markdown, text/html, */*"})
     assert markdown.status_code == 200
     assert markdown.headers["content-type"].startswith("text/markdown")
     assert markdown.headers["vary"] == "Accept"
@@ -135,14 +178,10 @@ def test_agent_discovery_documents_and_content_negotiation(client: TestClient) -
     assert html.status_code == 200
     assert html.headers["content-type"].startswith("text/html")
 
-    preferred_html = client.get(
-        "/mcp", headers={"Accept": "text/markdown;q=0.5, text/html;q=1.0"}
-    )
+    preferred_html = client.get("/mcp", headers={"Accept": "text/markdown;q=0.5, text/html;q=1.0"})
     assert preferred_html.headers["content-type"].startswith("text/html")
 
-    machine = client.get(
-        "/mcp", headers={"Accept": "application/json, text/html, */*"}
-    )
+    machine = client.get("/mcp", headers={"Accept": "application/json, text/html, */*"})
     assert machine.status_code == 200
     assert machine.headers["content-type"].startswith("application/json")
     assert machine.json()["name"] == "ru.maxzoa/1cent"
@@ -161,7 +200,7 @@ def test_agent_discovery_documents_and_content_negotiation(client: TestClient) -
     assert skill.headers["content-type"].startswith("text/markdown")
     assert skill.text.startswith("---\nname: onecent-web-intelligence\n")
     assert client.get("/agents.txt").status_code == 200
-    assert client.get("/.well-known/webmcp.json").json()["version"] == "0.8.0"
+    assert client.get("/.well-known/webmcp.json").json()["version"] == "0.8.1"
 
 
 def test_mcp_cors_preflight(client: TestClient) -> None:
@@ -195,9 +234,7 @@ def test_x402_well_known_manifest(client: TestClient) -> None:
     assert manifest["services"] == manifest["resources"]
 
     assert client.get("/.well-known/x402.json").json() == manifest
-    assert client.get("/.well-known/agent.json").json()["x402"].endswith(
-        "/.well-known/x402"
-    )
+    assert client.get("/.well-known/agent.json").json()["x402"].endswith("/.well-known/x402")
 
 
 def test_mcp_well_known_manifest(client: TestClient) -> None:
@@ -206,7 +243,7 @@ def test_mcp_well_known_manifest(client: TestClient) -> None:
     assert manifest.headers["content-type"].startswith("application/json")
     body = manifest.json()
     assert body["name"] == "ru.maxzoa/1cent"
-    assert body["version"] == "0.8.0"
+    assert body["version"] == "0.8.1"
     assert body["websiteUrl"] == "https://1cent.maxzoa.ru"
     assert body["remotes"] == [
         {
@@ -245,7 +282,7 @@ def test_free_demo_status_security_and_server_card(
 
     status = client.get("/status.json")
     assert status.status_code == 200
-    assert status.json()["version"] == "0.8.0"
+    assert status.json()["version"] == "0.8.1"
     assert status.json()["paid_tools"] == len(TOOLS)
     assert status.json()["free_mcp_tools"] == [
         "catalog.tools.search",
@@ -466,9 +503,7 @@ def test_corrupt_payment_signature_is_not_accepted(
     ]
 
 
-def test_unpaid_402_never_fetches_url(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_unpaid_402_never_fetches_url(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     operation = AsyncMock()
     funnel = AsyncMock()
     monkeypatch.setattr("onecent.api.app.pulse", operation)
@@ -477,9 +512,7 @@ def test_unpaid_402_never_fetches_url(
     assert response.status_code == 402
     assert "x-request-id" in response.headers
     operation.assert_not_awaited()
-    assert ("challenge_issued", "success") in [
-        call.args[:2] for call in funnel.await_args_list
-    ]
+    assert ("challenge_issued", "success") in [call.args[:2] for call in funnel.await_args_list]
 
 
 def test_verify_failure_never_fetches_url(
@@ -490,9 +523,7 @@ def test_verify_failure_never_fetches_url(
     monkeypatch.setattr("onecent.api.app.pulse", operation)
     monkeypatch.setattr("onecent.services.payments._record_funnel", funnel)
     monkeypatch.setattr("onecent.services.payments.Session", MiddlewareSession)
-    monkeypatch.setattr(
-        "onecent.services.payments.service_enabled", AsyncMock(return_value=True)
-    )
+    monkeypatch.setattr("onecent.services.payments.service_enabled", AsyncMock(return_value=True))
     monkeypatch.setattr("onecent.services.payments.get_payment", AsyncMock(return_value=None))
     monkeypatch.setattr("onecent.services.payments.reserve_payment", AsyncMock())
 

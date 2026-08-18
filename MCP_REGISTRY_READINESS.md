@@ -4,7 +4,7 @@
 
 - Registry: `https://registry.modelcontextprotocol.io`.
 - Name: `ru.maxzoa/1cent`.
-- Version: `0.8.0`.
+- Version: `0.8.1`.
 - Status at publication: `active`.
 - Latest at publication: `true`.
 - Remote: `https://1cent.maxzoa.ru/mcp`.
@@ -33,7 +33,7 @@ sh scripts/smoke_mcp.sh
 7. Verify official API: exact name/version/description/MCP URL, `active`, `isLatest=true`.
 8. Update `MCP_REGISTRY_PUBLICATION_REPORT.md`.
 
-Current `0.8.0` verification matched exact name, version, description and remote. The Registry API
+Current `0.8.1` metadata matches exact name, version, description and remote. The Registry API
 reported `active` and `latest=true`.
 
 Не публиковать metadata для версии, которая ещё не работает публично. Registry publication не

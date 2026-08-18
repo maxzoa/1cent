@@ -33,7 +33,7 @@ curl -sS "https://1cent.maxzoa.ru/v1/demo/preview?url=https%3A%2F%2Fexample.com%
 - Browser purchase entry: `https://1cent.maxzoa.ru/try`
 - Outcome packages: `https://1cent.maxzoa.ru/v1/products`
 
-Release 0.8.0 exposes 43 paid REST/MCP operations plus three free MCP tools:
+Release 0.8.1 exposes 43 paid REST/MCP operations plus three free MCP tools:
 
 - `catalog.tools.search` — find the correct operation and live price without a URL fetch;
 - `demo.url.pulse` — inspect a fixed precomputed output sample without payment or network access.
@@ -83,12 +83,13 @@ onecent install --client codex
 For MCP clients without native x402 signing, install the local Buyer Bridge:
 
 ```bash
-pipx install "onecent[buyer]==0.8.0"
+pipx install "onecent[buyer]==0.8.1"
 onecent wallet set
-onecent bridge --max-usdc-per-call 0.001 --daily-limit-usdc 0.01
+onecent bridge
 ```
 
-Manual one-call approval is the default. The OS keyring holds the buyer secret; 1cent, remote MCP
+Manual one-call approval is the default and has no commercial daily quota. The OS keyring holds
+the buyer secret; 1cent, remote MCP
 and catalog services never receive it. UNKNOWN outcomes are never retried. See
 [Buyer Bridge](BUYER_BRIDGE.md) for Claude, Cursor, VS Code and Codex setup.
 
@@ -99,13 +100,13 @@ confirms Base Mainnet and types the one-call confirmation. See `examples/buyer-p
 Node buyers can install the public release package:
 
 ```bash
-npm install --global onecent-buyer@0.8.0
+npm install --global onecent-buyer@0.8.1
 onecent-buyer doctor
 ```
 
 The package source remains available in [`packages/onecent-buyer`](packages/onecent-buyer).
-Registry pages: [PyPI `onecent` 0.8.0](https://pypi.org/project/onecent/0.8.0/) and
-[npm `onecent-buyer` 0.8.0](https://www.npmjs.com/package/onecent-buyer/v/0.8.0).
+Registry pages: [PyPI `onecent` 0.8.1](https://pypi.org/project/onecent/0.8.1/) and
+[npm `onecent-buyer` 0.8.1](https://www.npmjs.com/package/onecent-buyer/v/0.8.1).
 
 The bounded batch tool accepts one to five distinct public URLs. Its x402 quote is the live
 unit price multiplied by the validated URL count before any URL fetch begins. Results retain

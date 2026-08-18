@@ -50,7 +50,7 @@ PayAI capability PASS, preflight exit 0, unpaid candidate/public/MCP smoke и mo
 
 ## Buyer Bridge UNKNOWN
 
-Bridge marks a signed ambiguous attempt `unknown`, counts its amount against the local daily cap and
+Bridge marks a signed ambiguous attempt `unknown`, retains its amount in the local ledger and
 blocks the same fingerprint. Do not delete the row or repeat the tool call. Correlate request ID with
 server evidence and chain receipt first. Buyer wallet secret and payment signature are not incident
 report fields. See [BUYER_BRIDGE.md](BUYER_BRIDGE.md).

@@ -104,6 +104,21 @@ def test_quote_accepts_only_exact_pinned_payment() -> None:
             )
 
 
+def test_manual_quote_without_commercial_cap_still_pins_payment_contract() -> None:
+    quote = parse_quote(
+        _required(amount="1000000"),
+        expected_resource=f"{BASE_URL}/v1/url/status",
+        max_per_call_atomic=None,
+    )
+    assert quote.amount_atomic == 1_000_000
+    with pytest.raises(BuyerBridgeError):
+        parse_quote(
+            _required(network="eip155:84532"),
+            expected_resource=f"{BASE_URL}/v1/url/status",
+            max_per_call_atomic=None,
+        )
+
+
 def test_actual_x402_success_header_is_required_for_success() -> None:
     assert _response_settlement_success(_settlement_response()) is True
     assert _response_settlement_success(_settlement_response(success=False)) is False
@@ -131,6 +146,12 @@ def test_auto_mode_needs_all_explicit_owner_gates() -> None:
         )
         == "manual"
     )
+
+
+def test_auto_mode_policy_still_requires_explicit_spend_caps(tmp_path: Path) -> None:
+    policy = BridgePolicy(approval_mode="auto")
+    with pytest.raises(BuyerBridgeError, match="requires explicit"):
+        BuyerBridgeService(policy, BuyerLedger(tmp_path / "bridge.sqlite3"))
     with pytest.raises(BuyerBridgeError, match="auto-pay blocked"):
         validate_auto_mode(
             enabled=True,
@@ -190,6 +211,41 @@ async def test_manual_mode_quotes_then_executes_once_after_approval(
 
 
 @pytest.mark.asyncio
+async def test_manual_mode_has_no_daily_commercial_quota(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = BuyerBridgeService(
+        BridgePolicy(approval_mode="manual"),
+        BuyerLedger(tmp_path / "bridge.sqlite3"),
+    )
+    monkeypatch.setattr(service, "_fetch_quote", AsyncMock(return_value=_quote()))
+    execute = AsyncMock(
+        return_value=PaymentExecution(
+            success=True,
+            status_code=200,
+            result={},
+            request_id="req-unlimited",
+            payment_response_present=True,
+        )
+    )
+    monkeypatch.setattr(service, "_execute_payment", execute)
+    monkeypatch.setenv("ONECENT_BUYER_PRIVATE_KEY", TEST_PRIVATE_KEY)
+
+    for index in range(12):
+        payload: dict[str, object] = {
+            "url": f"https://example.com/{index}",
+            "fresh": False,
+        }
+        with pytest.raises(ApprovalRequired) as approval:
+            await service.paid_call("url_status", payload)
+        service.ledger.approve(approval.value.entry.entry_id)
+        await service.paid_call("url_status", payload)
+
+    assert execute.await_count == 12
+    assert service.ledger.snapshot()["daily_reserved_atomic"] == 12_000
+
+
+@pytest.mark.asyncio
 async def test_unknown_never_retries_same_request(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -226,13 +282,9 @@ async def test_daily_cap_counts_success_and_blocks_next_payment(
     monkeypatch.setattr(service, "_execute_payment", execute)
     monkeypatch.setenv("ONECENT_BUYER_PRIVATE_KEY", TEST_PRIVATE_KEY)
 
-    await service.paid_call(
-        "url_status", {"url": "https://example.com/one", "fresh": False}
-    )
+    await service.paid_call("url_status", {"url": "https://example.com/one", "fresh": False})
     with pytest.raises(BuyerStateError, match="daily spend cap"):
-        await service.paid_call(
-            "url_status", {"url": "https://example.com/two", "fresh": False}
-        )
+        await service.paid_call("url_status", {"url": "https://example.com/two", "fresh": False})
     assert execute.await_count == 1
 
 

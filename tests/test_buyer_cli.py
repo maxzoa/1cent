@@ -7,6 +7,7 @@ from onecent.buyer_cli import (
     BASE_USDC,
     SELLER,
     BuyerSafetyError,
+    _parser,
     atomic_from_usdc,
     install_client,
     validate_paid_confirmation,
@@ -79,6 +80,26 @@ def test_installer_preview_contains_no_secret(capsys: pytest.CaptureFixture[str]
     output = capsys.readouterr().out
     assert '"contains_secret": false' in output
     assert "ONECENT_BUYER_PRIVATE_KEY" not in output
+
+
+def test_manual_bridge_has_no_commercial_caps_by_default() -> None:
+    args = _parser().parse_args(["bridge"])
+    assert args.max_usdc_per_call is None
+    assert args.daily_limit_usdc is None
+    assert args.auto_pay is False
+
+
+def test_installer_default_command_has_no_commercial_caps(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    args = Namespace(
+        client="codex",
+        max_usdc_per_call=None,
+        daily_limit_usdc=None,
+        apply=False,
+    )
+    assert install_client(args) == 0
+    assert capsys.readouterr().out.strip() == ("codex mcp add 1cent-buyer -- onecent bridge")
 
 
 @pytest.mark.asyncio

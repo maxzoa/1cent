@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.1 - 2026-08-18
+
+- Removed buyer-facing per-call and daily commercial caps from default manual Buyer Bridge setup;
+  each exact payment still requires a fresh `PAY-ONCE` approval.
+- Kept explicit positive spend caps mandatory for unattended auto-pay and finite watch mode.
+- Added a browser-first free-preview result page, exact live-price guidance and a safe 200 help
+  response when `/v1/demo/preview` is opened without a URL.
+- Expanded conversion telemetry across landing, tools, pricing, preview, payment guide and unpaid
+  browser payment entry without classifying HTTP 402 as a purchase.
+- Server-side daily sales and revenue quotas remain disabled. Rate limits, concurrency, queue,
+  pause, SSRF, idempotency and UNKNOWN no-retry protections remain active.
+- No settlement, network, facilitator, seller or price change is part of this release.
+
 ## 0.8.0 - 2026-08-09
 
 - Added ten deterministic shared-artifact projections: static schema validation, accessibility,

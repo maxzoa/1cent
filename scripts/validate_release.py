@@ -92,7 +92,7 @@ def main() -> None:
         str(catalog_registry["version"]),
         str(tool_catalog["version"]),
     }
-    assert versions == {"0.8.0"}, versions
+    assert versions == {"0.8.1"}, versions
     assert registry["name"] == catalog_registry["name"] == "ru.maxzoa/1cent"
     assert glama == {
         "$schema": "https://glama.ai/mcp/schemas/server.json",
@@ -103,13 +103,13 @@ def main() -> None:
     ]
     assert catalog_registry["remotes"] == registry["remotes"]
     assert lobehub["identifier"] == "maxzoa-1cent"
-    assert lobehub["version"] == "0.8.0"
+    assert lobehub["version"] == "0.8.1"
     assert lobehub["cloudEndpoint"] == "https://1cent.maxzoa.ru/mcp"
     assert len(cast(list[dict[str, object]], lobehub["tools"])) == len(TOOLS) + 3
     assert len(cast(list[dict[str, object]], lobehub["prompts"])) == 1
     assert len(cast(list[dict[str, object]], lobehub["resources"])) == 1
     assert npm_buyer["name"] == "onecent-buyer"
-    assert npm_buyer["version"] == "0.8.0"
+    assert npm_buyer["version"] == "0.8.1"
     assert len(PRODUCTS) == 4
     catalog_tools = cast(list[dict[str, object]], tool_catalog["tools"])
     assert len(catalog_tools) == len(TOOLS)
@@ -148,7 +148,7 @@ def main() -> None:
     asyncio.run(_validate_mcp())
     asyncio.run(_validate_buyer_bridge())
     print(
-        f"release_validation=PASS; version=0.8.0; paid_tools={len(TOOLS)}; "
+        f"release_validation=PASS; version=0.8.1; paid_tools={len(TOOLS)}; "
         f"free_tools=3; prompts=1; resources=1; products=4; "
         f"buyer_bridge_tools={len(TOOLS) + 4}"
     )

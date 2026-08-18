@@ -11,7 +11,7 @@
 | [API.md](API.md) | Публичный REST API и x402 flow |
 | [MCP.md](MCP.md) | Remote MCP, tools, schemas и payment metadata |
 | [BUYER_QUICKSTART.md](BUYER_QUICKSTART.md) | Безопасный старт покупателя |
-| [BUYER_BRIDGE.md](BUYER_BRIDGE.md) | Локальная MCP-оплата, OS keyring, approval и spend caps |
+| [BUYER_BRIDGE.md](BUYER_BRIDGE.md) | Локальная MCP-оплата, OS keyring, ручной approval без коммерческой квоты |
 | [BUYER_ACTIVATION_070_REPORT.md](BUYER_ACTIVATION_070_REPORT.md) | 7 buyer-activation улучшений, тесты, deploy и отсутствие платежей |
 | [SECURITY.md](SECURITY.md) | Security policy и гарантии |
 | [MAINNET_RUNBOOK.md](MAINNET_RUNBOOK.md) | Обслуживание работающего Base Mainnet production |
