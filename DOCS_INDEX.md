@@ -13,6 +13,7 @@
 | [BUYER_QUICKSTART.md](BUYER_QUICKSTART.md) | Безопасный старт покупателя |
 | [BUYER_BRIDGE.md](BUYER_BRIDGE.md) | Локальная MCP-оплата, OS keyring, ручной approval без коммерческой квоты |
 | [BUYER_ACTIVATION_070_REPORT.md](BUYER_ACTIVATION_070_REPORT.md) | 7 buyer-activation улучшений, тесты, deploy и отсутствие платежей |
+| [BUYER_LIMITS_REMOVAL_081_REPORT.md](BUYER_LIMITS_REMOVAL_081_REPORT.md) | Production-приёмка 0.8.1: коммерческие cap убраны, технические защиты сохранены |
 | [SECURITY.md](SECURITY.md) | Security policy и гарантии |
 | [MAINNET_RUNBOOK.md](MAINNET_RUNBOOK.md) | Обслуживание работающего Base Mainnet production |
 | [MAINNET_ROLLBACK.md](MAINNET_ROLLBACK.md) | Аварийный возврат на сохранённый testnet |

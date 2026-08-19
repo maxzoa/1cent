@@ -1,12 +1,14 @@
 # MCP catalog submission status
 
-Проверено `2026-08-09` после release `0.8.0`. Runtime-факты:
+Публичный runtime и Official MCP Registry повторно проверены `2026-08-19`
+после release `0.8.1`. Остальные строки сохраняют последний честно
+подтверждённый status от `2026-08-09`. Runtime-факты:
 [CURRENT_PRODUCTION.md](CURRENT_PRODUCTION.md). HTTP 200 без актуальной карточки,
 поиска и рабочей установки не считается полным PASS.
 
 | Каталог | Фактический результат | Ссылка / внешний blocker |
 |---|---|---|
-| Official MCP Registry | PASS: `0.8.0`, `active`, `isLatest=true`, exact name/description/remote | `ru.maxzoa/1cent`; published `2026-08-09T16:54:35.038028Z` |
+| Official MCP Registry | PASS: `0.8.1`, `active`, `isLatest=true`, exact name/description/remote | `ru.maxzoa/1cent`; published `2026-08-19T04:16:50.425824Z` |
 | PayAI Bazaar | PARTIAL: 32/43 exact paid REST resources; 11 новых 0.8.0 resources ещё не проиндексированы | Read-only scan 25,737 resources; дополнительные settlement запрещены |
 | Smithery | PUBLIC/STALE: remote, 35 tools, 1 prompt, 1 resource; карточка всё ещё описывает 32 paid tools, last deploy 2026-07-30 | https://smithery.ai/servers/maxzoa27/onecent; owner release refresh pending |
 | AgentGrade | STALE: последний доказанный scan `A+`, 100%, 47/47 от 2026-07-30; свежего scan 0.8.0 нет | https://agentgrade.com |
@@ -26,15 +28,16 @@
 
 | Поверхность | Версия | Результат |
 |---|---:|---|
-| Public API/MCP | `0.8.0` | PASS |
-| GitHub release | `v0.8.0` | PASS: https://github.com/maxzoa/1cent/releases/tag/v0.8.0 |
-| Official MCP Registry | `0.8.0` | PASS |
-| PyPI `onecent` | `0.8.0` | PASS: 2 release files |
-| npm `onecent-buyer` | `0.8.0` / `latest` | PASS |
-| Buyer Bridge source/docs | `0.8.0` | PASS |
+| Public API/MCP | `0.8.1` | PASS |
+| GitHub release | `v0.8.1` | PASS: https://github.com/maxzoa/1cent/releases/tag/v0.8.1 |
+| Official MCP Registry | `0.8.1` | PASS |
+| PyPI `onecent` | `0.8.1` | PASS: 2 release files |
+| npm `onecent-buyer` | `0.8.1` / `latest` | PASS |
+| Buyer Bridge source/docs | `0.8.1` | PASS |
 
-OIDC publication runs: GitHub Actions `31324819932` (PyPI) и `31324823036`
-(npm), оба SUCCESS. Ни recovery code, ни long-lived package token не использовался.
+Release `v0.8.1` публичный и не prerelease; PyPI отдаёт два release-файла,
+npm `latest` отдаёт `0.8.1`. Recovery code и long-lived package token не
+использовались.
 
 Ни один внешний pending/stale статус не называется завершённым. Marketplace QA
 использовала metadata, free tools и unpaid challenge; settlement и платное размещение

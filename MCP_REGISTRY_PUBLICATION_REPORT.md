@@ -4,10 +4,10 @@
 
 - Registry: `https://registry.modelcontextprotocol.io`.
 - Name: `ru.maxzoa/1cent`.
-- Version: `0.8.0`.
+- Version: `0.8.1`.
 - Status: `active`.
 - Latest: `true`.
-- Published: `2026-08-09T16:54:35.038028Z`.
+- Published: `2026-08-19T04:16:50.425824Z`.
 - Description: `SSRF-safe web intelligence: 4 outcomes, 43 paid x402 tools, 3 free tools and a URL preview.`
 - Remote: `https://1cent.maxzoa.ru/mcp`.
 - Transport: Streamable HTTP.
@@ -31,7 +31,8 @@ exact name, version, description and remote. No x402 settlement was performed.
 | `0.6.1` | 2026-07-30 | Balanced three-level public MCP names |
 | `0.6.2` | 2026-07-30 | Agent-discovery release |
 | `0.7.0` | 2026-07-30 | Buyer-activation release |
-| `0.8.0` | 2026-08-09 | Full coverage, safe batch and production-truth release; active/latest |
+| `0.8.0` | 2026-08-09 | Full coverage, safe batch and production-truth release |
+| `0.8.1` | 2026-08-19 | Buyer cap removal and conversion-flow release; active/latest |
 
 ## Authentication and secret hygiene
 
