@@ -31,11 +31,15 @@ EXPECTED_TOOLS = {
 }
 EXPECTED_NETWORK = os.environ.get("EXPECTED_X402_NETWORK", "eip155:84532")
 EXPECTED_AMOUNT = os.environ.get("EXPECTED_X402_AMOUNT", "3000")
+HTTP_TIMEOUT_SECONDS = float(os.environ.get("MCP_HTTP_TIMEOUT_SECONDS", "120"))
 
 
 async def run(endpoint: str, paid: bool) -> None:
     endpoint = endpoint.rstrip("/") + "/"
-    http_client = httpx.AsyncClient(headers={"User-Agent": "onecent-smoke/1.0"})
+    http_client = httpx.AsyncClient(
+        headers={"User-Agent": "onecent-smoke/1.0"},
+        timeout=httpx.Timeout(HTTP_TIMEOUT_SECONDS),
+    )
     async with streamable_http_client(endpoint, http_client=http_client) as (read, write, _):
         async with ClientSession(
             read,
