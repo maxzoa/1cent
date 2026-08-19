@@ -12,7 +12,9 @@ COPY src ./src
 COPY alembic.ini ./
 COPY migrations ./migrations
 COPY scripts ./scripts
-RUN rm -rf build src/*.egg-info \
+RUN chmod 0644 /app/pyproject.toml /app/alembic.ini \
+    && chmod -R a+rX /app/migrations /app/scripts /app/src \
+    && rm -rf build src/*.egg-info \
     && pip install --no-cache-dir --no-deps --force-reinstall .
 USER 10001:10001
 EXPOSE 8013
