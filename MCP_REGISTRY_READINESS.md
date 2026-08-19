@@ -11,7 +11,7 @@
 - Transport: Streamable HTTP.
 - Schema: `https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json`.
 - Authentication: DNS, dedicated Registry-only Ed25519 key.
-- Published: `2026-08-09T16:54:35.038028Z`.
+- Published: `2026-08-19T04:16:50.425824Z`.
 
 Private key stays under ignored local `.secrets/`, never in Git/NAS/Telegram/report/process logs.
 Seller/buyer keys are not Registry keys.

@@ -1,6 +1,6 @@
 # Текущее production-состояние
 
-Проверено `2026-08-09T16:34:49Z` по публичным endpoint и NAS runtime.
+Проверено `2026-08-19T04:19:58Z` по публичным endpoint и NAS runtime.
 
 ## Live
 
@@ -39,13 +39,15 @@ challenge прошли. Все 43 платных маршрута объявля
 | `onecent-db` | healthy | 0 |
 | `onecent-backup` | healthy | 0 |
 
-- Release image ID: `sha256:deaffb65cbee0ea19367c1dea9b2db7749a41a3625bbc3bcf56826742de64cab`.
-- Image created: `2026-08-09T15:57:44.82532602Z`.
-- Fresh backup: `/volume1/docker/1cent/backups/onecent-latest.sql.gz`,
-  `2127262` bytes, mode `600`, epoch `1786290859`.
+- API image ID: `sha256:e1dc27ae9cbf30cd8ba9a3732567bf192c85e9a844cf648538b97db5f67273bc`;
+  started `2026-08-19T03:41:34.818282019Z`.
+- Bot image ID: `sha256:1243e6461c44245fd5db46648c448b175c34a3dc5e27e36a2200eb39cd5dc19e`;
+  started `2026-08-19T03:42:16.45099008Z`.
+- Fresh backup: `/volume1/docker/1cent/backups/onecent-20260819T025014Z.sql.gz`,
+  `4264049` bytes, mode `600`, epoch `1787107818`.
 - Изолированный restore drill: PASS, 17 таблиц, migration `0009`.
-- Rollback artifact: `/volume1/docker/1cent/onecent-pre-080-20260809T153814Z.tar.gz`,
-  mode `600`.
+- Rollback artifact: `/volume1/docker/1cent/onecent-pre-081-20260818T031038Z.tar.gz`,
+  `680914` bytes, mode `600`.
 - Monitor: `mainnet_health=PASS`; публичный TLS отделён от локального health gate.
 
 ## Платежи и безопасность
@@ -76,6 +78,8 @@ challenge прошли. Все 43 платных маршрута объявля
 - Открытие `/v1/demo/preview` без `url` теперь возвращает инструкцию 200, а не бесполезный 422.
 - Расширен funnel-аудит публичных страниц; HTTP 402 по-прежнему не считается покупкой.
 - Payment logic, сеть, PayAI, seller и цены не изменены; релиз не выполняет settlement.
+- Live deploy принят `2026-08-19`; MCP smoke timeout исправлен без
+  изменения payment/runtime-логики.
 
 ## Release 0.8.0
 
