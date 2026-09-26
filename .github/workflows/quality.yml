@@ -43,7 +43,7 @@ jobs:
           pip-audit --no-deps -r requirements-buyer.lock --progress-spinner off
       - name: Generate CycloneDX SBOM
         run: pip-audit --no-deps -r requirements.lock --format cyclonedx-json --output sbom.cdx.json --progress-spinner off
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: onecent-sbom
           path: sbom.cdx.json
